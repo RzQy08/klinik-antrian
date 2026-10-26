@@ -1,58 +1,192 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+<br/>
 
-## About Laravel
+<img src="https://placehold.co/96x96/0B0D10/C9A227?text=L&font=playfair-display" width="96" alt="LUMINA logo" />
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+# L U M I N A
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### *Digital Agency — crafted with light & precision.*
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+<br/>
 
-## Learning Laravel
+![Laravel](https://img.shields.io/badge/Laravel-0B0D10?style=for-the-badge&logo=laravel&logoColor=C9A227)
+![Blade](https://img.shields.io/badge/Blade-0B0D10?style=for-the-badge&logo=laravel&logoColor=FAF8F4)
+![Alpine.js](https://img.shields.io/badge/Alpine.js-0B0D10?style=for-the-badge&logo=alpinedotjs&logoColor=8BC0D0)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-0B0D10?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8)
+![React](https://img.shields.io/badge/Admin-React_+_Inertia-0B0D10?style=for-the-badge&logo=react&logoColor=61DAFB)
+![GrapesJS](https://img.shields.io/badge/GrapesJS-CMS-0B0D10?style=for-the-badge&logo=grapesjs&logoColor=C9A227)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+<br/>
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**[Tentang](#-tentang) · [Arsitektur](#-arsitektur-hibrida) · [Design System](#-design-system) · [Struktur](#-struktur-halaman) · [Instalasi](#-instalasi) · [Roadmap](#-roadmap)**
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+<br/>
 
-## Agentic Development
+</div>
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
 
-```bash
-composer require laravel/boost --dev
+## ✦ Tentang
 
-php artisan boost:install
+**LUMINA Digital Agency** adalah website agensi digital berbasis **Laravel** dengan dua sisi yang bekerja berdampingan:
+
+| | Sisi Publik | Sisi Admin |
+|---|---|---|
+| **Peran** | Website profil agensi untuk pengunjung | Panel CMS untuk mengelola konten & halaman |
+| **Teknologi** | Laravel Blade + Alpine.js + Tailwind CSS | React + Inertia + GrapesJS |
+| **Gaya** | Editorial, elegan, dark mode sebagai default | Fungsional, berbasis editor visual |
+
+Frontend publik awalnya dibangun dengan React/TypeScript + Framer Motion, lalu dimigrasikan ke **Blade + Alpine.js** dengan paritas fungsional penuh: lebih ringan, lebih dekat ke server, dan lebih mudah dirawat.
+
+---
+
+## ✦ Arsitektur Hibrida
+
+```mermaid
+flowchart LR
+    V([👤 Pengunjung]) --> P
+    A([🛠 Admin]) --> C
+
+    subgraph LARAVEL [" Laravel Application "]
+        direction TB
+        P["🌐 Frontend Publik<br/><b>Blade + Alpine.js + Tailwind</b>"]
+        C["🧩 Panel Admin / CMS<br/><b>React + Inertia + GrapesJS</b>"]
+        DB[("🗄 Database")]
+        P --- DB
+        C --- DB
+    end
+
+    style LARAVEL fill:#0B0D10,stroke:#C9A227,color:#FAF8F4
+    style P fill:#14171c,stroke:#C9A227,color:#FAF8F4
+    style C fill:#14171c,stroke:#C9A227,color:#FAF8F4
+    style DB fill:#C9A227,stroke:#C9A227,color:#0B0D10
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+**Pergantian dari React ke Alpine.js (paritas fungsional):**
 
-## Contributing
+| Sebelumnya (React) | Sekarang (Blade + Alpine) |
+|---|---|
+| `useState` / state komponen | `x-data` |
+| Framer Motion `whileInView` | `IntersectionObserver` |
+| Framer Motion entrance animation | CSS `@keyframes` |
+| Komponen TSX | Partial Blade |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## ✦ Design System
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Satu bahasa visual untuk seluruh halaman — gelap, hangat, dan berkelas.
 
-## Security Vulnerabilities
+<div align="center">
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Ink | Paper | Brass |
+|:---:|:---:|:---:|
+| ![ink](https://placehold.co/140x70/0B0D10/0B0D10) | ![paper](https://placehold.co/140x70/FAF8F4/FAF8F4) | ![brass](https://placehold.co/140x70/C9A227/C9A227) |
+| `#0B0D10` | `#FAF8F4` | `#C9A227` |
+| Latar dark mode | Latar light mode | Aksen utama |
 
-## License
+</div>
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Elemen | Pilihan |
+|---|---|
+| **Heading** | Fraunces *(serif)* |
+| **Body** | Inter |
+| **Mode default** | 🌙 Dark |
+| **Dark mode** | Getter Alpine defensif yang seragam di semua komponen (bukan varian `dark:` Tailwind) |
+
+---
+
+## ✦ Struktur Halaman
+
+Seluruh section publik berupa file Blade statis dengan nilai yang diambil langsung dari database, tanpa ketergantungan pada variabel `$content`.
+
+```
+resources/views/
+├── sections/
+│   ├── navbar          →  navigasi utama
+│   ├── hero            →  sambutan & CTA
+│   ├── tentang-kami    →  profil agensi
+│   ├── layanan         →  layanan yang ditawarkan
+│   ├── portfolio       →  karya pilihan
+│   ├── blog            →  artikel & insight
+│   ├── kontak          →  form & informasi kontak
+│   └── footer          →  penutup & tautan
+```
+
+> Keputusan desain: section dibuat statis agar eksperimen UI tidak bergantung pada panel admin dan database.
+
+---
+
+## ✦ Tech Stack
+
+<div align="center">
+
+| Layer | Teknologi |
+|:---:|:---|
+| **Backend** | Laravel · PHP · MySQL |
+| **Templating** | Blade |
+| **Interaktivitas** | Alpine.js |
+| **Styling** | Tailwind CSS |
+| **Admin / CMS** | React · Inertia · GrapesJS |
+| **Tipografi** | Fraunces · Inter |
+
+</div>
+
+---
+
+## ✦ Instalasi
+
+**Prasyarat:** PHP, Composer, Node.js & npm, serta database MySQL.
+
+```bash
+# 1. Clone repository
+git clone <URL-REPOSITORY-ANDA> lumina
+cd lumina
+
+# 2. Install dependensi
+composer install
+npm install
+
+# 3. Konfigurasi environment
+cp .env.example .env
+php artisan key:generate
+
+# 4. Atur koneksi database di .env, lalu migrasi
+php artisan migrate
+
+# 5. Jalankan (dua terminal)
+php artisan serve
+npm run dev
+```
+
+Buka **http://localhost:8000** 🚀
+
+---
+
+## ✦ Roadmap
+
+- [x] Migrasi frontend publik dari React/TypeScript ke Blade + Alpine.js
+- [x] Penyeragaman design system (ink · paper · brass, Fraunces + Inter)
+- [x] Konversi seluruh section ke Blade statis
+- [ ] Hubungkan kembali section ke database (mulai dari `hero-section`)
+- [ ] Lengkapi `section_contents` untuk section selain Hero
+- [ ] Tambah tabel `settings` untuk konfigurasi global
+- [ ] Hapus tabel bawaan Laravel yang tidak terpakai
+
+---
+
+## ✦ Lisensi
+
+Dibangun di atas [Laravel](https://laravel.com) yang berlisensi [MIT](https://opensource.org/licenses/MIT).
+Lisensi proyek LUMINA: *tentukan sendiri (mis. MIT / proprietary).*
+
+<br/>
+
+<div align="center">
+
+**LUMINA Digital Agency**
+
+<sub>Dibuat dengan ☕ dan Laravel</sub>
+
+</div>
