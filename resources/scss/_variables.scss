@@ -1,0 +1,97 @@
+// =====================================================================
+// TEMA RUMAH SAKIT - ubah warna, font, dan bentuk cukup di berkas ini.
+// Semua komponen Bootstrap (tombol, badge, form, alert, dll) mengikuti.
+// =====================================================================
+
+// ---- Palet ----
+// Teal medis sebagai identitas; hijau untuk kondisi baik, merah hanya untuk bahaya.
+$primary:   #0B7A8F;
+$secondary: #556B75;
+$success:   #177F55;
+$info:      #1F6FB5;
+$warning:   #F2A516;
+$danger:    #C73E37;
+$light:     #F3F8F9;
+$dark:      #0F2A33;
+
+// Warna tambahan khusus papan antrian
+$navy:      #073B4C;
+$navy-soft: #0C5468;
+$navy-line: #2B7488;
+$glow:      #7CF0DC;
+$on-navy:   #E6F6F8;
+$on-navy-muted: #9CC9D3;
+
+// ---- Dasar ----
+$body-bg:                  #F3F8F9;
+$body-color:               #0F2A33;
+$body-secondary-color:     #50666E;
+$body-tertiary-bg:         #E9F2F4;
+$border-color:             #D9E6EA;
+$link-decoration:          none;
+$link-hover-decoration:    underline;
+
+$min-contrast-ratio: 4.5;
+$enable-shadows: false;
+$enable-negative-margins: false;
+
+// ---- Huruf ----
+$font-family-sans-serif: 'Onest Variable', 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$headings-font-family:   'Bricolage Grotesque Variable', 'Bricolage Grotesque', 'Onest Variable', system-ui, sans-serif;
+$headings-font-weight:   700;
+$headings-color:         #0F2A33;
+$font-size-base:         1rem;
+$line-height-base:       1.55;
+
+// ---- Bentuk ----
+$border-radius:     .65rem;
+$border-radius-sm:  .45rem;
+$border-radius-lg:  1rem;
+$border-radius-xl:  1.25rem;
+$border-radius-xxl: 1.75rem;
+
+$btn-font-weight:     600;
+$btn-padding-y:       .55rem;
+$btn-padding-x:       1.1rem;
+$btn-padding-y-sm:    .35rem;
+$btn-padding-x-sm:    .8rem;
+$btn-padding-y-lg:    .85rem;
+$btn-padding-x-lg:    1.5rem;
+$btn-focus-width:     .2rem;
+
+$input-padding-y:       .65rem;
+$input-padding-x:       .85rem;
+$input-border-color:    #C5D5DA;
+$input-focus-border-color: $primary;
+$input-focus-box-shadow: 0 0 0 .22rem rgba($primary, .22);
+$form-label-font-weight: 600;
+$form-label-margin-bottom: .4rem;
+
+$card-border-radius:  $border-radius-lg;
+$card-border-color:   $border-color;
+$card-cap-bg:         transparent;
+$card-spacer-x:       1.25rem;
+$card-spacer-y:       1.25rem;
+$card-cap-padding-y:  .9rem;
+$card-box-shadow:     0 1px 2px rgba(15, 42, 51, .05);
+
+$badge-font-weight:   600;
+$badge-padding-y:     .4em;
+$badge-padding-x:     .75em;
+
+$navbar-padding-y:    .65rem;
+$nav-link-padding-y:  .55rem;
+$nav-link-font-weight: 500;
+
+$table-cell-padding-y: .85rem;
+$table-cell-padding-x: 1.1rem;
+$table-border-color:   $border-color;
+$table-th-font-weight: 600;
+
+$alert-border-radius:  $border-radius;
+$list-group-border-color: $border-color;
+$modal-content-border-radius: $border-radius-lg;
+$dropdown-border-radius: $border-radius;
+$dropdown-border-color:  $border-color;
+$dropdown-box-shadow:    0 12px 32px rgba(15, 42, 51, .14);
+$offcanvas-box-shadow:   0 12px 32px rgba(15, 42, 51, .18);
