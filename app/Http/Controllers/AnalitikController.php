@@ -34,7 +34,7 @@ class AnalitikController extends Controller
         $statistik = Antrian::query()
             ->untukAnalitik()
             ->antaraTanggal($dari, $sampai)
-            ->selectRaw("poli_id, COUNT(*) as jumlah, COUNT(DISTINCT dokter_id) as dokter, AVG({$layanan}) as rata_layanan, AVG({$tunggu}) as rata_tunggu")
+            ->selectRaw("poli_id, COUNT(*) as jumlah, COUNT(DISTINCT dokter_id) as dokter, COUNT(DISTINCT tanggal) as hari_aktif, AVG({$layanan}) as rata_layanan, AVG({$tunggu}) as rata_tunggu")
             ->groupBy('poli_id')
             ->get()
             ->keyBy('poli_id');
@@ -73,6 +73,7 @@ class AnalitikController extends Controller
                 jumlahDokter: (int) $statistik->dokter,
                 dari: $dari,
                 sampai: $sampai,
+                hariAktif: (int) $statistik->hari_aktif,
             );
         } catch (\InvalidArgumentException $e) {
             return [

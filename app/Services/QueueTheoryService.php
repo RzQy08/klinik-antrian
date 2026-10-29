@@ -56,7 +56,7 @@ class QueueTheoryService
             ->untukPoli($poliId)
             ->untukAnalitik()
             ->antaraTanggal($dari, $sampai)
-            ->selectRaw("COUNT(*) as jumlah, COUNT(DISTINCT dokter_id) as dokter, AVG({$layanan}) as rata_layanan")
+            ->selectRaw("COUNT(*) as jumlah, COUNT(DISTINCT dokter_id) as dokter, COUNT(DISTINCT tanggal) as hari_aktif, AVG({$layanan}) as rata_layanan")
             ->first();
 
         return self::dariStatistik(
@@ -66,6 +66,7 @@ class QueueTheoryService
             dari: $dari,
             sampai: $sampai,
             jamOperasionalPerHari: $jamOperasionalPerHari,
+            hariAktif: (int) $statistik->hari_aktif,
         );
     }
 
@@ -79,7 +80,8 @@ class QueueTheoryService
         int $jumlahDokter,
         Carbon $dari,
         Carbon $sampai,
-        float $jamOperasionalPerHari = 8.0
+        float $jamOperasionalPerHari = 8.0,
+        ?int $hariAktif = null
     ): self {
         if ($jumlah === 0) {
             throw new InvalidArgumentException('Tidak ada data antrian selesai pada rentang tanggal ini.');
@@ -89,10 +91,15 @@ class QueueTheoryService
             throw new InvalidArgumentException('Data antrian selesai belum memuat waktu mulai dan selesai layanan.');
         }
 
-        $jumlahHari = $dari->diffInDays($sampai) + 1;
+        // Hanya hari yang benar-benar ada pelayanan yang dihitung. Hari libur (misalnya Minggu) tidak
+        // boleh ikut membagi, kalau tidak lambda terlalu kecil dan rho/Wq teoritis ikut meleset.
+        // Tanpa data hari aktif, dipakai seluruh hari pada rentang (perilaku lama).
+        $jumlahHari = ($hariAktif !== null && $hariAktif > 0)
+            ? $hariAktif
+            : (int) round(abs($dari->copy()->startOfDay()->diffInDays($sampai->copy()->startOfDay()))) + 1;
         $totalJamOperasional = $jumlahHari * $jamOperasionalPerHari;
 
-        // lambda = total kedatangan / total jam operasional
+        // lambda = total kedatangan / total jam operasional pada hari aktif
         $lambda = $jumlah / $totalJamOperasional;
 
         // mu = 1 / rata-rata lama layanan (dalam jam), per SATU dokter
