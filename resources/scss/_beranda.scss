@@ -1,0 +1,75 @@
+// =====================================================================
+// Beranda publik (kelas berawalan bn-)
+// =====================================================================
+
+// ---------- hero ----------
+.bn-hero {
+    position: relative; isolation: isolate; overflow: hidden;
+    padding: clamp(1.5rem, 4.5vw, 4rem);
+    border-radius: 1.75rem;
+    border: 1px solid rgba($primary, .16);
+    background: linear-gradient(135deg, #fff 0%, rgba($primary, .07) 100%);
+    box-shadow: 0 1px 2px rgba($dark, .04), 0 28px 56px -28px rgba($primary, .3);
+
+    // pola titik halus, memudar ke kiri
+    &::before {
+        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+        background-image: radial-gradient(rgba($primary, .22) 1.2px, transparent 1.3px);
+        background-size: 22px 22px;
+        -webkit-mask-image: linear-gradient(100deg, transparent 30%, #000 100%);
+        mask-image: linear-gradient(100deg, transparent 30%, #000 100%);
+    }
+}
+.bn-hero-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.bn-blob { position: absolute; border-radius: 50%; filter: blur(70px); }
+.bn-blob-1 { width: 22rem; height: 22rem; top: -8rem; right: -4rem; background: rgba($glow, .45); }
+.bn-blob-2 { width: 18rem; height: 18rem; bottom: -9rem; left: 20%; background: rgba($primary, .22); }
+
+.bn-status {
+    display: inline-flex; align-items: center; gap: .55rem; margin-bottom: 1.25rem;
+    padding: .4rem .9rem; border-radius: 999px; font-size: .85rem; font-weight: 600;
+    &.bn-status-ok { background: rgba($success, .1); color: darken($success, 6%); }
+    &.bn-status-off { background: rgba($danger, .1); color: $danger; }
+}
+.bn-status-dot {
+    width: .55rem; height: .55rem; border-radius: 50%; background: currentColor;
+    animation: bn-denyut 2s infinite;
+}
+
+.bn-title {
+    font-size: clamp(2.2rem, 5.2vw, 3.9rem); line-height: 1.05; letter-spacing: -.03em; margin-bottom: 1.25rem;
+}
+.bn-title-accent {
+    background: linear-gradient(90deg, $primary 0%, #12B5A0 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.bn-lead { font-size: clamp(1.02rem, 1.6vw, 1.2rem); color: $body-secondary-color; max-width: 33rem; margin-bottom: 1.75rem; }
+.bn-cta { box-shadow: 0 10px 24px -8px rgba($primary, .55); }
+
+// ---------- tiket melayang ----------
+.bn-stage { position: relative; max-width: 21rem; margin: 0 auto; padding: 1.5rem 0; }
+.bn-ticket {
+    transform: rotate(2deg); box-shadow: 0 1.5rem 3rem rgba($dark, .2);
+    animation: bn-melayang 6s ease-in-out infinite;
+}
+.bn-chip {
+    position: absolute; display: flex; align-items: center; gap: .7rem; padding: .6rem .95rem .6rem .6rem;
+    background: #fff; border: 1px solid $border-color; border-radius: 1rem; font-size: .9rem; white-space: nowrap;
+    box-shadow: 0 12px 28px rgba($dark, .16);
+    animation: bn-melayang 5s ease-in-out infinite;
+}
+.bn-chip-1 { top: 0; right: -.75rem; animation-delay: -1.5s; }
+.bn-chip-2 { bottom: .25rem; left: -.75rem; animation-delay: -3s; }
+.bn-chip-icon { display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: .7rem; font-size: 1.05rem; }
+.bn-chip-icon-warn { background: rgba($warning, .22); color: #8A5A00; }
+.bn-chip-icon-ok { background: rgba($success, .14); color: $success; }
+
+@include media-breakpoint-down(lg) {
+    .bn-ticket { transform: none; }
+    .bn-chip-1 { right: 0; }
+    .bn-chip-2 { left: 0; }
+}
+
+@keyframes bn-melayang { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+@keyframes bn-denyut { 0% { box-shadow: 0 0 0 0 rgba($success, .5); } 70% { box-shadow: 0 0 0 .5rem rgba($success, 0); } 100% { box-shadow: 0 0 0 0 rgba($success, 0); } }
+@media (prefers-reduced-motion: reduce) { .bn-ticket, .bn-chip, .bn-status-dot { animation: none; } }

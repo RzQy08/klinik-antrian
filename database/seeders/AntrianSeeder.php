@@ -18,6 +18,16 @@ class AntrianSeeder extends Seeder
     private const JUMLAH_HARI = 30;
 
     /**
+     * Tanggal acuan "hari ini" bagi data simulasi. Dibuat tetap (bukan Carbon::today()) bersama
+     * benih acak di bawah, supaya setiap kali seeder dijalankan hasilnya sama persis dan angka
+     * di skripsi bisa direproduksi. Data yang dibuat mencakup 30 hari sebelum tanggal ini.
+     */
+    private const TANGGAL_ACUAN = '2026-10-31';
+
+    /** Benih generator bilangan acak (mt_srand) supaya simulasi dapat diulang. */
+    private const BENIH_ACAK = 20261031;
+
+    /**
      * Jam operasional klinik.
      */
     private const JAM_BUKA = '08:00';
@@ -49,6 +59,8 @@ class AntrianSeeder extends Seeder
 
     public function run(): void
     {
+        mt_srand(self::BENIH_ACAK);
+
         $this->pasienIds = Pasien::pluck('id');
 
         if ($this->pasienIds->isEmpty()) {
@@ -69,7 +81,7 @@ class AntrianSeeder extends Seeder
             $rataLayananMenit = self::RATA2_LAMA_LAYANAN_MENIT[$poli->kode_poli] ?? 10;
 
             for ($h = self::JUMLAH_HARI; $h >= 1; $h--) {
-                $tanggal = Carbon::today()->subDays($h);
+                $tanggal = Carbon::parse(self::TANGGAL_ACUAN)->startOfDay()->subDays($h);
 
                 // Lewati hari Minggu (klinik tutup, sesuai jadwal praktik)
                 if ($tanggal->isSunday()) {

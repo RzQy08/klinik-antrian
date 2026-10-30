@@ -7,7 +7,7 @@
             </div>
             <div class="btn-group" role="group" aria-label="Rentang data">
                 @foreach ([7, 14, 30] as $hari)
-                    <a href="{{ route('antrian.analitik', ['hari' => $hari, 'target' => $target]) }}" class="btn btn-sm {{ $jumlahHari == $hari ? 'btn-primary' : 'btn-outline-primary' }}" @if ($jumlahHari == $hari) aria-current="true" @endif>{{ $hari }} hari</a>
+                    <a href="{{ route('antrian.analitik', ['hari' => $hari, 'target' => $target, 'sampai' => request('sampai')]) }}" class="btn btn-sm {{ $jumlahHari == $hari ? 'btn-primary' : 'btn-outline-primary' }}" @if ($jumlahHari == $hari) aria-current="true" @endif>{{ $hari }} hari</a>
                 @endforeach
             </div>
         </div>
@@ -15,7 +15,7 @@
             <span class="small text-body-secondary">Target rata-rata tunggu untuk rekomendasi dokter:</span>
             <div class="btn-group" role="group" aria-label="Target waktu tunggu">
                 @foreach ([5, 10, 15, 20] as $menit)
-                    <a href="{{ route('antrian.analitik', ['hari' => $jumlahHari, 'target' => $menit]) }}" class="btn btn-sm {{ $target == $menit ? 'btn-primary' : 'btn-outline-primary' }}" @if ($target == $menit) aria-current="true" @endif>{{ $menit }} menit</a>
+                    <a href="{{ route('antrian.analitik', ['hari' => $jumlahHari, 'target' => $menit, 'sampai' => request('sampai')]) }}" class="btn btn-sm {{ $target == $menit ? 'btn-primary' : 'btn-outline-primary' }}" @if ($target == $menit) aria-current="true" @endif>{{ $menit }} menit</a>
                 @endforeach
             </div>
         </div>

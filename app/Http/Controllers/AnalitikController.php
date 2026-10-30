@@ -24,8 +24,11 @@ class AnalitikController extends Controller
         $jumlahHari = $hari < 1 ? 14 : min($hari, 90);
         // Target rata-rata waktu tunggu (menit) untuk rekomendasi jumlah dokter, dibatasi 1-60
         $target = min(60, max(1, $request->integer('target', 10)));
-        $dari = Carbon::today()->subDays($jumlahHari);
-        $sampai = Carbon::today()->subDay();
+        // Tanggal akhir bisa ditentukan lewat ?sampai=YYYY-MM-DD (bawaan: kemarin), supaya angka pada
+        // laporan dapat dibuka kembali untuk periode yang sama. Rentang selalu berakhir pada tanggal itu.
+        $request->validate(['sampai' => ['nullable', 'date']]);
+        $sampai = $request->filled('sampai') ? Carbon::parse($request->input('sampai'))->startOfDay() : Carbon::yesterday();
+        $dari = $sampai->copy()->subDays($jumlahHari - 1);
 
         $polis = Poli::where('aktif', true)->get();
 

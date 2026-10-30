@@ -35,52 +35,63 @@
     @endphp
 
     {{-- Pembuka --}}
-    <section class="hero-panel mb-5">
-    <div class="row align-items-center g-5">
-        <div class="col-lg-7">
-            @if (\App\Services\JamOperasional::aktif())
-                @if (\App\Services\JamOperasional::pendaftaranDibuka())
-                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis mb-3"><i class="bi bi-circle-fill me-1" style="font-size: .5rem"></i> Pendaftaran dibuka sampai pukul {{ \App\Services\JamOperasional::tampil(config('operasional.pendaftaran_tutup')) }}</span>
+    <section class="bn-hero mb-5">
+        <div class="bn-hero-bg" aria-hidden="true"><span class="bn-blob bn-blob-1"></span><span class="bn-blob bn-blob-2"></span></div>
+
+        <div class="row align-items-center g-5 position-relative">
+            <div class="col-lg-7">
+                @if (\App\Services\JamOperasional::aktif())
+                    @if (\App\Services\JamOperasional::pendaftaranDibuka())
+                        <span class="bn-status bn-status-ok"><span class="bn-status-dot"></span>Pendaftaran dibuka sampai pukul {{ \App\Services\JamOperasional::tampil(config('operasional.pendaftaran_tutup')) }}</span>
+                    @else
+                        <span class="bn-status bn-status-off"><span class="bn-status-dot"></span>Pendaftaran ditutup</span>
+                    @endif
                 @else
-                    <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis mb-3"><i class="bi bi-circle-fill me-1" style="font-size: .5rem"></i> Pendaftaran ditutup</span>
+                    <span class="bn-status bn-status-ok"><span class="bn-status-dot"></span>Antrian online aktif</span>
                 @endif
-            @endif
 
-            <h1 class="hero-title display-4 fw-bold mb-4">Ambil nomor antrian, <span class="text-primary">tahu kapan giliran Anda.</span></h1>
-            <p class="lead text-body-secondary mb-4" style="max-width: 34rem">Pilih poli dan isi data singkat. Perkiraan waktu tunggu langsung muncul, dan layar di ruang tunggu memperbarui nomor setiap 2 detik.</p>
+                <h1 class="bn-title">Ambil nomor antrian,<br><span class="bn-title-accent">tahu kapan giliran Anda.</span></h1>
+                <p class="bn-lead">Pilih poli, isi data singkat, dan perkiraan waktu tunggu langsung muncul. Tidak perlu menunggu berdiri di loket.</p>
 
-            <div class="d-flex flex-wrap gap-2 mb-4">
-                <a href="{{ route('antrian.create') }}" class="btn btn-primary btn-lg"><i class="bi bi-ticket-perforated me-2"></i>Ambil nomor antrian</a>
-                @auth
-                    <a href="{{ route('dashboard') }}" class="btn btn-outline-primary btn-lg">Buka dashboard</a>
-                @else
-                    <a href="{{ route('login') }}" class="btn btn-outline-primary btn-lg">Masuk sebagai staf</a>
-                @endauth
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <a href="{{ route('antrian.create') }}" class="btn btn-primary btn-lg bn-cta"><i class="bi bi-ticket-perforated me-2"></i>Ambil nomor antrian</a>
+                    <a href="{{ route('antrian.layar') }}" class="btn btn-outline-primary btn-lg"><i class="bi bi-tv me-2"></i>Lihat papan antrian</a>
+                </div>
+
+                <ul class="hero-facts list-unstyled mb-0">
+                    <li><i class="bi bi-person-check"></i>Tanpa login</li>
+                    <li><i class="bi bi-hourglass-split"></i>Estimasi tunggu otomatis</li>
+                    <li><i class="bi bi-whatsapp"></i>Kabar lewat WhatsApp</li>
+                </ul>
             </div>
 
-            <ul class="hero-facts list-unstyled mb-0">
-                <li><i class="bi bi-person-check"></i>Tanpa login</li>
-                <li><i class="bi bi-hourglass-split"></i>Estimasi tunggu otomatis</li>
-                <li><i class="bi bi-display"></i>Layar ruang tunggu langsung</li>
-            </ul>
-        </div>
+            {{-- Tiket ilustrasi dengan kartu melayang --}}
+            <div class="col-lg-5" aria-hidden="true">
+                <div class="bn-stage">
+                    <div class="bn-ticket card overflow-hidden">
+                        <div class="board board-pattern text-center px-4 pt-4 pb-5 rounded-0">
+                            <div class="small board-muted">Poli Umum</div>
+                            <div class="numeral mt-2" style="font-size: 6.5rem">A017</div>
+                            <div class="small board-muted mt-3">Contoh tiket</div>
+                        </div>
+                        <div class="ticket-cut"><span class="hole hole-l"></span><span class="hole hole-r"></span></div>
+                        <div class="card-body d-flex justify-content-between align-items-baseline">
+                            <span class="text-body-secondary">Perkiraan tunggu</span>
+                            <span class="fs-4 fw-bold display-font">&plusmn; 12 menit</span>
+                        </div>
+                    </div>
 
-        {{-- Contoh tiket, hanya ilustrasi --}}
-        <div class="col-lg-5" aria-hidden="true">
-            <div class="card hero-ticket overflow-hidden mx-auto" style="max-width: 21rem">
-                <div class="board board-pattern text-center px-4 pt-4 pb-5 rounded-0">
-                    <div class="small board-muted">Poli Umum</div>
-                    <div class="numeral mt-2" style="font-size: 6.5rem">A017</div>
-                    <div class="small board-muted mt-3">Contoh tiket</div>
-                </div>
-                <div class="ticket-cut"><span class="hole hole-l"></span><span class="hole hole-r"></span></div>
-                <div class="card-body d-flex justify-content-between align-items-baseline">
-                    <span class="text-body-secondary">Perkiraan tunggu</span>
-                    <span class="fs-4 fw-bold display-font">&plusmn; 12 menit</span>
+                    <div class="bn-chip bn-chip-1">
+                        <span class="bn-chip-icon bn-chip-icon-warn"><i class="bi bi-megaphone-fill"></i></span>
+                        <span class="lh-sm"><b class="d-block">Dipanggil A016</b><small class="text-body-secondary">Poli Umum</small></span>
+                    </div>
+                    <div class="bn-chip bn-chip-2">
+                        <span class="bn-chip-icon bn-chip-icon-ok"><i class="bi bi-bell-fill"></i></span>
+                        <span class="lh-sm"><b class="d-block">Giliran Anda!</b><small class="text-body-secondary">Notifikasi WhatsApp</small></span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     </section>
 
     {{-- Masuk cepat, hanya tampil di mode lokal --}}

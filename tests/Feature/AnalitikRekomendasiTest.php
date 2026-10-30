@@ -38,3 +38,17 @@ it('halaman analitik menampilkan rekomendasi dan simulasi jumlah dokter', functi
         ->assertSee('Target rata-rata tunggu untuk rekomendasi dokter')
         ->assertSee('Saat ini');
 });
+
+it('analitik memakai tanggal akhir dari parameter sampai', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $this->actingAs($admin)
+        ->get(route('antrian.analitik', ['hari' => 14, 'sampai' => '2026-10-30']))
+        ->assertOk()
+        ->assertSee('17 Okt 2026')
+        ->assertSee('30 Okt 2026');
+
+    $this->actingAs($admin)
+        ->get(route('antrian.analitik', ['sampai' => 'bukan-tanggal']))
+        ->assertSessionHasErrors('sampai');
+});
