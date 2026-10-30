@@ -1,0 +1,45 @@
+<?php
+
+return [
+    'after' => ':attribute harus setelah :date.',
+    'boolean' => ':attribute harus berupa ya atau tidak.',
+    'confirmed' => 'Konfirmasi :attribute tidak cocok.',
+    'date' => ':attribute bukan tanggal yang valid.',
+    'date_format' => ':attribute tidak sesuai format :format.',
+    'digits' => ':attribute harus terdiri dari :digits digit angka.',
+    'email' => ':attribute harus berupa alamat email yang valid.',
+    'exists' => ':attribute yang dipilih tidak valid.',
+    'in' => ':attribute yang dipilih tidak valid.',
+    'integer' => ':attribute harus berupa bilangan bulat.',
+    'max' => [
+        'numeric' => ':attribute tidak boleh lebih dari :max.',
+        'string' => ':attribute tidak boleh lebih dari :max karakter.',
+    ],
+    'min' => [
+        'numeric' => ':attribute minimal :min.',
+        'string' => ':attribute minimal :min karakter.',
+    ],
+    'required' => ':attribute wajib diisi.',
+    'required_if' => ':attribute wajib diisi.',
+    'string' => ':attribute harus berupa teks.',
+    'unique' => ':attribute sudah dipakai.',
+
+    'attributes' => [
+        'poli_id' => 'poli',
+        'nik' => 'NIK',
+        'nama' => 'nama',
+        'no_hp' => 'nomor WhatsApp',
+        'tanggal_lahir' => 'tanggal lahir',
+        'jenis_kelamin' => 'jenis kelamin',
+        'nama_poli' => 'nama poli',
+        'kode_poli' => 'kode poli',
+        'dokter_id' => 'dokter',
+        'no_sip' => 'nomor SIP',
+        'email' => 'email',
+        'password' => 'kata sandi',
+        'jam_mulai' => 'jam mulai',
+        'jam_selesai' => 'jam selesai',
+        'hari' => 'hari',
+        'kuota' => 'kuota',
+    ],
+];

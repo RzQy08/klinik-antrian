@@ -1,0 +1,9 @@
+{
+    "Unauthorized": "Anda belum masuk.",
+    "Forbidden": "Anda tidak memiliki akses ke halaman ini.",
+    "Not Found": "Halaman tidak ditemukan.",
+    "Page Expired": "Halaman kedaluwarsa. Muat ulang halaman lalu coba lagi.",
+    "Too Many Requests": "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.",
+    "Server Error": "Terjadi kesalahan pada server.",
+    "Service Unavailable": "Layanan sedang tidak tersedia."
+}

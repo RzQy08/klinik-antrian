@@ -4,30 +4,38 @@
 
     @php
         $pertama = $polis->first();
-        $adaRiwayat = \Illuminate\Support\Facades\Route::has('antrian.riwayat');
 
-        $fitur = [
-            ['Pasien', 'Ambil nomor antrian', route('antrian.create'), 'Isi data singkat, dapat nomor dan perkiraan tunggu', null],
-            ['Pasien', 'Layar antrian satu poli', $pertama ? route('antrian.display', $pertama) : null, 'Tampilan TV per poli, nomor berganti tiap 2 detik', null],
-            ['Pasien', 'Papan semua poli', route('antrian.layar'), 'Satu layar berisi nomor yang sedang dipanggil di semua poli', null],
-            ['Petugas', 'Antrian hari ini', route('antrian.index'), 'Ringkasan jumlah antrian semua poli', 'petugas'],
-            ['Petugas', 'Kelola satu poli', $pertama ? route('antrian.kelola', $pertama) : null, 'Panggil, panggil ulang, mulai layani, tandai tidak hadir', 'petugas'],
-            ['Petugas', 'Analitik', route('antrian.analitik'), 'Waktu tunggu teori dibanding data riil', 'petugas'],
-        ];
+        // Menu untuk staf yang sedang login. Pasien tidak melihat daftar ini.
+        $menuStaf = [];
+        if (auth()->check()) {
+            $peranSaya = auth()->user()->role;
 
-        if ($adaRiwayat) {
-            $fitur[] = ['Petugas', 'Riwayat dan laporan', route('antrian.riwayat'), 'Filter antrian lama dan unduh CSV', 'petugas'];
+            $semuaMenu = [
+                ['petugas', 'Antrian hari ini', route('antrian.index'), 'Ringkasan jumlah antrian semua poli', 'list-check'],
+                ['petugas', 'Kelola satu poli', $pertama ? route('antrian.kelola', $pertama) : null, 'Panggil, panggil ulang, mulai layani, tandai tidak hadir', 'megaphone'],
+                ['petugas', 'Analitik', route('antrian.analitik'), 'Waktu tunggu teori, data riil, dan rekomendasi dokter', 'bar-chart-line'],
+                ['dokter', 'Pasien saya', route('antrian.dokter'), 'Mulai dan selesaikan pelayanan', 'person-badge'],
+                ['admin', 'Ringkasan admin', route('admin.dashboard'), 'Pintu masuk ke data master', 'speedometer2'],
+                ['admin', 'Kelola poli', route('admin.poli.index'), 'Tambah, ubah, nonaktifkan poli', 'hospital'],
+                ['admin', 'Kelola dokter dan jadwal', route('admin.dokter.index'), 'Data dokter, jadwal praktik, akun login', 'calendar-week'],
+            ];
+
+            if (\Illuminate\Support\Facades\Route::has('antrian.riwayat')) {
+                $semuaMenu[] = ['petugas', 'Riwayat dan laporan', route('antrian.riwayat'), 'Filter antrian lama dan unduh CSV', 'clock-history'];
+            }
+
+            foreach ($semuaMenu as [$perlu, $nama, $url, $keterangan, $ikon]) {
+                $boleh = $perlu === 'petugas' ? in_array($peranSaya, ['admin', 'petugas'], true) : $peranSaya === $perlu;
+
+                if ($boleh && $url) {
+                    $menuStaf[] = compact('nama', 'url', 'keterangan', 'ikon');
+                }
+            }
         }
-
-        $fitur[] = ['Dokter', 'Pasien saya', route('antrian.dokter'), 'Mulai dan selesaikan pelayanan', 'dokter'];
-        $fitur[] = ['Admin', 'Ringkasan admin', route('admin.dashboard'), 'Pintu masuk ke data master', 'admin'];
-        $fitur[] = ['Admin', 'Kelola poli', route('admin.poli.index'), 'Tambah, ubah, nonaktifkan poli', 'admin'];
-        $fitur[] = ['Admin', 'Kelola dokter dan jadwal', route('admin.dokter.index'), 'Data dokter, jadwal praktik, akun login', 'admin'];
     @endphp
 
     {{-- Pembuka --}}
-    <section class="row align-items-center g-5 pb-5 pt-lg-3">
-        <div class="col-lg-7">    <section class="hero-panel mb-5">
+    <section class="hero-panel mb-5">
     <div class="row align-items-center g-5">
         <div class="col-lg-7">
             @if (\App\Services\JamOperasional::aktif())
@@ -48,7 +56,7 @@
                 @else
                     <a href="{{ route('login') }}" class="btn btn-outline-primary btn-lg">Masuk sebagai staf</a>
                 @endauth
-                        </div>
+            </div>
 
             <ul class="hero-facts list-unstyled mb-0">
                 <li><i class="bi bi-person-check"></i>Tanpa login</li>
@@ -124,58 +132,52 @@
         </div>
     </section>
 
-    {{-- Peta fitur dan alur uji --}}
-    <section class="row g-4">
-        <div class="col-lg-8">
-            <h2 class="h3 mb-3">Semua halaman</h2>
-            <div class="card">
-                <table class="table table-stack mb-0">
-                    <thead>
-                        <tr><th>Peran</th><th>Halaman</th><th>Akses</th></tr>
-                    </thead>
-                    <tbody>
-                        @php $sebelumnya = null; @endphp
-                        @foreach ($fitur as [$peran, $nama, $url, $keterangan, $perlu])
-                            <tr>
-                                <td data-label="Peran" class="fw-semibold">
-                                    @if ($peran !== $sebelumnya) {{ $peran }} @else <span class="only-stacked">{{ $peran }}</span> @endif
-                                </td>
-                                <td data-label="Halaman">
-                                    <div>
-                                        @if ($url)
-                                            <a href="{{ $url }}" class="fw-medium">{{ $nama }}</a>
-                                        @else
-                                            <span class="text-body-tertiary">{{ $nama }}</span>
-                                        @endif
-                                        <div class="small text-body-secondary">{{ $keterangan }}</div>
-                                    </div>
-                                </td>
-                                <td data-label="Akses">
-                                    @if ($perlu)
-                                        <span class="badge rounded-pill bg-info-subtle text-info-emphasis">Login {{ $perlu }}</span>
-                                    @else
-                                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis">Terbuka</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @php $sebelumnya = $peran; @endphp
-                        @endforeach
-                    </tbody>
-                </table>
+    {{-- Menu staf: hanya tampil setelah login --}}
+    @if ($menuStaf)
+        <section class="mb-5">
+            <h2 class="h3 mb-3">Menu Anda</h2>
+            <div class="row g-3">
+                @foreach ($menuStaf as $menu)
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ $menu['url'] }}" class="card h-100 text-decoration-none">
+                            <div class="card-body d-flex gap-3">
+                                <i class="bi bi-{{ $menu['ikon'] }} fs-3 text-primary"></i>
+                                <div>
+                                    <div class="fw-semibold">{{ $menu['nama'] }}</div>
+                                    <div class="small text-body-secondary">{{ $menu['keterangan'] }}</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                @endforeach
             </div>
-        </div>
+        </section>
+    @endif
 
-        <div class="col-lg-4">
-            <h2 class="h3 mb-3">Urutan uji</h2>
-            <div class="card">
-                <ol class="card-body mb-0 ps-5 d-grid gap-3 small">
-                    <li>Ambil nomor antrian sebagai pasien.</li>
-                    <li>Buka papan antrian di tab lain dan biarkan terbuka.</li>
-                    <li>Masuk sebagai petugas, buka Kelola poli, lalu panggil nomor.</li>
-                    <li>Perhatikan papan: nomor berganti dalam 2 detik.</li>
-                    <li>Masuk sebagai dokter, mulai dan selesaikan pelayanan.</li>
-                    <li>Masuk sebagai petugas, buka Analitik untuk melihat perbandingan teori dan data riil.</li>
-                </ol>
+    {{-- Cara kerja untuk pasien --}}
+    <section class="mb-4">
+        <h2 class="h3 mb-3">Cara kerjanya</h2>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card h-100"><div class="card-body">
+                    <span class="numeral fs-2 text-navy">1</span>
+                    <h3 class="h6 mt-2">Ambil nomor</h3>
+                    <p class="small text-body-secondary mb-0">Pilih poli dan isi NIK serta nama. Tiket langsung tampil dengan perkiraan waktu tunggu.</p>
+                </div></div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100"><div class="card-body">
+                    <span class="numeral fs-2 text-navy">2</span>
+                    <h3 class="h6 mt-2">Pantau giliran</h3>
+                    <p class="small text-body-secondary mb-0">Tiket memperbarui diri otomatis. Anda juga bisa melihat layar antrian poli kapan saja.</p>
+                </div></div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100"><div class="card-body">
+                    <span class="numeral fs-2 text-navy">3</span>
+                    <h3 class="h6 mt-2">Datang saat dipanggil</h3>
+                    <p class="small text-body-secondary mb-0">Nomor Anda muncul di layar ruang tunggu dan tiket berubah menjadi "Giliran Anda!".</p>
+                </div></div>
             </div>
         </div>
     </section>

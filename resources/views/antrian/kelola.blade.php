@@ -12,6 +12,8 @@
 
     @include('partials.flash')
 
+    <livewire:pemberitahu-antrian-baru :poli-id="$poli->id" />
+
     @unless ($layananBerjalan)
         <div class="alert alert-danger" role="alert"><i class="bi bi-clock-history me-1"></i> {{ \App\Services\JamOperasional::pesanLayananSelesai() }}</div>
     @endunless

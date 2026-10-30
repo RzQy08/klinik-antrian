@@ -132,5 +132,63 @@ it('pasien lama dengan NIK yang sama tidak dibuat ulang', function () {
     }
 
     expect(\App\Models\Pasien::where('nik', '3201010101990003')->count())->toBe(1);
-    expect(Antrian::count())->toBe(2);
+    expect(Antrian::count())->toBe(1);
 });
+
+   it('pendaftaran kedua di poli yang sama diarahkan ke tiket yang sudah ada', function () {
+       $poli = Poli::factory()->create(['kode_poli' => 'A']);
+       Dokter::factory()->create(['poli_id' => $poli->id]);
+
+       $data = ['poli_id' => $poli->id, 'nik' => '3201010101990004', 'nama' => 'Rina Sari'];
+
+       $this->post(route('antrian.store'), $data);
+       $pertama = Antrian::first();
+
+       $this->post(route('antrian.store'), $data)
+           ->assertRedirect(route('antrian.tiket', $pertama->kode_tiket));
+
+       expect(Antrian::count())->toBe(1);
+   });
+
+   it('pasien yang sama boleh mengambil nomor di poli lain', function () {
+       $poliA = Poli::factory()->create(['kode_poli' => 'A']);
+       $poliB = Poli::factory()->create(['kode_poli' => 'B']);
+
+       foreach ([$poliA, $poliB] as $poli) {
+           $this->post(route('antrian.store'), ['poli_id' => $poli->id, 'nik' => '3201010101990005', 'nama' => 'Tono']);
+       }
+
+       expect(Antrian::count())->toBe(2);
+   });
+
+   it('pasien boleh mengambil nomor baru setelah antrian sebelumnya selesai', function () {
+       $poli = Poli::factory()->create(['kode_poli' => 'A']);
+       $data = ['poli_id' => $poli->id, 'nik' => '3201010101990006', 'nama' => 'Wati'];
+
+       $this->post(route('antrian.store'), $data);
+       Antrian::first()->update(['status' => 'selesai']);
+       $this->post(route('antrian.store'), $data);
+
+       expect(Antrian::count())->toBe(2);
+   });
+
+   it('tiket menampilkan pemberitahuan giliran saat pasien dipanggil', function () {
+       $poli = Poli::factory()->create(['kode_poli' => 'A', 'nama_poli' => 'Poli Umum']);
+
+       $this->post(route('antrian.store'), ['poli_id' => $poli->id, 'nik' => '3201010101990007', 'nama' => 'Eko']);
+       $antrian = Antrian::first();
+       $antrian->update(['status' => 'dipanggil']);
+
+       $this->get(route('antrian.tiket', $antrian->kode_tiket))
+           ->assertOk()
+           ->assertSee('Giliran Anda!')
+           ->assertDontSee('Perkiraan tunggu');
+   });
+
+   it('aplikasi memakai zona waktu WIB dan bahasa Indonesia', function () {
+       expect(config('app.timezone'))->toBe('Asia/Jakarta');
+       expect(app()->getLocale())->toBe('id');
+
+       $this->post(route('antrian.store'), ['nik' => '12345'])
+           ->assertSessionHasErrors(['nik' => 'NIK harus terdiri dari 16 digit angka.']);
+   });

@@ -139,6 +139,17 @@ class AntrianController extends Controller
 
             $poli = Poli::lockForUpdate()->findOrFail($validated['poli_id']);
 
+            // Pasien yang masih punya antrian aktif di poli ini hari ini tidak dibuatkan nomor baru
+            $aktif = Antrian::where('pasien_id', $pasien->id)
+                ->where('poli_id', $poli->id)
+                ->padaTanggal(now())
+                ->whereIn('status', ['menunggu', 'dipanggil', 'dilayani'])
+                ->first();
+
+            if ($aktif) {
+                return $aktif;
+            }
+
             // Termasuk antrian limpahan, sehingga nomor pendaftar baru melanjutkan nomor limpahan
             $nomorUrut = Antrian::where('poli_id', $poli->id)
                 ->padaTanggal(now())
@@ -162,10 +173,14 @@ class AntrianController extends Controller
             ]);
         });
 
-        return redirect()
-            ->route('antrian.tiket', $antrian->kode_tiket)
-            ->with('success', 'Nomor antrian berhasil dibuat.');
-    }
+        $pesan = $antrian->wasRecentlyCreated
+        ? 'Nomor antrian berhasil dibuat.'
+        : 'Anda masih punya antrian aktif di poli ini, berikut tiketnya.';
+
+    return redirect()
+        ->route('antrian.tiket', $antrian->kode_tiket)
+        ->with('success', $pesan);
+        }
 
         /**
      * Membuat pasien baru. Nomor RM dibentuk dari ID pasien (selalu unik), bukan dari jumlah baris,
@@ -203,15 +218,8 @@ class AntrianController extends Controller
 
     public function tiket(Antrian $antrian): View
     {
-        $antrian->load('poli', 'pasien');
-
-        $posisiDidepan = Antrian::untukPoli($antrian->poli_id)
-            ->hariIni()
-            ->menunggu()
-            ->where('waktu_daftar', '<', $antrian->waktu_daftar)
-            ->count();
-
-        return view('antrian.tiket', compact('antrian', 'posisiDidepan'));
+        // Isi tiket (status, posisi, estimasi) dirender komponen Livewire TiketAntrian
+       return view('antrian.tiket', compact('antrian'));
     }
 
     /**

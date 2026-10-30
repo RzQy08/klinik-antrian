@@ -10,6 +10,7 @@ use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemoLoginController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RiwayatController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -65,6 +66,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/antrian/analitik', [AnalitikController::class, 'index'])
         ->middleware('role:admin,petugas')
         ->name('antrian.analitik');
+
+    Route::get('/antrian/riwayat', [RiwayatController::class, 'index'])
+        ->middleware('role:admin,petugas')
+        ->name('antrian.riwayat');
+
+    Route::get('/antrian/riwayat/csv', [RiwayatController::class, 'csv'])
+        ->middleware(['role:admin,petugas', 'throttle:10,1'])
+        ->name('antrian.riwayat.csv');
 
     Route::get('/antrian/dokter', [AntrianController::class, 'dokterDashboard'])
         ->middleware('role:dokter')

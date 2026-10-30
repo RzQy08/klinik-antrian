@@ -56,7 +56,7 @@ class QueueTheoryService
             ->untukPoli($poliId)
             ->untukAnalitik()
             ->antaraTanggal($dari, $sampai)
-            ->selectRaw("COUNT(*) as jumlah, COUNT(DISTINCT dokter_id) as dokter, AVG({$layanan}) as rata_layanan")
+            ->selectRaw("COUNT(*) as jumlah, COUNT(DISTINCT dokter_id) as dokter, COUNT(DISTINCT tanggal) as hari_aktif, AVG({$layanan}) as rata_layanan")
             ->first();
 
         return self::dariStatistik(
@@ -66,6 +66,7 @@ class QueueTheoryService
             dari: $dari,
             sampai: $sampai,
             jamOperasionalPerHari: $jamOperasionalPerHari,
+            hariAktif: (int) $statistik->hari_aktif,
         );
     }
 
@@ -79,7 +80,8 @@ class QueueTheoryService
         int $jumlahDokter,
         Carbon $dari,
         Carbon $sampai,
-        float $jamOperasionalPerHari = 8.0
+        float $jamOperasionalPerHari = 8.0,
+        ?int $hariAktif = null
     ): self {
         if ($jumlah === 0) {
             throw new InvalidArgumentException('Tidak ada data antrian selesai pada rentang tanggal ini.');
@@ -89,10 +91,15 @@ class QueueTheoryService
             throw new InvalidArgumentException('Data antrian selesai belum memuat waktu mulai dan selesai layanan.');
         }
 
-        $jumlahHari = $dari->diffInDays($sampai) + 1;
+        // Hanya hari yang benar-benar ada pelayanan yang dihitung. Hari libur (misalnya Minggu) tidak
+        // boleh ikut membagi, kalau tidak lambda terlalu kecil dan rho/Wq teoritis ikut meleset.
+        // Tanpa data hari aktif, dipakai seluruh hari pada rentang (perilaku lama).
+        $jumlahHari = ($hariAktif !== null && $hariAktif > 0)
+            ? $hariAktif
+            : (int) round(abs($dari->copy()->startOfDay()->diffInDays($sampai->copy()->startOfDay()))) + 1;
         $totalJamOperasional = $jumlahHari * $jamOperasionalPerHari;
 
-        // lambda = total kedatangan / total jam operasional
+        // lambda = total kedatangan / total jam operasional pada hari aktif
         $lambda = $jumlah / $totalJamOperasional;
 
         // mu = 1 / rata-rata lama layanan (dalam jam), per SATU dokter
@@ -231,6 +238,58 @@ class QueueTheoryService
         $estimasiJam = ($posisiDalamAntrian / $this->c) * (1 / $this->mu);
 
         return (int) round($estimasiJam * 3600);
+    }
+
+    /**
+     * Salinan model dengan jumlah dokter berbeda (λ dan μ per dokter tetap sama).
+     * Dipakai untuk simulasi "bagaimana kalau dokter ditambah/dikurangi".
+     */
+    public function denganDokter(int $c): self
+    {
+        return new self($this->lambda, $this->mu, $c);
+    }
+
+    /**
+     * Simulasi jumlah dokter $dari sampai $sampai: utilisasi dan waktu tunggu teoritis tiap skenario.
+     * Skenario yang tidak stabil (rho >= 1) memiliki wq_menit null.
+     *
+     * @return array<int, array{c:int, rho:float, stabil:bool, wq_menit:?float, peluang_menunggu:?float}>
+     */
+    public function simulasiDokter(int $dari, int $sampai): array
+    {
+        $hasil = [];
+
+        for ($c = max(1, $dari); $c <= $sampai; $c++) {
+            $skenario = $this->denganDokter($c);
+            $stabil = $skenario->stabil();
+
+            $hasil[$c] = [
+                'c' => $c,
+                'rho' => round($skenario->rho(), 4),
+                'stabil' => $stabil,
+                'wq_menit' => $stabil ? round($skenario->wqMenit(), 2) : null,
+                'peluang_menunggu' => $stabil ? round($skenario->probabilitasMenunggu(), 4) : null,
+            ];
+        }
+
+        return $hasil;
+    }
+
+    /**
+     * Jumlah dokter paling sedikit yang membuat sistem stabil, utilisasi tidak melebihi $rhoMaks,
+     * dan rata-rata waktu tunggu tidak melebihi $targetWqMenit. Null kalau $maksDokter pun belum cukup.
+     */
+    public function rekomendasiDokter(float $targetWqMenit = 10.0, float $rhoMaks = 0.85, int $maksDokter = 10): ?int
+    {
+        for ($c = 1; $c <= $maksDokter; $c++) {
+            $skenario = $this->denganDokter($c);
+
+            if ($skenario->stabil() && $skenario->rho() <= $rhoMaks && $skenario->wqMenit() <= $targetWqMenit) {
+                return $c;
+            }
+        }
+
+        return null;
     }
 
     private function faktorial(int $n): float

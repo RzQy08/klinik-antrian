@@ -27,7 +27,7 @@
                 </div>
             @endunless
 
-            <form method="POST" action="{{ route('antrian.store') }}" class="card">
+            <form method="POST" action="{{ route('antrian.store') }}" class="card" onsubmit="this.querySelector('button[type=submit]').disabled = true">
                 @csrf
                 <fieldset class="card-body p-4 p-md-5 d-grid gap-4" @disabled(! $pendaftaranDibuka)>
 

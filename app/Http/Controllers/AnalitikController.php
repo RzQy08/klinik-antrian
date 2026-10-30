@@ -22,6 +22,8 @@ class AnalitikController extends Controller
                 // Rentang dibatasi 1-90 hari supaya input aneh tidak memaksa database membaca data bertahun-tahun
         $hari = $request->integer('hari', 14);
         $jumlahHari = $hari < 1 ? 14 : min($hari, 90);
+        // Target rata-rata waktu tunggu (menit) untuk rekomendasi jumlah dokter, dibatasi 1-60
+        $target = min(60, max(1, $request->integer('target', 10)));
         $dari = Carbon::today()->subDays($jumlahHari);
         $sampai = Carbon::today()->subDay();
 
@@ -34,18 +36,19 @@ class AnalitikController extends Controller
         $statistik = Antrian::query()
             ->untukAnalitik()
             ->antaraTanggal($dari, $sampai)
-            ->selectRaw("poli_id, COUNT(*) as jumlah, COUNT(DISTINCT dokter_id) as dokter, AVG({$layanan}) as rata_layanan, AVG({$tunggu}) as rata_tunggu")
+            ->selectRaw("poli_id, COUNT(*) as jumlah, COUNT(DISTINCT dokter_id) as dokter, COUNT(DISTINCT tanggal) as hari_aktif, AVG({$layanan}) as rata_layanan, AVG({$tunggu}) as rata_tunggu")
             ->groupBy('poli_id')
             ->get()
             ->keyBy('poli_id');
 
-        $hasil = $polis->map(function (Poli $poli) use ($statistik, $dari, $sampai) {
-            return $this->analisisSatuPoli($poli, $statistik->get($poli->id), $dari, $sampai);
+        $hasil = $polis->map(function (Poli $poli) use ($statistik, $dari, $sampai, $target) {
+            return $this->analisisSatuPoli($poli, $statistik->get($poli->id), $dari, $sampai, $target);
         });
 
         return view('antrian.analitik', [
             'hasil' => $hasil,
             'jumlahHari' => $jumlahHari,
+            'target' => $target,
             'dari' => $dari,
             'sampai' => $sampai,
         ]);
@@ -54,7 +57,7 @@ class AnalitikController extends Controller
     /**
      * Hitung metrik teori vs aktual untuk satu poli.
      */
-        private function analisisSatuPoli(Poli $poli, ?Antrian $statistik, Carbon $dari, Carbon $sampai): array
+        private function analisisSatuPoli(Poli $poli, ?Antrian $statistik, Carbon $dari, Carbon $sampai, int $target = 10): array
     {
         $jumlah = $statistik ? (int) $statistik->jumlah : 0;
 
@@ -73,6 +76,7 @@ class AnalitikController extends Controller
                 jumlahDokter: (int) $statistik->dokter,
                 dari: $dari,
                 sampai: $sampai,
+                hariAktif: (int) $statistik->hari_aktif,
             );
         } catch (\InvalidArgumentException $e) {
             return [
@@ -102,9 +106,15 @@ class AnalitikController extends Controller
                 : null;
         }
 
+        // Rekomendasi jumlah dokter + simulasi skenario di sekitar jumlah dokter saat ini
+        $rekomendasi = $service->rekomendasiDokter($target);
+        $batasAtas = min(10, max($service->c + 3, $rekomendasi ?? 0));
+
         return [
             'poli' => $poli,
             'ada_data' => true,
+            'rekomendasi_dokter' => $rekomendasi,
+            'simulasi' => $service->simulasiDokter(max(1, $service->c - 1), $batasAtas),
             'jumlah_sampel' => $jumlah,
             'stabil' => $stabil,
             'lambda' => $service->lambda,

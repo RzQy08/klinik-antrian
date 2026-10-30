@@ -42,8 +42,8 @@ it('dariData menghitung lambda, mu, dan c lewat agregat SQL tanpa limpahan', fun
 
     $service = QueueTheoryService::dariData($poli->id, Carbon::parse('2026-10-06'), Carbon::parse('2026-10-19'));
 
-    // 3 pasien / (14 hari x 8 jam); rata-rata layanan (600+600+1200)/3 = 800 detik; 2 dokter
-    expect($service->lambda)->toBe(round(3 / (14 * 8), 4));
+    // 3 pasien / (2 hari aktif x 8 jam); rata-rata layanan (600+600+1200)/3 = 800 detik; 2 dokter
+    expect($service->lambda)->toBe(round(3 / (2 * 8), 4));
     expect($service->mu)->toBe(round(3600 / 800, 4));
     expect($service->c)->toBe(2);
 });
@@ -112,4 +112,20 @@ it('queue-metrics:generate menyimpan metrik harian dari data agregat tanpa limpa
     expect((float) $metrik->lambda)->toBe(0.25);
     expect((float) $metrik->mu)->toBe(6.0);
     expect((float) $metrik->wq_aktual_menit)->toBe(10.0);
+});
+
+it('lambda hanya membagi dengan hari yang ada pelayanan, hari libur tidak ikut dihitung', function () {
+    $poli = Poli::factory()->create();
+    $dokter = Dokter::factory()->create(['poli_id' => $poli->id]);
+
+    // Senin sampai Sabtu ada pelayanan (2026-10-12 s/d 17), Minggu 2026-10-18 libur
+    foreach (['2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15', '2026-10-16', '2026-10-17'] as $tanggal) {
+        antrianSelesaiUji($poli, $dokter, $tanggal, 600);
+        antrianSelesaiUji($poli, $dokter, $tanggal, 600);
+    }
+
+    // Rentang 7 hari memuat satu hari Minggu: 12 pasien / (6 hari aktif x 8 jam), bukan / (7 x 8)
+    $service = QueueTheoryService::dariData($poli->id, Carbon::parse('2026-10-12'), Carbon::parse('2026-10-18'));
+
+    expect($service->lambda)->toBe(round(12 / (6 * 8), 4));
 });
