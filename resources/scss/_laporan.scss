@@ -1,0 +1,139 @@
+// =====================================================================
+// Analitik dan Riwayat (kelas berawalan lp-)
+// Ringan: tanpa bayangan besar, tanpa animasi berulang, kartu di luar layar
+// tidak ikut dirender (content-visibility), tabel dipotong per halaman.
+// =====================================================================
+
+$lp-aksen: (#0B7A8F, #B5791B, #C4553F, #6A50D3, #1F6FB5, #4E8A22);
+@for $i from 0 to length($lp-aksen) {
+    .lp-c#{$i} { --a: #{nth($lp-aksen, $i + 1)}; --a-lembut: #{rgba(nth($lp-aksen, $i + 1), .12)}; }
+}
+
+.lp-page { min-width: 0; }
+.lp-page :focus-visible { outline: 3px solid rgba($primary, .6); outline-offset: 2px; border-radius: .35rem; }
+
+// ---------- kepala ----------
+.lp-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; }
+.lp-title { margin: 0 0 .3rem; font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.08; letter-spacing: -.03em; }
+.lp-sub { margin: 0; color: $body-secondary-color; }
+.lp-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.25rem; }
+.lp-lab { font-size: .9rem; font-weight: 600; color: $body-secondary-color; }
+.lp-seg {
+    display: inline-flex; gap: .15rem; padding: .25rem; background: #fff; border: 1px solid $border-color; border-radius: 999px;
+    a {
+        display: inline-flex; align-items: center; min-height: 2.4rem; padding: 0 .95rem; border-radius: 999px;
+        color: $dark; font-size: .92rem; font-weight: 600; white-space: nowrap; text-decoration: none;
+        &:hover:not(.is-on) { background: $body-tertiary-bg; }
+        &.is-on { background: $primary; color: #fff; }
+    }
+}
+
+// ---------- ringkasan ----------
+.lp-stats { display: grid; gap: .85rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.5rem), 1fr)); }
+.lp-stat { display: flex; align-items: center; gap: .9rem; padding: 1rem 1.1rem; background: #fff; border: 1px solid $border-color; border-radius: $border-radius-lg; }
+.lp-stat-ico { display: grid; place-items: center; flex-shrink: 0; width: 2.9rem; height: 2.9rem; border-radius: .9rem; background: var(--a-lembut); color: var(--a); font-size: 1.35rem; }
+.lp-stat-n { font-family: $headings-font-family; font-weight: 800; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.lp-stat-l { margin-top: .25rem; font-size: .9rem; color: $body-secondary-color; }
+
+.lp-insight {
+    display: flex; gap: .85rem; align-items: flex-start; margin-top: 1rem; padding: .95rem 1.15rem; border-radius: $border-radius-lg;
+    background: rgba($warning, .12); border: 1px solid rgba($warning, .45); color: #5E3D00;
+    .bi { margin-top: .15rem; font-size: 1.2rem; }
+    &.is-baik { background: rgba($success, .1); border-color: rgba($success, .35); color: darken($success, 10%); }
+}
+
+// ---------- kartu poli (analitik) ----------
+.lp-card {
+    margin-top: 1.25rem; background: #fff; border: 1px solid $border-color; border-top: 4px solid var(--a); border-radius: $border-radius-xl;
+    content-visibility: auto; contain-intrinsic-size: auto 26rem;
+}
+.lp-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; padding: 1.1rem 1.4rem; border-bottom: 1px solid $border-color; }
+.lp-kode { display: inline-grid; place-items: center; flex-shrink: 0; min-width: 2.6rem; height: 2.6rem; padding: 0 .45rem; border-radius: .7rem; background: var(--a); color: #fff; font-family: $headings-font-family; font-weight: 800; font-size: 1.3rem; line-height: 1; }
+.lp-card-nama { margin: 0; font-size: 1.15rem; font-weight: 700; font-family: $font-family-sans-serif; letter-spacing: 0; }
+.lp-card-sampel { margin-left: auto; font-size: .9rem; color: $body-secondary-color; }
+.lp-flag { padding: .2rem .75rem; border-radius: 999px; font-size: .85rem; font-weight: 700; white-space: nowrap; }
+.lp-flag.ok { background: rgba($success, .14); color: darken($success, 10%); }
+.lp-flag.warn { background: rgba($warning, .24); color: #7A4E00; }
+.lp-flag.bad { background: rgba($danger, .14); color: darken($danger, 8%); }
+
+.lp-body { display: grid; gap: 1.75rem 2.5rem; padding: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
+.lp-h3 { margin: 0 0 1rem; font-size: 1rem; font-weight: 700; font-family: $font-family-sans-serif; letter-spacing: 0; }
+.lp-metrics { display: grid; gap: .75rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lp-metric-n { font-family: $headings-font-family; font-weight: 800; font-size: 1.9rem; line-height: 1; font-variant-numeric: tabular-nums; color: $dark; }
+.lp-metric-l { margin-top: .3rem; font-size: .85rem; color: $body-secondary-color; line-height: 1.3; }
+
+.lp-gauge-row { display: flex; align-items: center; gap: 1.1rem; margin-top: 1.4rem; }
+.lp-gauge {
+    --p: 0; --w: #{$success};
+    position: relative; display: grid; place-items: center; flex-shrink: 0; width: 5.6rem; height: 5.6rem; border-radius: 50%;
+    background: conic-gradient(var(--w) calc(var(--p) * 1%), #E3ECEF 0);
+    &::before { content: ''; position: absolute; inset: .6rem; border-radius: 50%; background: #fff; }
+    span { position: relative; font-family: $headings-font-family; font-weight: 800; font-size: 1.15rem; }
+    &.is-warn { --w: #{$warning}; }
+    &.is-bad { --w: #{$danger}; }
+}
+.lp-gauge-teks strong { display: block; }
+.lp-gauge-teks span { font-size: .9rem; color: $body-secondary-color; }
+
+.lp-bar-row + .lp-bar-row { margin-top: 1rem; }
+.lp-bar-lab { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .35rem; font-size: .92rem; }
+.lp-bar-lab span { color: $body-secondary-color; }
+.lp-bar { height: .8rem; border-radius: 99px; background: #E3ECEF; overflow: hidden; }
+.lp-bar i { display: block; height: 100%; border-radius: 99px; }
+.lp-bar .t { background: $primary; }
+.lp-bar .a { background: $warning; }
+.lp-diff { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: 1.1rem; font-size: .92rem; color: $body-secondary-color; }
+.lp-alert { margin: 1.4rem; padding: 1rem 1.2rem; border-radius: $border-radius-lg; background: rgba($danger, .1); border: 1px solid rgba($danger, .35); color: darken($danger, 12%); }
+
+.lp-detail { margin: 0 1.4rem 1.4rem; border: 1px solid $border-color; border-radius: $border-radius-lg; }
+.lp-detail > summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3rem; padding: .6rem 1.1rem; cursor: pointer; list-style: none; font-weight: 700;
+    &::-webkit-details-marker { display: none; }
+    &::after { content: '\F282'; font-family: 'bootstrap-icons'; font-weight: 400; transition: transform .2s; }
+}
+.lp-detail[open] > summary::after { transform: rotate(180deg); }
+.lp-detail[open] > summary { border-bottom: 1px solid $border-color; }
+.lp-detail-isi { padding: 1.1rem 1.1rem 1.2rem; }
+.lp-sim td, .lp-sim th { padding: .55rem .75rem; }
+
+.lp-note { max-width: 46rem; margin: 1.5rem 0 0; font-size: .9rem; color: $body-secondary-color; }
+
+// ---------- riwayat ----------
+.lp-quick { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin-bottom: 1rem; }
+.lp-filter { margin-bottom: 1rem; padding: 1.1rem 1.25rem; background: #fff; border: 1px solid $border-color; border-radius: $border-radius-xl; }
+.lp-filter .form-label { margin-bottom: .3rem; font-size: .9rem; font-weight: 600; }
+.lp-filter .form-control, .lp-filter .form-select { min-height: 2.9rem; }
+.lp-filter-toggle { display: flex; width: 100%; justify-content: space-between; align-items: center; min-height: 3rem; }
+.lp-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.lp-chip { display: inline-flex; align-items: center; gap: .5rem; padding: .3rem .4rem .3rem .85rem; border-radius: 999px; background: rgba($primary, .1); color: darken($primary, 8%); font-size: .9rem; font-weight: 600; }
+.lp-chip a { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; color: inherit; &:hover { background: rgba($primary, .2); } }
+
+.lp-tabel { background: #fff; border: 1px solid $border-color; border-radius: $border-radius-xl; overflow: hidden; }
+.lp-scroll { max-height: min(74vh, 56rem); overflow: auto; overscroll-behavior: contain; }
+.lp-table { margin: 0; font-size: .95rem; }
+.lp-table thead th {
+    position: sticky; top: 0; z-index: 2; padding: .8rem 1rem; background: #EEF5F7; border-bottom: 1px solid $border-color;
+    font-size: .8rem; font-weight: 700; color: $body-secondary-color; white-space: nowrap; letter-spacing: .01em;
+}
+.lp-table tbody td { padding: .75rem 1rem; border-color: #E6EEF1; }
+.lp-table tbody tr:hover > * { background: #F6FAFB; }
+.lp-no { font-family: $headings-font-family; font-weight: 800; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.lp-lim { margin-left: .4rem; padding: .05rem .5rem; border-radius: 999px; background: rgba($warning, .22); color: #7A4E00; font-size: .75rem; font-weight: 700; }
+.lp-poli { display: inline-flex; align-items: center; gap: .55rem; }
+.lp-poli .lp-kode { min-width: 1.9rem; height: 1.9rem; font-size: .95rem; border-radius: .5rem; }
+.lp-dur { display: inline-block; min-width: 4.2rem; padding: .15rem .6rem; border-radius: 999px; background: $body-tertiary-bg; font-size: .88rem; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+.lp-dur.warn { background: rgba($warning, .22); color: #7A4E00; }
+.lp-dur.bad { background: rgba($danger, .14); color: darken($danger, 8%); }
+.lp-kosong { display: flex; flex-direction: column; align-items: center; gap: .6rem; padding: 3.5rem 1.5rem; text-align: center; color: $body-secondary-color; }
+.lp-kosong .bi { font-size: 2.4rem; color: $primary; opacity: .55; }
+.lp-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem 1.5rem; margin-top: 1rem; }
+.lp-pager .pagination { margin: 0; }
+
+@media (max-width: 575.98px) {
+    .lp-scroll { max-height: none; overflow: visible; }
+    .lp-tabel { border: 0; background: transparent; }
+    .lp-table tbody tr { margin-bottom: .75rem; background: #fff; border: 1px solid $border-color; border-radius: $border-radius-lg; }
+    .lp-metrics { gap: .5rem; }
+    .lp-card-sampel { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .lp-detail > summary::after { transition: none; } }

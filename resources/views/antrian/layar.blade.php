@@ -4,7 +4,7 @@
     @include('partials.head', ['title' => 'Papan antrian', 'js' => false])
     @livewireStyles
 </head>
-<body class="tv-body">
+<body class="pa-body">
     {{-- Papan seluruh poli untuk TV ruang tunggu utama --}}
     <livewire:antrian-board />
 

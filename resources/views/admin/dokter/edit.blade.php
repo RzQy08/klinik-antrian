@@ -1,45 +1,86 @@
 <x-app-layout>
     <x-slot name="header">
         <a href="{{ route('admin.dokter.index') }}" class="small"><i class="bi bi-arrow-left me-1"></i>Kembali ke daftar dokter</a>
-        <h1 class="h2 mt-3 mb-0">Ubah dokter</h1>
+        <h1 class="h2 mt-2 mb-1">Ubah dokter</h1>
+        <p class="text-body-secondary mb-0">{{ $dokter->nama }}</p>
     </x-slot>
 
-    <div style="max-width: 36rem">
-        @include('partials.errors')
+    @include('partials.errors')
 
-        @if ($dokter->user)
-            <div class="alert alert-info"><i class="bi bi-person-lock me-1"></i> Akun login: <strong>{{ $dokter->user->email }}</strong>. Email dan password tidak diubah lewat form ini.</div>
-        @endif
+    <form method="POST" action="{{ route('admin.dokter.update', $dokter) }}" class="df-layout">
+        @csrf
+        @method('PUT')
 
-        <form method="POST" action="{{ route('admin.dokter.update', $dokter) }}" class="card">
-            @csrf
-            @method('PUT')
-            <div class="card-body p-4 d-grid gap-4">
-                <div>
-                    <label for="poli_id" class="form-label">Poli</label>
-                    <select id="poli_id" name="poli_id" required class="form-select">
-                        @foreach ($polis as $poli)
-                            <option value="{{ $poli->id }}" @selected(old('poli_id', $dokter->poli_id) == $poli->id)>{{ $poli->nama_poli }}</option>
-                        @endforeach
-                    </select>
+        <section class="ad-card df-main">
+            <header class="ad-card-head"><h2><i class="bi bi-person-badge me-2 text-primary"></i>Data dokter</h2></header>
+            @include('admin.dokter.partials.fields', ['dokter' => $dokter])
+
+            <hr class="df-sep">
+
+            <header class="ad-card-head"><h2><i class="bi bi-person-lock me-2 text-primary"></i>Akun login</h2></header>
+
+            @if ($dokter->user)
+                <div class="df-grid">
+                    <div>
+                        <label class="form-label">Email akun</label>
+                        <input type="email" class="form-control" value="{{ $dokter->user->email }}" readonly aria-readonly="true">
+                        <div class="form-text">Email tidak diubah lewat form ini.</div>
+                    </div>
+                    <div x-data="{ lihat: false }">
+                        <label for="password_baru" class="form-label">Password baru <span class="fw-normal text-body-secondary">(opsional)</span></label>
+                        <div class="df-pass">
+                            <input id="password_baru" name="password_baru" :type="lihat ? 'text' : 'password'" autocomplete="new-password" class="form-control @error('password_baru') is-invalid @enderror" placeholder="Kosongkan bila tidak diganti">
+                            <button type="button" @click="lihat = ! lihat" :aria-label="lihat ? 'Sembunyikan password' : 'Tampilkan password'"><i class="bi" :class="lihat ? 'bi-eye-slash' : 'bi-eye'"></i></button>
+                        </div>
+                        @error('password_baru')<div class="text-danger small">{{ $message }}</div>@enderror
+                    </div>
                 </div>
-                <div>
-                    <label for="nama" class="form-label">Nama dokter</label>
-                    <input id="nama" name="nama" type="text" required class="form-control" value="{{ old('nama', $dokter->nama) }}">
+            @else
+                <div x-data="{ buat: {{ old('buat_akun') ? 'true' : 'false' }} }">
+                    <div class="ad-note ad-note-warning mb-3"><i class="bi bi-person-exclamation"></i><div><div class="fw-semibold">Dokter ini belum punya akun login</div><div class="small text-body-secondary">Tanpa akun, dokter tidak bisa memulai dan menyelesaikan pelayanan sendiri.</div></div></div>
+                    <label class="df-toggle">
+                        <input type="checkbox" name="buat_akun" value="1" x-model="buat">
+                        <span class="df-toggle-track"><span></span></span>
+                        <span class="fw-semibold">Buatkan akun login sekarang</span>
+                    </label>
+                    <div class="df-grid mt-3" x-show="buat" x-collapse>
+                        <div>
+                            <label for="email" class="form-label">Email</label>
+                            <input id="email" name="email" type="email" autocomplete="off" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}">
+                            @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div x-data="{ lihat: false }">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="df-pass">
+                                <input id="password" name="password" :type="lihat ? 'text' : 'password'" autocomplete="new-password" class="form-control @error('password') is-invalid @enderror">
+                                <button type="button" @click="lihat = ! lihat" :aria-label="lihat ? 'Sembunyikan password' : 'Tampilkan password'"><i class="bi" :class="lihat ? 'bi-eye-slash' : 'bi-eye'"></i></button>
+                            </div>
+                            <div class="form-text">Minimal 8 karakter.</div>
+                            @error('password')<div class="text-danger small">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label for="no_sip" class="form-label">No. SIP <span class="fw-normal text-body-secondary">(opsional)</span></label>
-                    <input id="no_sip" name="no_sip" type="text" class="form-control" value="{{ old('no_sip', $dokter->no_sip) }}">
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="aktif" id="aktif" value="1" @checked($dokter->aktif)>
-                    <label class="form-check-label" for="aktif">Aktif</label>
-                </div>
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Simpan perubahan</button>
+            @endif
+        </section>
+
+        <aside class="d-grid gap-3 align-content-start df-side">
+            <section class="ad-card">
+                <header class="ad-card-head"><h2>Ringkasan</h2></header>
+                <dl class="df-facts">
+                    <div><dt>Poli</dt><dd>{{ $dokter->poli?->nama_poli }}</dd></div>
+                    <div><dt>Status</dt><dd><span class="ap-state {{ $dokter->aktif ? 'is-on' : '' }}">{{ $dokter->aktif ? 'Aktif' : 'Nonaktif' }}</span></dd></div>
+                    <div><dt>Hari praktik</dt><dd>{{ $dokter->jadwal_praktiks_count }} hari</dd></div>
+                    <div><dt>Pasien dilayani</dt><dd>{{ $dokter->antrians_count }}</dd></div>
+                </dl>
+                <a href="{{ route('admin.dokter.jadwal.index', $dokter) }}" class="btn btn-outline-primary w-100 mt-3"><i class="bi bi-calendar3 me-1"></i>Atur jadwal praktik</a>
+            </section>
+
+            <section class="ad-card">
+                <div class="df-actions">
+                    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2-circle me-1"></i>Simpan perubahan</button>
                     <a href="{{ route('admin.dokter.index') }}" class="btn btn-outline-secondary">Batal</a>
                 </div>
-            </div>
-        </form>
-    </div>
+            </section>
+        </aside>
+    </form>
 </x-app-layout>

@@ -1,0 +1,68 @@
+// =====================================================================
+// Panel dokter (kelas berawalan dp-): satu layar, satu pekerjaan utama,
+// tombol besar, dan pembaruan otomatis.
+// =====================================================================
+[x-cloak] { display: none !important; }
+@keyframes dp-denyut { 0% { box-shadow: 0 0 0 0 rgba($success, .5); } 70% { box-shadow: 0 0 0 .5rem rgba($success, 0); } 100% { box-shadow: 0 0 0 0 rgba($success, 0); } }
+@keyframes dp-napas { 0%, 100% { box-shadow: 0 0 0 0 rgba($warning, .45); } 50% { box-shadow: 0 0 0 .8rem rgba($warning, 0); } }
+
+.dp-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin-bottom: 1rem; }
+.dp-live { display: inline-flex; align-items: center; gap: .5rem; font-size: .82rem; color: $body-secondary-color; }
+.dp-live-dot { width: .55rem; height: .55rem; border-radius: 50%; background: $success; animation: dp-denyut 2s infinite; }
+.dp-sound { display: inline-flex; align-items: center; gap: .5rem; padding: .45rem .9rem; font-size: .85rem; font-weight: 600; color: $dark; background: #fff; border: 1px solid $border-color; border-radius: 999px; transition: border-color .15s, color .15s; &:hover { color: $primary; border-color: $primary; } &[aria-pressed='true'] { color: $primary; border-color: rgba($primary, .5); background: rgba($primary, .06); } }
+
+// tata letak: fokus di kiri, ringkasan di kanan; di ponsel fokus tampil lebih dulu
+.dp-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+@include media-breakpoint-up(lg) { .dp-grid { grid-template-columns: minmax(0, 1fr) 21rem; gap: 1.25rem; align-items: start; } .dp-side { position: sticky; top: 5.5rem; } }
+.dp-main, .dp-side { display: grid; gap: 1rem; align-content: start; }
+
+// kartu fokus
+.dp-now {
+    position: relative; overflow: hidden; padding: clamp(1.25rem, 3vw, 2.25rem); color: $on-navy; border-radius: 1.75rem; isolation: isolate;
+    background: radial-gradient(28rem 16rem at 100% 0, rgba($glow, .28), transparent 70%), linear-gradient(160deg, #052B38, $navy 60%, #0A5568);
+    box-shadow: 0 30px 60px -34px rgba($navy, .8);
+    &::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 21v14M21 28h14' stroke='white' stroke-opacity='.06' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); }
+    &.is-called { background: radial-gradient(28rem 16rem at 100% 0, rgba($warning, .3), transparent 70%), linear-gradient(160deg, #3A2A06, #15303A 62%, $navy); animation: dp-napas 2.4s ease-in-out infinite; .dp-now-no { color: #FFD275; text-shadow: 0 0 60px rgba($warning, .4); } }
+}
+.dp-now-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; }
+.dp-chip { display: inline-flex; align-items: center; gap: .55rem; padding: .4rem .9rem; font-size: .82rem; font-weight: 700; letter-spacing: .02em; color: #fff; background: rgba(#fff, .12); border: 1px solid rgba(#fff, .22); border-radius: 999px; }
+.dp-timer { display: inline-flex; align-items: center; gap: .5rem; font-size: .88rem; color: $on-navy-muted; .numeral { font-size: 1.6rem; color: #fff; } }
+.dp-now-no { margin: 1.25rem 0 .35rem; font-size: clamp(4.5rem, 16vw, 8rem); color: $glow; text-shadow: 0 0 60px rgba($glow, .35); }
+.dp-now-name { margin: 0; font-size: clamp(1.5rem, 4vw, 2.3rem); color: #fff; letter-spacing: -.02em; }
+.dp-now-meta { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: .9rem 0 0; padding: 0; list-style: none; color: $on-navy-muted; font-size: .95rem; li { display: inline-flex; align-items: center; gap: .45rem; } i { color: $glow; } }
+.dp-now.is-called .dp-now-meta i { color: #FFD275; }
+.dp-now-act { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.75rem; > .dp-btn { flex: 1 1 14rem; } }
+
+// tombol besar (target sentuh nyaman)
+.dp-btn { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 3.6rem; padding: .75rem 1.4rem; font-size: 1.1rem; font-weight: 700; border: 0; border-radius: 1.1rem; transition: transform .15s, box-shadow .15s, background .15s; &:hover:not(:disabled) { transform: translateY(-2px); } &:active:not(:disabled) { transform: none; } &:disabled { opacity: .6; cursor: progress; } &:focus-visible { outline: 3px solid #fff; outline-offset: 3px; } i { font-size: 1.3rem; } }
+.dp-btn-go { color: $navy; background: $glow; box-shadow: 0 16px 32px -12px rgba($glow, .6); &:hover:not(:disabled) { background: #A2F6E8; } }
+.dp-btn-done { color: #fff; background: $success; box-shadow: 0 16px 32px -12px rgba($success, .7); &:hover:not(:disabled) { background: #1B9266; } }
+.dp-btn-ghost { color: #fff; background: rgba(#fff, .1); border: 1px solid rgba(#fff, .3); &:hover:not(:disabled) { background: rgba(#fff, .18); } }
+.dp-btn-warn { color: #3A2A06; background: #FFD275; }
+.dp-skip { flex: 1 1 10rem; display: flex; > .dp-btn { width: 100%; } }
+.dp-confirm { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; width: 100%; font-size: .9rem; span { flex: 1 1 100%; } .dp-btn { flex: 1; min-height: 3rem; font-size: 1rem; } }
+
+// keadaan menunggu
+.dp-idle { padding: clamp(2rem, 6vw, 3.5rem) 1.25rem; text-align: center; background: #fff; border: 2px dashed rgba($primary, .35); border-radius: 1.75rem; h2 { font-size: 1.5rem; letter-spacing: -.02em; } p { max-width: 28rem; margin: 0 auto 1.25rem; color: $body-secondary-color; } }
+.dp-idle-ico { display: inline-grid; place-items: center; width: 4.5rem; height: 4.5rem; margin-bottom: 1rem; font-size: 2rem; color: $primary; background: rgba($primary, .1); border-radius: 50%; }
+.dp-idle-count { display: inline-flex; align-items: baseline; gap: .5rem; padding: .5rem 1rem; font-size: .9rem; color: $body-secondary-color; background: $light; border-radius: 999px; .numeral { font-size: 1.4rem; color: $navy; } }
+
+// kartu umum
+.dp-card { padding: 1.15rem; background: #fff; border: 1px solid $border-color; border-radius: 1.4rem; box-shadow: 0 14px 30px -26px rgba($navy, .5); }
+.dp-card-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .85rem; h3 { margin: 0; font-size: 1rem; letter-spacing: -.01em; } }
+.dp-count { display: inline-grid; place-items: center; min-width: 1.7rem; height: 1.7rem; padding: 0 .45rem; font-size: .82rem; font-weight: 700; color: #8A5A00; background: rgba($warning, .25); border-radius: 999px; }
+.dp-muted { color: $body-secondary-color; font-size: .9rem; }
+
+.dp-list { margin: 0; padding: 0; list-style: none; > li { display: flex; align-items: center; gap: .9rem; padding: .85rem 0; border-top: 1px solid $border-color; &:first-child { border-top: 0; padding-top: 0; } } }
+.dp-list-no { min-width: 4.4rem; font-size: 1.6rem; color: $navy; }
+.dp-list-body { flex: 1; min-width: 0; }
+.dp-list-act { display: flex; gap: .4rem; flex-shrink: 0; .btn { min-height: 2.8rem; font-weight: 600; } }
+@include media-breakpoint-down(sm) { .dp-list > li { flex-wrap: wrap; } .dp-list-act { width: 100%; .btn:first-child { flex: 1; } } }
+
+// ringkasan
+.dp-quota-nums { display: flex; align-items: baseline; gap: .6rem; margin-bottom: .6rem; .numeral { font-size: 2.2rem; color: $navy; } small { color: $body-secondary-color; } }
+.dp-quota-time { margin-top: .6rem; font-size: .85rem; color: $body-secondary-color; }
+.dp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; > div { display: grid; gap: .25rem; padding: .9rem .5rem; text-align: center; background: #fff; border: 1px solid $border-color; border-radius: 1.1rem; } .numeral { font-size: 1.8rem; color: $navy; } small { font-size: .72rem; line-height: 1.25; color: $body-secondary-color; } }
+.dp-next, .dp-done { display: flex; align-items: center; gap: .75rem; padding: .55rem 0; border-top: 1px dashed $border-color; &:first-of-type { border-top: 0; } .numeral { min-width: 3.6rem; font-size: 1.15rem; color: $navy; } .text-truncate { flex: 1; min-width: 0; font-size: .92rem; } small { color: $body-secondary-color; } }
+
+@media (prefers-reduced-motion: reduce) { .dp-now.is-called, .dp-live-dot { animation: none; } .dp-btn { transition: none; } }

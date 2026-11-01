@@ -15,9 +15,8 @@ class DokterController extends Controller
 {
     public function index(): View
     {
-        $dokters = Dokter::with('poli', 'user')->orderBy('nama')->get();
-
-        return view('admin.dokter.index', compact('dokters'));
+        // Tabel, pencarian, saringan, dan paginasi ditangani komponen Livewire Admin\DokterManager
+        return view('admin.dokter.index');
     }
 
     public function create(): View
@@ -41,18 +40,7 @@ class DokterController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $request) {
-            $userId = null;
-
-            if ($request->boolean('buat_akun')) {
-                $user = User::create([
-                    'name' => $validated['nama'],
-                    'email' => $validated['email'],
-                    'password' => bcrypt($validated['password']),
-                    'role' => 'dokter',
-                ]);
-
-                $userId = $user->id;
-            }
+            $userId = $request->boolean('buat_akun') ? $this->buatAkun($validated)->id : null;
 
             Dokter::create([
                 'poli_id' => $validated['poli_id'],
@@ -68,6 +56,7 @@ class DokterController extends Controller
 
     public function edit(Dokter $dokter): View
     {
+        $dokter->load('poli:id,nama_poli', 'user:id,email')->loadCount(['antrians', 'jadwalPraktiks']);
         $polis = Poli::orderBy('nama_poli')->get();
 
         return view('admin.dokter.edit', compact('dokter', 'polis'));
@@ -80,14 +69,37 @@ class DokterController extends Controller
             'nama' => ['required', 'string', 'max:255'],
             'no_sip' => ['nullable', 'string', 'max:255'],
             'aktif' => ['nullable', 'boolean'],
+            // dokter yang belum punya akun boleh dibuatkan sekarang
+            'buat_akun' => ['nullable', 'boolean'],
+            'email' => ['required_if:buat_akun,1', 'nullable', 'email', 'unique:users,email'],
+            'password' => ['required_if:buat_akun,1', 'nullable', 'string', 'min:8'],
+            // dokter yang sudah punya akun boleh diganti passwordnya
+            'password_baru' => ['nullable', 'string', 'min:8'],
         ]);
 
-        $dokter->update([
-            'poli_id' => $validated['poli_id'],
-            'nama' => $validated['nama'],
-            'no_sip' => $validated['no_sip'] ?? null,
-            'aktif' => $request->boolean('aktif'),
-        ]);
+        DB::transaction(function () use ($validated, $request, $dokter) {
+            $userId = $dokter->user_id;
+
+            if (! $userId && $request->boolean('buat_akun')) {
+                $userId = $this->buatAkun($validated)->id;
+            } elseif ($dokter->user) {
+                $perubahan = ['name' => $validated['nama']];
+
+                if (! empty($validated['password_baru'])) {
+                    $perubahan['password'] = $validated['password_baru']; // di-hash otomatis oleh cast model User
+                }
+
+                $dokter->user->update($perubahan);
+            }
+
+            $dokter->update([
+                'poli_id' => $validated['poli_id'],
+                'user_id' => $userId,
+                'nama' => $validated['nama'],
+                'no_sip' => $validated['no_sip'] ?? null,
+                'aktif' => $request->boolean('aktif'),
+            ]);
+        });
 
         return redirect()->route('admin.dokter.index')->with('success', 'Dokter berhasil diperbarui.');
     }
@@ -101,5 +113,15 @@ class DokterController extends Controller
         $dokter->delete();
 
         return redirect()->route('admin.dokter.index')->with('success', 'Dokter berhasil dihapus.');
+    }
+
+    private function buatAkun(array $data): User
+    {
+        return User::create([
+            'name' => $data['nama'],
+            'email' => $data['email'],
+            'password' => bcrypt($data['password']),
+            'role' => 'dokter',
+        ]);
     }
 }

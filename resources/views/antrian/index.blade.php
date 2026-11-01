@@ -1,76 +1,124 @@
+@php
+    $warna = fn ($kode) => 'pt-c'.(ord(strtoupper(substr((string) $kode, 0, 1))) % 6);
+    $maks = max(1, (int) $polis->max('menunggu_count'));
+    $totalMenunggu = (int) $polis->sum('menunggu_count');
+    $palingRamai = $polis->sortByDesc('menunggu_count')->first();
+@endphp
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+        <div class="pt-head">
             <div>
-                <h1 class="h2 mb-1">Antrian hari ini</h1>
-                <p class="text-body-secondary mb-0">{{ now()->locale('id')->translatedFormat('l, j F Y') }}</p>
+                <h1 class="pt-title">Antrian hari ini</h1>
+                <p class="pt-sub">
+                    <span><i class="bi bi-calendar3"></i>{{ now()->locale('id')->translatedFormat('l, j F Y') }}</span>
+                    <span><i class="bi bi-clock"></i><time class="pt-jam" id="ptJam">{{ now()->format('H:i:s') }}</time> WIB</span>
+                </p>
             </div>
 
-            <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="pt-head-actions">
                 @if (\App\Services\JamOperasional::aktif())
                     @if (\App\Services\JamOperasional::pendaftaranDibuka())
-                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis">Pendaftaran dibuka</span>
+                        <span class="pt-pill ok"><i class="bi bi-door-open"></i>Pendaftaran dibuka</span>
                     @else
-                        <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Pendaftaran ditutup</span>
+                        <span class="pt-pill off"><i class="bi bi-door-closed"></i>Pendaftaran ditutup</span>
                     @endif
                     @if (\App\Services\JamOperasional::layananBerjalan())
-                        <span class="badge rounded-pill bg-info-subtle text-info-emphasis">Layanan sampai {{ \App\Services\JamOperasional::tampil(config('operasional.layanan_selesai')) }}</span>
+                        <span class="pt-pill info"><i class="bi bi-activity"></i>Layanan sampai {{ \App\Services\JamOperasional::tampil(config('operasional.layanan_selesai')) }}</span>
                     @else
-                        <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Layanan selesai</span>
+                        <span class="pt-pill off"><i class="bi bi-moon-stars"></i>Layanan selesai</span>
                     @endif
                 @endif
-                <a href="{{ route('antrian.layar') }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm"><i class="bi bi-tv me-1"></i>Papan semua poli</a>
+                <a href="{{ route('antrian.layar') }}" target="_blank" rel="noopener" class="btn btn-outline-primary"><i class="bi bi-tv me-2"></i>Papan semua poli<span class="visually-hidden"> (tab baru)</span></a>
             </div>
         </div>
     </x-slot>
 
-    @include('partials.flash')
+    <div class="pt-page">
+        @include('partials.flash')
 
-    @php $maks = max(1, $polis->max('menunggu_count')); @endphp
+        <section aria-label="Ringkasan hari ini">
+            <div class="pt-stats">
+                <div class="pt-stat pt-c0"><span class="pt-stat-ico"><i class="bi bi-people"></i></span><div><div class="pt-stat-n">{{ $totalMenunggu }}</div><div class="pt-stat-l">Pasien menunggu</div></div></div>
+                <div class="pt-stat pt-c1"><span class="pt-stat-ico"><i class="bi bi-megaphone"></i></span><div><div class="pt-stat-n">{{ $polis->sum('dipanggil_count') }}</div><div class="pt-stat-l">Sedang dipanggil</div></div></div>
+                <div class="pt-stat pt-c5"><span class="pt-stat-ico"><i class="bi bi-check2-circle"></i></span><div><div class="pt-stat-n">{{ $polis->sum('selesai_count') }}</div><div class="pt-stat-l">Selesai hari ini</div></div></div>
+                <div class="pt-stat pt-c4"><span class="pt-stat-ico"><i class="bi bi-building"></i></span><div><div class="pt-stat-n">{{ $polis->count() }}</div><div class="pt-stat-l">Poli aktif</div></div></div>
+            </div>
+        </section>
 
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'people', 'label' => 'Pasien menunggu', 'nilai' => $polis->sum('menunggu_count'), 'warna' => 'primary'])</div>
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'megaphone', 'label' => 'Sedang dipanggil', 'nilai' => $polis->sum('dipanggil_count'), 'warna' => 'warning'])</div>
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'check-circle', 'label' => 'Selesai hari ini', 'nilai' => $polis->sum('selesai_count'), 'warna' => 'success'])</div>
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'building', 'label' => 'Poli aktif', 'nilai' => $polis->count(), 'warna' => 'navy'])</div>
+        <div class="pt-bar">
+            <h2>Pilih poli untuk dikelola</h2>
+            <div class="pt-live" id="ptLive" role="group" aria-label="Penyegaran otomatis">
+                <span class="pt-live-dot" aria-hidden="true"></span>
+                <span id="ptLiveTeks">Diperbarui otomatis tiap 30 detik</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="ptJeda" aria-pressed="false">Jeda</button>
+            </div>
+        </div>
+
+        <section aria-label="Daftar poli">
+            <div class="pt-poli-grid">
+                @forelse ($polis as $poli)
+                    @php
+                        $persen = $poli->menunggu_count > 0 ? max(6, (int) round($poli->menunggu_count / $maks * 100)) : 0;
+                        $ramai = $poli->menunggu_count > 10;
+                        $terpadat = $palingRamai && $palingRamai->id === $poli->id && $poli->menunggu_count > 0 && ! $ramai;
+                    @endphp
+                    <article class="pt-poli {{ $warna($poli->kode_poli) }}" data-kode="{{ $poli->kode_poli }}" aria-labelledby="poli-{{ $poli->id }}">
+                        <div class="pt-poli-top">
+                            <span class="pt-kode" aria-hidden="true">{{ $poli->kode_poli }}</span>
+                            <h3 class="pt-poli-nama" id="poli-{{ $poli->id }}">{{ $poli->nama_poli }}</h3>
+                            @if ($ramai)
+                                <span class="pt-tag"><i class="bi bi-exclamation-triangle-fill me-1"></i>Ramai</span>
+                            @elseif ($terpadat)
+                                <span class="pt-tag">Terpadat</span>
+                            @endif
+                        </div>
+
+                        <div class="pt-wait">
+                            <span class="pt-wait-n">{{ $poli->menunggu_count }}</span>
+                            <span class="pt-wait-l">pasien menunggu</span>
+                        </div>
+
+                        <div class="pt-load" role="img" aria-label="Beban antrian {{ $persen }} persen dibanding poli terpadat"><span style="width: {{ $persen }}%"></span></div>
+
+                        <div class="pt-counts">
+                            <span class="pt-count"><i class="bi bi-megaphone" aria-hidden="true"></i><b>{{ $poli->dipanggil_count }}</b> dipanggil</span>
+                            <span class="pt-count"><i class="bi bi-check2-circle" aria-hidden="true"></i><b>{{ $poli->selesai_count }}</b> selesai</span>
+                        </div>
+
+                        <div class="pt-poli-acts">
+                            <a href="{{ route('antrian.kelola', $poli) }}" class="btn btn-primary">Kelola antrian<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i><span class="visually-hidden"> {{ $poli->nama_poli }}</span></a>
+                            <a href="{{ route('antrian.display', $poli) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary" aria-label="Buka layar TV {{ $poli->nama_poli }} (tab baru)" title="Layar TV poli ini"><i class="bi bi-tv" aria-hidden="true"></i></a>
+                        </div>
+                    </article>
+                @empty
+                    <div class="pt-sec w-100"><div class="pt-empty"><i class="bi bi-building" aria-hidden="true"></i><div>Belum ada poli aktif. Minta admin menambahkan poli lewat menu Poli.</div></div></div>
+                @endforelse
+            </div>
+        </section>
     </div>
 
-    <div class="card">
-        <div class="card-header"><h2 class="card-title-sm">Per poli</h2></div>
-        <ul class="list-group list-group-flush">
-            @forelse ($polis as $poli)
-                <li class="list-group-item p-3 p-md-4">
-                    <div class="row align-items-center g-3">
-                        <div class="col-12 col-md-5 d-flex align-items-center gap-3">
-                            <span class="kode">{{ $poli->kode_poli }}</span>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold">
-                                    {{ $poli->nama_poli }}
-                                    @if ($poli->menunggu_count > 10)
-                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis ms-1">Ramai</span>
-                                    @endif
-                                </div>
-                                <div class="bar mt-2" style="max-width: 16rem" aria-hidden="true"><span class="bg-primary" style="width: {{ round($poli->menunggu_count / $maks * 100) }}%"></span></div>
-                            </div>
-                        </div>
+    <script>
+    (function () {
+        var jam = document.getElementById('ptJam');
+        function tik() {
+            if (!jam) return;
+            var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; };
+            jam.textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+        }
+        setInterval(tik, 1000);
 
-                        <div class="col-7 col-md-4">
-                            <div class="row row-cols-3 g-2 text-center">
-                                <div class="col"><div class="numeral fs-3">{{ $poli->menunggu_count }}</div><div class="small text-body-secondary">Menunggu</div></div>
-                                <div class="col"><div class="numeral fs-3">{{ $poli->dipanggil_count }}</div><div class="small text-body-secondary">Dipanggil</div></div>
-                                <div class="col"><div class="numeral fs-3">{{ $poli->selesai_count }}</div><div class="small text-body-secondary">Selesai</div></div>
-                            </div>
-                        </div>
-
-                        <div class="col-5 col-md-3 d-flex flex-wrap justify-content-end gap-2">
-                            <a href="{{ route('antrian.kelola', $poli) }}" class="btn btn-primary btn-sm">Kelola</a>
-                            <a href="{{ route('antrian.display', $poli) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm" aria-label="Buka layar TV {{ $poli->nama_poli }}"><i class="bi bi-tv"></i></a>
-                        </div>
-                    </div>
-                </li>
-            @empty
-                <li class="list-group-item p-4 text-body-secondary">Belum ada poli aktif. Tambahkan poli lewat menu Poli.</li>
-            @endforelse
-        </ul>
-    </div>
+        // Penyegaran otomatis, bisa dijeda (aksesibilitas: pengguna mengendalikan pembaruan)
+        var jeda = false, tombol = document.getElementById('ptJeda'), box = document.getElementById('ptLive'), teks = document.getElementById('ptLiveTeks');
+        tombol.addEventListener('click', function () {
+            jeda = !jeda;
+            tombol.setAttribute('aria-pressed', jeda ? 'true' : 'false');
+            tombol.textContent = jeda ? 'Lanjutkan' : 'Jeda';
+            box.classList.toggle('is-jeda', jeda);
+            teks.textContent = jeda ? 'Pembaruan dijeda' : 'Diperbarui otomatis tiap 30 detik';
+        });
+        setInterval(function () {
+            if (!jeda && document.visibilityState === 'visible') location.reload();
+        }, 30000);
+    })();
+    </script>
 </x-app-layout>

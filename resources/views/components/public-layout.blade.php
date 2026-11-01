@@ -1,10 +1,10 @@
-@props(['title' => null, 'wide' => false])
+@props(['title' => null, 'wide' => false, 'full' => false])
 <!DOCTYPE html>
 <html lang="id">
 <head>
     @include('partials.head', ['title' => $title])
 </head>
-<body>
+<body class="d-flex flex-column min-vh-dvh bn-pub">
 
 <nav class="navbar navbar-expand-xl topbar sticky-top">
     <div class="container-xxl">
@@ -44,12 +44,93 @@
     </div>
 </nav>
 
-<main class="container-xxl py-4 py-md-5" @if (! $wide) style="max-width: 46rem" @endif>
-    {{ $slot }}
-</main>
+@if ($full)
+    <main class="flex-grow-1">{{ $slot }}</main>
+@else
+    <main class="container-xxl py-4 py-md-5 flex-grow-1" @if (! $wide) style="max-width: 46rem" @endif>
+        {{ $slot }}
+    </main>
+@endif
 
-<footer class="container-xxl pb-5 small text-body-secondary">
-    {{ config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama') }}. Sistem antrian poliklinik dengan perkiraan waktu tunggu dari teori antrian.
+@php
+    $poliFooter = \App\Models\Poli::where('aktif', true)->orderBy('kode_poli')->get(['id', 'nama_poli']);
+    $waTujuan = config('rumahsakit.whatsapp') ? \App\Services\WhatsAppService::normalisasi((string) config('rumahsakit.whatsapp')) : null;
+
+    $jamLayanan = config('rumahsakit.jam_layanan');
+    if (! $jamLayanan && \App\Services\JamOperasional::aktif()) {
+        $jamLayanan = 'Pendaftaran '.\App\Services\JamOperasional::tampil(config('operasional.pendaftaran_buka')).' sampai '.\App\Services\JamOperasional::tampil(config('operasional.pendaftaran_tutup')).' WIB';
+    }
+@endphp
+<footer class="bn-footer">
+    <div class="container-xxl">
+        <div class="bn-footer-top">
+            <div class="bn-footer-brand">
+                <a href="{{ route('beranda') }}" class="text-decoration-none">@include('partials.brand', ['terang' => true])</a>
+                <p>{{ config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama') }} melayani pendaftaran antrian poliklinik secara online, lengkap dengan perkiraan waktu tunggu dan pemberitahuan saat giliran Anda tiba.</p>
+
+                @if (config('rumahsakit.instagram') || config('rumahsakit.facebook') || $waTujuan)
+                    <div class="bn-social">
+                        @if (config('rumahsakit.instagram'))<a href="{{ config('rumahsakit.instagram') }}" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>@endif
+                        @if (config('rumahsakit.facebook'))<a href="{{ config('rumahsakit.facebook') }}" target="_blank" rel="noopener" aria-label="Facebook"><i class="bi bi-facebook"></i></a>@endif
+                        @if ($waTujuan)<a href="https://wa.me/{{ $waTujuan }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>@endif
+                    </div>
+                @endif
+            </div>
+
+            <nav aria-label="Layanan poliklinik">
+                <h4>Layanan poliklinik</h4>
+                <ul>
+                    @forelse ($poliFooter as $p)
+                        <li><a href="{{ route('antrian.create') }}">{{ $p->nama_poli }}</a></li>
+                    @empty
+                        <li>Daftar poli akan segera tersedia</li>
+                    @endforelse
+                </ul>
+            </nav>
+
+            <nav aria-label="Tautan cepat">
+                <h4>Tautan cepat</h4>
+                <ul>
+                    <li><a href="{{ route('antrian.create') }}">Ambil nomor antrian</a></li>
+                    <li><a href="{{ route('beranda') }}#antrian">Antrian hari ini</a></li>
+                    <li><a href="{{ route('antrian.layar') }}">Papan antrian</a></li>
+                    <li><a href="{{ route('beranda') }}#cara-kerja">Cara kerja</a></li>
+                </ul>
+            </nav>
+
+            <div>
+                <h4>Hubungi kami</h4>
+                <ul class="bn-contact">
+                    @if (config('rumahsakit.alamat'))
+                        <li><i class="bi bi-geo-alt"></i><span>{{ config('rumahsakit.alamat') }}@if (config('rumahsakit.maps')) <a href="{{ config('rumahsakit.maps') }}" target="_blank" rel="noopener" class="bn-contact-link">Lihat peta</a>@endif</span></li>
+                    @endif
+                    @if (config('rumahsakit.telepon'))
+                        <li><i class="bi bi-telephone"></i><a href="tel:{{ preg_replace('/[^0-9+]/', '', config('rumahsakit.telepon')) }}">{{ config('rumahsakit.telepon') }}</a></li>
+                    @endif
+                    @if ($waTujuan)
+                        <li><i class="bi bi-whatsapp"></i><a href="https://wa.me/{{ $waTujuan }}" target="_blank" rel="noopener">{{ config('rumahsakit.whatsapp') }}</a></li>
+                    @endif
+                    @if (config('rumahsakit.email'))
+                        <li><i class="bi bi-envelope"></i><a href="mailto:{{ config('rumahsakit.email') }}">{{ config('rumahsakit.email') }}</a></li>
+                    @endif
+                    <li><i class="bi bi-clock"></i><span>{{ $jamLayanan ?: 'Pendaftaran antrian online tersedia' }}</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bn-footer-bottom">
+            <span>&copy; {{ now()->year }} {{ config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama') }}. Seluruh hak dilindungi.</span>
+            <span class="bn-footer-note"><i class="bi bi-shield-check"></i>Data pribadi dipakai hanya untuk keperluan pendaftaran dan pelayanan.</span>
+            <span class="bn-footer-links">
+                @auth
+                    <a href="{{ route('dashboard') }}">Dashboard</a>
+                @else
+                    <a href="{{ route('login') }}">Login staf</a>
+                @endauth
+                <a href="#top" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;"><i class="bi bi-arrow-up"></i> Ke atas</a>
+            </span>
+        </div>
+    </div>
 </footer>
 
 </body>

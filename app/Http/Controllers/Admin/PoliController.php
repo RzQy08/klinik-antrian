@@ -12,10 +12,8 @@ class PoliController extends Controller
 {
     public function index(): View
     {
-        // withCount: jumlah dokter dihitung dalam 1 query, bukan 1 query per poli
-        $polis = Poli::withCount('dokters')->orderBy('nama_poli')->get();
-
-        return view('admin.poli.index', compact('polis'));
+        // Daftar poli, pencarian, dan aksi cepat ditangani komponen Livewire Admin\PoliManager
+        return view('admin.poli.index');
     }
 
     public function create(): View

@@ -1,93 +1,131 @@
+@php
+    $warna = fn ($kode) => 'lp-c'.(ord(strtoupper(substr((string) $kode, 0, 1))) % 6);
+    $tanpa = fn (array $kunci) => request()->except(array_merge($kunci, ['page']));
+    $hariIni = now()->toDateString();
+    $rentang = ['Hari ini' => 0, '7 hari' => 6, '30 hari' => 29, '90 hari' => 90];
+    $adaFilter = $filter['poli_id'] || $filter['status'] || $filter['q'];
+    $poliTerpilih = $filter['poli_id'] ? $polis->firstWhere('id', $filter['poli_id']) : null;
+    $belum = ($ringkasan['menunggu'] ?? 0) + ($ringkasan['dipanggil'] ?? 0) + ($ringkasan['dilayani'] ?? 0);
+@endphp
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+        <div class="lp-head">
             <div>
-                <h1 class="h2 mb-1">Riwayat antrian</h1>
-                <p class="text-body-secondary mb-0">{{ $filter['dari']->locale('id')->translatedFormat('j M Y') }} sampai {{ $filter['sampai']->locale('id')->translatedFormat('j M Y') }}</p>
+                <h1 class="lp-title">Riwayat antrian</h1>
+                <p class="lp-sub">{{ $filter['dari']->locale('id')->translatedFormat('j M Y') }} sampai {{ $filter['sampai']->locale('id')->translatedFormat('j M Y') }}</p>
             </div>
-            <a href="{{ route('antrian.riwayat.csv', request()->query()) }}" class="btn btn-outline-primary"><i class="bi bi-download me-1"></i>Unduh CSV</a>
+            <a href="{{ route('antrian.riwayat.csv', request()->query()) }}" class="btn btn-primary"><i class="bi bi-download me-2" aria-hidden="true"></i>Unduh CSV</a>
         </div>
     </x-slot>
 
-    @include('partials.errors')
+    <div class="lp-page">
+        @include('partials.errors')
 
-    <form method="GET" action="{{ route('antrian.riwayat') }}" class="card mb-4">
-        <div class="card-body">
-            <div class="row g-3 align-items-end">
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label for="dari" class="form-label">Dari</label>
-                    <input type="date" id="dari" name="dari" value="{{ $filter['dari']->toDateString() }}" class="form-control">
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label for="sampai" class="form-label">Sampai</label>
-                    <input type="date" id="sampai" name="sampai" value="{{ $filter['sampai']->toDateString() }}" class="form-control">
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label for="poli_id" class="form-label">Poli</label>
-                    <select id="poli_id" name="poli_id" class="form-select">
-                        <option value="">Semua</option>
-                        @foreach ($polis as $poli)
-                            <option value="{{ $poli->id }}" @selected($filter['poli_id'] === $poli->id)>{{ $poli->nama_poli }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label for="status" class="form-label">Status</label>
-                    <select id="status" name="status" class="form-select">
-                        <option value="">Semua</option>
-                        @foreach ($daftarStatus as $status)
-                            <option value="{{ $status }}" @selected($filter['status'] === $status)>{{ ucfirst(str_replace('_', ' ', $status)) }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-12 col-lg-2">
-                    <label for="q" class="form-label">Cari</label>
-                    <input type="search" id="q" name="q" value="{{ $filter['q'] }}" maxlength="50" placeholder="Nama, nomor, NIK" class="form-control">
-                </div>
-                <div class="col-12 col-lg-2 d-grid">
-                    <button type="submit" class="btn btn-primary">Terapkan</button>
-                </div>
+        {{-- Pintasan rentang --}}
+        <div class="lp-quick">
+            <span class="lp-lab" id="lab-rentang">Rentang cepat</span>
+            <div class="lp-seg" role="group" aria-labelledby="lab-rentang">
+                @foreach ($rentang as $nama => $mundur)
+                    @php $aktif = $filter['sampai']->toDateString() === $hariIni && $filter['dari']->toDateString() === now()->subDays($mundur)->toDateString(); @endphp
+                    <a href="{{ route('antrian.riwayat', $tanpa(['dari', 'sampai']) + ['dari' => now()->subDays($mundur)->toDateString(), 'sampai' => $hariIni]) }}" class="{{ $aktif ? 'is-on' : '' }}" @if ($aktif) aria-current="true" @endif>{{ $nama }}</a>
+                @endforeach
             </div>
         </div>
-    </form>
 
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'list-ul', 'label' => 'Total antrian', 'nilai' => $total, 'warna' => 'primary'])</div>
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'check-circle', 'label' => 'Selesai', 'nilai' => $ringkasan['selesai'] ?? 0, 'warna' => 'success'])</div>
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'person-x', 'label' => 'Tidak hadir', 'nilai' => $ringkasan['tidak_hadir'] ?? 0, 'warna' => 'danger'])</div>
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'hourglass-split', 'label' => 'Belum selesai', 'nilai' => ($ringkasan['menunggu'] ?? 0) + ($ringkasan['dipanggil'] ?? 0) + ($ringkasan['dilayani'] ?? 0), 'warna' => 'warning'])</div>
-    </div>
+        {{-- Filter --}}
+        <form method="GET" action="{{ route('antrian.riwayat') }}" class="lp-filter">
+            <button class="btn btn-outline-secondary lp-filter-toggle d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#panelFilter" aria-expanded="false" aria-controls="panelFilter">
+                <span><i class="bi bi-funnel me-2" aria-hidden="true"></i>Filter dan pencarian</span><i class="bi bi-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="collapse d-md-block mt-3 mt-md-0" id="panelFilter">
+                <div class="row g-3 align-items-end">
+                    <div class="col-6 col-lg-2"><label for="dari" class="form-label">Dari</label><input type="date" id="dari" name="dari" value="{{ $filter['dari']->toDateString() }}" class="form-control"></div>
+                    <div class="col-6 col-lg-2"><label for="sampai" class="form-label">Sampai</label><input type="date" id="sampai" name="sampai" value="{{ $filter['sampai']->toDateString() }}" class="form-control"></div>
+                    <div class="col-6 col-lg-2">
+                        <label for="poli_id" class="form-label">Poli</label>
+                        <select id="poli_id" name="poli_id" class="form-select">
+                            <option value="">Semua</option>
+                            @foreach ($polis as $poli)
+                                <option value="{{ $poli->id }}" @selected($filter['poli_id'] === $poli->id)>{{ $poli->nama_poli }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <label for="status" class="form-label">Status</label>
+                        <select id="status" name="status" class="form-select">
+                            <option value="">Semua</option>
+                            @foreach ($daftarStatus as $status)
+                                <option value="{{ $status }}" @selected($filter['status'] === $status)>{{ ucfirst(str_replace('_', ' ', $status)) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-lg-2"><label for="q" class="form-label">Cari</label><input type="search" id="q" name="q" value="{{ $filter['q'] }}" maxlength="50" placeholder="Nama, nomor, NIK" class="form-control"></div>
+                    <div class="col-12 col-lg-2 d-grid"><button type="submit" class="btn btn-primary" style="min-height: 2.9rem">Terapkan</button></div>
+                </div>
+            </div>
+        </form>
 
-    <div class="card">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Tanggal</th><th>Nomor</th><th>Poli</th><th>Pasien</th><th>Dokter</th><th>Status</th>
-                        <th class="text-end">Tunggu</th><th class="text-end">Layanan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($data as $a)
-                        <tr>
-                            <td class="text-nowrap">{{ $a->tanggal->locale('id')->translatedFormat('j M Y') }}<div class="small text-body-secondary">{{ $a->waktu_daftar?->format('H:i') }}</div></td>
-                            <td class="fw-semibold">{{ $a->nomor_antrian }}@if ($a->limpahan)<span class="badge text-bg-warning ms-1">Limpahan</span>@endif</td>
-                            <td>{{ $a->poli?->nama_poli }}</td>
-                            <td>{{ $a->pasien?->nama }}<div class="small text-body-secondary">{{ \App\Http\Controllers\RiwayatController::samarkanNik($a->pasien?->nik) }}</div></td>
-                            <td>{{ $a->dokter?->nama ?? '-' }}</td>
-                            <td>@include('partials.status', ['status' => $a->status])</td>
-                            <td class="text-end text-nowrap">{{ $a->lama_tunggu_detik !== null ? round($a->lama_tunggu_detik / 60).' mnt' : '-' }}</td>
-                            <td class="text-end text-nowrap">{{ $a->lama_layanan_detik !== null ? round($a->lama_layanan_detik / 60).' mnt' : '-' }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="8" class="text-center text-body-secondary py-5">Tidak ada antrian pada filter ini.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+        @if ($adaFilter)
+            <ul class="lp-chips" aria-label="Filter aktif">
+                @if ($poliTerpilih)<li class="lp-chip">Poli: {{ $poliTerpilih->nama_poli }}<a href="{{ route('antrian.riwayat', $tanpa(['poli_id'])) }}" aria-label="Hapus filter poli"><i class="bi bi-x-lg" aria-hidden="true"></i></a></li>@endif
+                @if ($filter['status'])<li class="lp-chip">Status: {{ ucfirst(str_replace('_', ' ', $filter['status'])) }}<a href="{{ route('antrian.riwayat', $tanpa(['status'])) }}" aria-label="Hapus filter status"><i class="bi bi-x-lg" aria-hidden="true"></i></a></li>@endif
+                @if ($filter['q'])<li class="lp-chip">Cari: {{ $filter['q'] }}<a href="{{ route('antrian.riwayat', $tanpa(['q'])) }}" aria-label="Hapus pencarian"><i class="bi bi-x-lg" aria-hidden="true"></i></a></li>@endif
+            </ul>
+        @endif
+
+        {{-- Ringkasan --}}
+        <div class="lp-stats mb-3" aria-label="Ringkasan hasil">
+            <div class="lp-stat lp-c0"><span class="lp-stat-ico"><i class="bi bi-list-ul"></i></span><div><div class="lp-stat-n">{{ $total }}</div><div class="lp-stat-l">Total antrian</div></div></div>
+            <div class="lp-stat lp-c5"><span class="lp-stat-ico"><i class="bi bi-check-circle"></i></span><div><div class="lp-stat-n">{{ $ringkasan['selesai'] ?? 0 }}</div><div class="lp-stat-l">Selesai</div></div></div>
+            <div class="lp-stat lp-c2"><span class="lp-stat-ico"><i class="bi bi-person-x"></i></span><div><div class="lp-stat-n">{{ $ringkasan['tidak_hadir'] ?? 0 }}</div><div class="lp-stat-l">Tidak hadir</div></div></div>
+            <div class="lp-stat lp-c1"><span class="lp-stat-ico"><i class="bi bi-hourglass-split"></i></span><div><div class="lp-stat-n">{{ $belum }}</div><div class="lp-stat-l">Belum selesai</div></div></div>
         </div>
+
+        {{-- Tabel --}}
+        <div class="lp-tabel">
+            <div class="lp-scroll" tabindex="0" role="region" aria-label="Tabel riwayat antrian">
+                <table class="table table-stack lp-table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Tanggal</th><th scope="col">Nomor</th><th scope="col">Poli</th><th scope="col">Pasien</th>
+                            <th scope="col">Dokter</th><th scope="col">Status</th><th scope="col" class="text-end">Tunggu</th><th scope="col" class="text-end">Layanan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($data as $a)
+                            @php
+                                $tunggu = $a->lama_tunggu_detik !== null ? (int) round($a->lama_tunggu_detik / 60) : null;
+                                $layanan = $a->lama_layanan_detik !== null ? (int) round($a->lama_layanan_detik / 60) : null;
+                            @endphp
+                            <tr>
+                                <td data-label="Tanggal" class="text-nowrap">{{ $a->tanggal->translatedFormat('j M Y') }}<div class="small text-body-secondary">{{ $a->waktu_daftar?->format('H:i') }}</div></td>
+                                <td data-label="Nomor" class="text-nowrap"><span class="lp-no">{{ $a->nomor_antrian }}</span>@if ($a->limpahan)<span class="lp-lim">Limpahan</span>@endif</td>
+                                <td data-label="Poli"><span class="lp-poli {{ $warna($a->poli?->kode_poli) }}"><span class="lp-kode" aria-hidden="true">{{ $a->poli?->kode_poli }}</span>{{ $a->poli?->nama_poli }}</span></td>
+                                <td data-label="Pasien">{{ $a->pasien?->nama }}<div class="small text-body-secondary">{{ \App\Http\Controllers\RiwayatController::samarkanNik($a->pasien?->nik) }}</div></td>
+                                <td data-label="Dokter">{{ $a->dokter?->nama ?? '-' }}</td>
+                                <td data-label="Status">@include('partials.status', ['status' => $a->status])</td>
+                                <td data-label="Tunggu" class="text-end text-nowrap">@if ($tunggu !== null)<span class="lp-dur {{ $tunggu > 30 ? 'bad' : ($tunggu > 15 ? 'warn' : '') }}">{{ $tunggu }} mnt</span>@else - @endif</td>
+                                <td data-label="Layanan" class="text-end text-nowrap">@if ($layanan !== null)<span class="lp-dur">{{ $layanan }} mnt</span>@else - @endif</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="8" class="p-0">
+                                <div class="lp-kosong">
+                                    <i class="bi bi-search" aria-hidden="true"></i>
+                                    <strong>Tidak ada antrian pada filter ini</strong>
+                                    <span>Coba perlebar rentang tanggal atau hapus filter.</span>
+                                    @if ($adaFilter)<a href="{{ route('antrian.riwayat', request()->only(['dari', 'sampai'])) }}" class="btn btn-outline-primary btn-sm">Hapus semua filter</a>@endif
+                                </div>
+                            </td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="lp-pager">
+            <span class="small text-body-secondary">Halaman {{ $data->currentPage() }}, {{ $data->count() }} data ditampilkan. NIK disamarkan demi privasi pasien.</span>
+            {{ $data->links('pagination::simple-bootstrap-5') }}
+        </div>
+        <p class="small text-body-secondary mt-2" style="max-width: 44rem">Berkas CSV memakai pemisah titik koma dan bisa langsung dibuka di Excel.</p>
     </div>
-
-    <div class="mt-3">{{ $data->links('pagination::bootstrap-5') }}</div>
-
-    <p class="small text-body-secondary mt-3" style="max-width: 44rem">NIK ditampilkan sebagian demi privasi pasien. Berkas CSV memakai pemisah titik koma dan bisa langsung dibuka di Excel.</p>
 </x-app-layout>

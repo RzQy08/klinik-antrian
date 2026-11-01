@@ -1,75 +1,326 @@
 // =====================================================================
-// Beranda publik (kelas berawalan bn-)
+// Beranda publik dan footer (kelas berawalan bn-)
+// Setiap section adalah pita (band) selebar layar dengan pola sendiri:
+//   hero gelap -> statistik -> garis diagonal -> titik -> tanda tambah -> ajakan -> footer
 // =====================================================================
 
-// ---------- hero ----------
-.bn-hero {
-    position: relative; isolation: isolate; overflow: hidden;
-    padding: clamp(1.5rem, 4.5vw, 4rem);
-    border-radius: 1.75rem;
-    border: 1px solid rgba($primary, .16);
-    background: linear-gradient(135deg, #fff 0%, rgba($primary, .07) 100%);
-    box-shadow: 0 1px 2px rgba($dark, .04), 0 28px 56px -28px rgba($primary, .3);
+@keyframes bn-melayang { 0%, 100% { translate: 0 0; } 50% { translate: 0 -9px; } }
+@keyframes bn-denyut-hijau { 0% { box-shadow: 0 0 0 0 rgba($glow, .6); } 70% { box-shadow: 0 0 0 .55rem rgba($glow, 0); } 100% { box-shadow: 0 0 0 0 rgba($glow, 0); } }
+@keyframes bn-denyut-gelap { 0% { box-shadow: 0 0 0 0 rgba($success, .5); } 70% { box-shadow: 0 0 0 .5rem rgba($success, 0); } 100% { box-shadow: 0 0 0 0 rgba($success, 0); } }
+@keyframes bn-naik { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes bn-gulir-masuk { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes bn-gulir-keluar { from { transform: none; opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
 
-    // pola titik halus, memudar ke kiri
+// Hindari geser horizontal akibat elemen dekoratif
+body { overflow-x: clip; }
+
+// ---------- pita (band) ----------
+.bn-band { position: relative; padding: clamp(3.5rem, 7vw, 6rem) 0; border-top: 1px solid rgba($primary, .1); }
+
+// garis diagonal halus
+.bn-band-stripes {
+    padding-top: clamp(4rem, 8vw, 6.5rem);
+    background-color: #EAF4F6;
+    background-image:
+        repeating-linear-gradient(135deg, rgba($primary, .075) 0 2px, transparent 2px 16px),
+        linear-gradient(180deg, rgba(#fff, .7), transparent 22%);
+}
+// titik-titik
+.bn-band-dots {
+    background-color: #fff;
+    background-image: radial-gradient(rgba($primary, .2) 1.3px, transparent 1.4px);
+    background-size: 24px 24px;
+}
+// tanda tambah medis + sorot warna, supaya kartu putih terlihat menonjol
+.bn-band-plus {
+    background-color: #D9ECF0;
+    background-image:
+        radial-gradient(40rem 22rem at 8% 0%, rgba($glow, .35), transparent 70%),
+        radial-gradient(36rem 24rem at 100% 100%, rgba($primary, .22), transparent 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M32 24v16M24 32h16' stroke='%230B7A8F' stroke-opacity='.16' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.bn-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: clamp(1.5rem, 3vw, 2.25rem); }
+.bn-head-center { justify-content: center; text-align: center; }
+.bn-eyebrow { display: inline-flex; align-items: center; gap: .5rem; margin-bottom: .7rem; padding: .3rem .8rem; border-radius: 999px; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: $primary; background: rgba($primary, .1); }
+.bn-h2 { font-size: clamp(1.9rem, 3.8vw, 2.8rem); letter-spacing: -.03em; margin: 0; }
+.bn-sub { margin: .6rem 0 0; color: $body-secondary-color; max-width: 36rem; }
+
+// ---------- hero (selebar layar) ----------
+.bn-hero {
+    position: relative; isolation: isolate; overflow: hidden; color: $on-navy;
+    padding: clamp(2.5rem, 6vw, 5.5rem) 0 clamp(6rem, 11vw, 9rem);
+    background:
+        radial-gradient(52rem 32rem at 88% -8%, rgba($glow, .3), transparent 62%),
+        radial-gradient(40rem 30rem at -8% 108%, rgba($primary, .75), transparent 62%),
+        linear-gradient(160deg, #052B38 0%, $navy 52%, #0A5568 100%);
+
     &::before {
         content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-        background-image: radial-gradient(rgba($primary, .22) 1.2px, transparent 1.3px);
-        background-size: 22px 22px;
-        -webkit-mask-image: linear-gradient(100deg, transparent 30%, #000 100%);
-        mask-image: linear-gradient(100deg, transparent 30%, #000 100%);
+        background-image: linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
+        background-size: 48px 48px;
+        -webkit-mask-image: radial-gradient(ellipse at 72% 38%, #000 0%, transparent 72%);
+        mask-image: radial-gradient(ellipse at 72% 38%, #000 0%, transparent 72%);
     }
+    .row > * { animation: bn-naik .7s cubic-bezier(.2, .8, .2, 1) both; }
+    .row > *:nth-child(2) { animation-delay: .15s; }
 }
-.bn-hero-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.bn-blob { position: absolute; border-radius: 50%; filter: blur(70px); }
-.bn-blob-1 { width: 22rem; height: 22rem; top: -8rem; right: -4rem; background: rgba($glow, .45); }
-.bn-blob-2 { width: 18rem; height: 18rem; bottom: -9rem; left: 20%; background: rgba($primary, .22); }
 
 .bn-status {
-    display: inline-flex; align-items: center; gap: .55rem; margin-bottom: 1.25rem;
-    padding: .4rem .9rem; border-radius: 999px; font-size: .85rem; font-weight: 600;
-    &.bn-status-ok { background: rgba($success, .1); color: darken($success, 6%); }
-    &.bn-status-off { background: rgba($danger, .1); color: $danger; }
+    display: inline-flex; align-items: center; gap: .6rem; margin-bottom: 1.5rem;
+    padding: .45rem 1rem; border-radius: 999px; font-size: .85rem; font-weight: 600;
+    color: $glow; background: rgba($glow, .1); border: 1px solid rgba($glow, .3);
+    &.bn-status-off { color: #FFB4AE; background: rgba($danger, .16); border-color: rgba(#FFB4AE, .35); }
 }
-.bn-status-dot {
-    width: .55rem; height: .55rem; border-radius: 50%; background: currentColor;
-    animation: bn-denyut 2s infinite;
+.bn-status-dot { width: .55rem; height: .55rem; border-radius: 50%; background: currentColor; animation: bn-denyut-hijau 2s infinite; }
+
+.bn-title { color: #fff; font-size: clamp(2.3rem, 5.6vw, 4.3rem); line-height: 1.02; letter-spacing: -.035em; margin-bottom: 1.4rem; }
+.bn-title-accent { background: linear-gradient(90deg, $glow 0%, #BFF7EE 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.bn-lead { font-size: clamp(1.02rem, 1.6vw, 1.22rem); color: $on-navy-muted; max-width: 34rem; margin-bottom: 2rem; }
+
+.bn-btn-glow {
+    background: $glow; color: $navy; border: 0; font-weight: 700; box-shadow: 0 14px 30px -10px rgba($glow, .6); transition: transform .15s, box-shadow .15s;
+    &:hover { background: #A2F6E8; color: $navy; transform: translateY(-2px); box-shadow: 0 18px 34px -10px rgba($glow, .7); }
+}
+.bn-btn-ghost {
+    color: #fff; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .28);
+    &:hover { color: #fff; background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .5); }
 }
 
-.bn-title {
-    font-size: clamp(2.2rem, 5.2vw, 3.9rem); line-height: 1.05; letter-spacing: -.03em; margin-bottom: 1.25rem;
+.bn-facts {
+    display: flex; flex-wrap: wrap; column-gap: 1.6rem; row-gap: .5rem; color: $on-navy-muted; font-size: .92rem;
+    li { display: inline-flex; align-items: center; gap: .5rem; }
+    .bi { color: $glow; font-size: 1.05rem; }
 }
-.bn-title-accent {
-    background: linear-gradient(90deg, $primary 0%, #12B5A0 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.bn-lead { font-size: clamp(1.02rem, 1.6vw, 1.2rem); color: $body-secondary-color; max-width: 33rem; margin-bottom: 1.75rem; }
-.bn-cta { box-shadow: 0 10px 24px -8px rgba($primary, .55); }
 
-// ---------- tiket melayang ----------
-.bn-stage { position: relative; max-width: 21rem; margin: 0 auto; padding: 1.5rem 0; }
-.bn-ticket {
-    transform: rotate(2deg); box-shadow: 0 1.5rem 3rem rgba($dark, .2);
-    animation: bn-melayang 6s ease-in-out infinite;
+// ---------- papan kaca ----------
+.bn-stage { position: relative; max-width: 24rem; margin: 0 auto; padding: 1.75rem 0; }
+.bn-glass { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .2); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.bn-board {
+    padding: 1.4rem; border-radius: 1.6rem; transform: rotate(-1.5deg);
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .25);
+    animation: bn-melayang 7s ease-in-out infinite;
 }
+.bn-board-label { display: inline-flex; align-items: center; gap: .5rem; font-size: .78rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: $on-navy-muted; }
+.bn-live-dot { width: .6rem; height: .6rem; border-radius: 50%; background: $glow; animation: bn-denyut-hijau 2s infinite; }
+.bn-live-dot-dark { background: $success; animation-name: bn-denyut-gelap; }
+.bn-board-no { font-size: clamp(4.5rem, 9vw, 6.5rem); color: $glow; margin: .6rem 0 1.1rem; text-shadow: 0 0 50px rgba($glow, .4); }
+.bn-board-rows {
+    display: grid; gap: .5rem;
+    li { display: flex; align-items: center; gap: .8rem; padding: .55rem .8rem; border-radius: .9rem; background: rgba(255, 255, 255, .07); color: $on-navy; font-size: .95rem; }
+    li span:nth-child(2) { flex: 1; }
+    .kode { min-width: 2rem; height: 2rem; font-size: 1rem; border-radius: .55rem; }
+    b { color: #fff; font-size: 1.25rem; }
+}
+
 .bn-chip {
-    position: absolute; display: flex; align-items: center; gap: .7rem; padding: .6rem .95rem .6rem .6rem;
-    background: #fff; border: 1px solid $border-color; border-radius: 1rem; font-size: .9rem; white-space: nowrap;
-    box-shadow: 0 12px 28px rgba($dark, .16);
-    animation: bn-melayang 5s ease-in-out infinite;
+    position: absolute; display: flex; align-items: center; gap: .7rem; padding: .6rem 1rem .6rem .6rem;
+    background: #fff; color: $dark; border-radius: 1rem; font-size: .9rem; white-space: nowrap;
+    box-shadow: 0 18px 36px rgba(0, 0, 0, .3); animation: bn-melayang 5s ease-in-out infinite;
 }
-.bn-chip-1 { top: 0; right: -.75rem; animation-delay: -1.5s; }
-.bn-chip-2 { bottom: .25rem; left: -.75rem; animation-delay: -3s; }
-.bn-chip-icon { display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: .7rem; font-size: 1.05rem; }
-.bn-chip-icon-warn { background: rgba($warning, .22); color: #8A5A00; }
+.bn-chip-1 { top: 0; right: -.5rem; animation-delay: -1.5s; }
+.bn-chip-2 { bottom: .25rem; left: -.5rem; animation-delay: -3s; }
+.bn-chip-icon { display: inline-grid; place-items: center; width: 2.3rem; height: 2.3rem; border-radius: .7rem; font-size: 1.05rem; }
+.bn-chip-icon-warn { background: rgba($warning, .24); color: #8A5A00; }
 .bn-chip-icon-ok { background: rgba($success, .14); color: $success; }
 
 @include media-breakpoint-down(lg) {
-    .bn-ticket { transform: none; }
+    .bn-board { transform: none; }
     .bn-chip-1 { right: 0; }
     .bn-chip-2 { left: 0; }
 }
 
-@keyframes bn-melayang { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
-@keyframes bn-denyut { 0% { box-shadow: 0 0 0 0 rgba($success, .5); } 70% { box-shadow: 0 0 0 .5rem rgba($success, 0); } 100% { box-shadow: 0 0 0 0 rgba($success, 0); } }
-@media (prefers-reduced-motion: reduce) { .bn-ticket, .bn-chip, .bn-status-dot { animation: none; } }
+// ---------- statistik: menimpa tepi bawah hero ----------
+.bn-stats-wrap { position: relative; z-index: 2; margin-top: -3.25rem; }
+.bn-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+@include media-breakpoint-up(lg) { .bn-stats { grid-template-columns: repeat(4, 1fr); gap: 1rem; } }
+.bn-stat {
+    display: flex; align-items: center; gap: .9rem; padding: 1.1rem 1.2rem; background: #fff;
+    border: 1px solid $border-color; border-radius: 1.25rem; box-shadow: 0 22px 44px -22px rgba($navy, .5);
+    .numeral { font-size: clamp(1.7rem, 3vw, 2.3rem); color: $navy; }
+}
+.bn-stat-label { font-size: .82rem; color: $body-secondary-color; margin-top: .25rem; }
+.bn-stat-ico { display: inline-grid; place-items: center; flex-shrink: 0; width: 2.9rem; height: 2.9rem; border-radius: .9rem; font-size: 1.3rem; background: rgba($primary, .12); color: $primary; }
+.bn-stat-ico-ok { background: rgba($success, .12); color: $success; }
+.bn-stat-ico-navy { background: $navy; color: $glow; }
+.bn-stat-ico-warn { background: rgba($warning, .22); color: #8A5A00; }
+
+
+// ---------- kartu antrian langsung (komponen Livewire BerandaPoli) ----------
+// Jumlah kolom menyesuaikan lebar layar dan jumlah poli. Di ponsel kartu menjadi baris ringkas
+// (nomor di kanan), jadi empat poli hanya setinggi satu layar, bukan berlembar-lembar.
+.bn-poli-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15.5rem), 1fr)); gap: 1rem; }
+.bn-poli {
+    container-type: inline-size;
+    display: flex; flex-direction: column; gap: .9rem; padding: 1.25rem; background: #fff;
+    border: 1px solid $border-color; border-radius: 1.4rem; box-shadow: 0 14px 30px -22px rgba($navy, .45);
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    &:hover { transform: translateY(-4px); box-shadow: 0 24px 42px -24px rgba($navy, .55); border-color: rgba($primary, .4); }
+    &.is-aktif { border-color: rgba($primary, .55); box-shadow: 0 0 0 3px rgba($primary, .12), 0 14px 30px -22px rgba($navy, .45); }
+}
+.bn-poli-head { display: flex; align-items: center; gap: .8rem; min-width: 0; h3 { margin: 0; font-size: 1.05rem; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+.bn-roll { position: relative; height: clamp(3.4rem, 22cqw, 4.4rem); overflow: hidden; display: flex; align-items: center; }
+.bn-roll-in, .bn-roll-out { position: absolute; left: 0; font-family: $headings-font-family; font-weight: 800; font-size: clamp(2.6rem, 20cqw, 3.8rem); line-height: 1; letter-spacing: -.03em; color: $navy; font-variant-numeric: tabular-nums; }
+.bn-roll-in.is-kosong { color: #C3D2D7; }
+.bn-roll-in.is-masuk { animation: bn-gulir-masuk .5s cubic-bezier(.2, .8, .2, 1) both; }
+.bn-roll-out { animation: bn-gulir-keluar .5s cubic-bezier(.2, .8, .2, 1) both; color: #9FB3BA; }
+.bn-poli-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; min-height: 1.9rem; }
+.bn-pill { display: inline-flex; padding: .3rem .75rem; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+.bn-pill-panggil { background: rgba($warning, .22); color: #8A5A00; }
+.bn-pill-layani { background: rgba($info, .14); color: $info; }
+.bn-dokter { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; color: $body-secondary-color; i { color: $primary; } }
+.bn-poli-foot { margin-top: auto; padding-top: 1rem; border-top: 1px dashed $border-color; }
+
+// ponsel: kartu poli jadi baris ringkas
+@include media-breakpoint-down(sm) {
+    .bn-poli {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head roll" "meta roll" "foot foot";
+        column-gap: 1rem; row-gap: .45rem; padding: .95rem 1.05rem; border-radius: 1.15rem;
+        &:hover { transform: none; }
+    }
+    .bn-poli-head { grid-area: head; }
+    .bn-poli-head .kode { min-width: 2.25rem; height: 2.25rem; font-size: 1.15rem; border-radius: .65rem; }
+    .bn-poli-head h3 { font-size: 1rem; }
+    .bn-poli-meta { grid-area: meta; min-height: 0; align-self: start; }
+    .bn-roll { grid-area: roll; width: 5.6rem; height: 3.2rem; justify-content: flex-end; }
+    .bn-roll-in, .bn-roll-out { left: auto; right: 0; font-size: 2.5rem; }
+    .bn-poli-foot { grid-area: foot; padding-top: .55rem; > .d-flex { margin-bottom: .4rem !important; } .bar { height: .4rem; } }
+}
+.bn-link { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; font-weight: 600; i { transition: transform .15s; } &:hover i { transform: translateX(3px); } }
+.bn-kosong { grid-column: 1 / -1; padding: 2rem; text-align: center; color: $body-secondary-color; background: #fff; border: 1px dashed $border-color; border-radius: 1.4rem; }
+@media (prefers-reduced-motion: reduce) { .bn-roll-in.is-masuk, .bn-roll-out { animation: none; } .bn-roll-out { display: none; } }
+
+// ---------- menu staf ----------
+.bn-menu {
+    position: relative; display: flex; align-items: center; gap: 1rem; padding: 1.1rem 1.2rem; color: inherit; background: #fff;
+    border: 1px solid $border-color; border-radius: 1.2rem; box-shadow: 0 10px 24px -20px rgba($navy, .5); transition: transform .2s, border-color .2s, box-shadow .2s;
+    &:hover { color: inherit; text-decoration: none; transform: translateY(-3px); border-color: rgba($primary, .5); box-shadow: 0 20px 36px -22px rgba($navy, .55); }
+}
+.bn-menu-ico { display: inline-grid; place-items: center; flex-shrink: 0; width: 2.8rem; height: 2.8rem; border-radius: .9rem; background: rgba($primary, .12); color: $primary; font-size: 1.3rem; }
+.bn-menu-go { margin-left: auto; color: $body-secondary-color; transition: transform .2s, color .2s; }
+.bn-menu:hover .bn-menu-go { color: $primary; transform: translate(2px, -2px); }
+
+// ---------- bento (tanpa lubang, area bernama) ----------
+.bn-bento {
+    display: grid; gap: 1rem; grid-template-columns: 1fr;
+    grid-template-areas: "a" "b" "c" "wa" "n" "tv";
+}
+@include media-breakpoint-up(md) {
+    .bn-bento { grid-template-columns: repeat(2, 1fr); grid-template-areas: "a a" "b c" "wa n" "tv tv"; }
+}
+@include media-breakpoint-up(lg) {
+    .bn-bento {
+        grid-template-columns: repeat(12, 1fr); grid-auto-rows: minmax(13.5rem, auto); gap: 1.25rem;
+        grid-template-areas:
+            "a a a a a a b b b c c c"
+            "wa wa wa n n n tv tv tv tv tv tv";
+    }
+}
+.bn-tile-a { grid-area: a; }
+.bn-tile-b { grid-area: b; }
+.bn-tile-c { grid-area: c; }
+.bn-tile-wa { grid-area: wa; }
+.bn-tile-navy { grid-area: n; }
+.bn-tile-tv { grid-area: tv; }
+
+.bn-tile {
+    position: relative; overflow: hidden; display: flex; flex-direction: column; padding: clamp(1.4rem, 2.4vw, 2rem);
+    background: #fff; border: 1px solid rgba($primary, .14); border-radius: 1.75rem;
+    box-shadow: 0 1px 2px rgba($navy, .06), 0 24px 40px -26px rgba($navy, .55);
+    transition: transform .25s, box-shadow .25s;
+    &:hover { transform: translateY(-5px); box-shadow: 0 1px 2px rgba($navy, .06), 0 34px 50px -26px rgba($navy, .65); }
+    h3 { font-size: 1.3rem; letter-spacing: -.02em; margin: 0 0 .5rem; }
+    p { color: $body-secondary-color; margin: 0; max-width: 30rem; }
+}
+.bn-step { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; margin-bottom: 1.1rem; border-radius: 50%; background: $navy; color: $glow; font-family: $headings-font-family; font-weight: 800; box-shadow: 0 8px 18px -6px rgba($navy, .6); }
+.bn-tile-icon { font-size: 2.1rem; margin-bottom: 1rem; }
+
+.bn-tile-a { background: linear-gradient(165deg, #fff 35%, #E6F4F7); }
+.bn-mini-form { margin-top: auto; padding-top: 1.5rem; display: flex; flex-wrap: wrap; gap: .5rem; }
+.bn-mini-chip { padding: .45rem .9rem; border-radius: .8rem; border: 1px solid $input-border-color; background: #fff; font-size: .85rem; font-weight: 600; color: $body-secondary-color; &.is-on { border-color: $primary; background: rgba($primary, .08); color: $primary; box-shadow: 0 0 0 1px $primary; } }
+.bn-mini-input { flex: 1 1 100%; padding: .8rem 1rem; border-radius: .8rem; border: 1px solid $input-border-color; background: #fff; font-size: .9rem; letter-spacing: .06em; color: $body-secondary-color; }
+
+.bn-queue {
+    margin-top: auto; padding-top: 1.25rem; display: flex; align-items: center; gap: .45rem;
+    span { width: 1.9rem; height: 1.9rem; border-radius: 50%; background: #D5E4E9; }
+    .is-me { width: auto; height: 1.9rem; padding: 0 .85rem; border-radius: 999px; background: $primary; color: #fff; font-size: .8rem; font-weight: 700; display: inline-grid; place-items: center; }
+}
+
+.bn-tile-wa { background: linear-gradient(150deg, #1FA765, #0E7A47); border-color: transparent; h3, .bn-tile-icon { color: #fff; } p { color: rgba(#fff, .88); } }
+.bn-tile-tv { background: linear-gradient(120deg, #fff 40%, #E6F4F7); .bn-tile-icon { color: $primary; } }
+.bn-tile-navy {
+    background: radial-gradient(18rem 14rem at 100% 0, rgba($glow, .28), transparent 70%), $navy; border-color: transparent; color: $on-navy;
+    p { color: $on-navy-muted; margin-top: auto; padding-top: 1.2rem; }
+}
+.bn-tile-kicker { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: $on-navy-muted; }
+.bn-tile-big { margin-top: 1rem; font-size: clamp(2.8rem, 5vw, 3.8rem); color: $glow; small { font-size: 1rem; font-weight: 600; color: $on-navy-muted; letter-spacing: 0; } }
+
+// muncul halus saat digulir (browser yang mendukung)
+@supports (animation-timeline: view()) {
+    .bn-tile, .bn-poli, .bn-menu {
+        animation: bn-naik linear both; animation-timeline: view(); animation-range: entry 0% entry 40%;
+    }
+}
+
+// ---------- ajakan (selebar layar) ----------
+.bn-cta-band {
+    padding: clamp(3rem, 6vw, 5rem) 0; color: #fff; position: relative; overflow: hidden; isolation: isolate;
+    background: radial-gradient(34rem 18rem at 100% 0, rgba($glow, .4), transparent 70%), linear-gradient(135deg, $primary, #095E6F);
+    &::before {
+        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 21v14M21 28h14' stroke='white' stroke-opacity='.1' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+}
+.bn-cta {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem;
+    h2 { color: #fff; font-size: clamp(1.7rem, 3.4vw, 2.5rem); letter-spacing: -.03em; margin: 0 0 .4rem; }
+    p { margin: 0; color: rgba(#fff, .88); font-size: 1.05rem; }
+}
+
+// ---------- footer ----------
+.bn-footer { color: $on-navy-muted; background: radial-gradient(40rem 20rem at 0 0, rgba($primary, .35), transparent 70%), #052B38; }
+.bn-footer a { color: $on-navy-muted; transition: color .15s; &:hover { color: $glow; text-decoration: none; } }
+.bn-footer-top { display: grid; gap: 2.5rem; padding: clamp(2.5rem, 5vw, 4rem) 0; grid-template-columns: 1fr; }
+@include media-breakpoint-up(md) { .bn-footer-top { grid-template-columns: 1fr 1fr; } }
+@include media-breakpoint-up(lg) { .bn-footer-top { grid-template-columns: 1.5fr 1fr .9fr 1.4fr; } }
+.bn-footer-brand p { max-width: 22rem; margin: 1rem 0 0; font-size: .92rem; }
+.bn-footer h4 { margin: 0 0 1rem; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff; font-family: $font-family-sans-serif; }
+.bn-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .65rem; font-size: .93rem; }
+.bn-contact li { display: flex; align-items: flex-start; gap: .75rem; }
+.bn-contact li i { flex-shrink: 0; margin-top: .15rem; color: $glow; }
+.bn-contact-link { display: inline-block; margin-left: .35rem; font-weight: 600; color: $glow !important; }
+.bn-social { display: flex; gap: .6rem; margin-top: 1.25rem; a { display: inline-grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .14); color: #fff; &:hover { background: $glow; color: $navy; border-color: $glow; } } }
+.bn-footer-note { display: inline-flex; align-items: center; gap: .45rem; i { color: $glow; } }
+.bn-footer-links { display: inline-flex; align-items: center; gap: 1.25rem; }
+.bn-footer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; padding: 1.25rem 0 1.5rem; border-top: 1px solid rgba(255, 255, 255, .12); font-size: .85rem; }
+
+// ---------- widget akses cepat pengembangan (melayang, tidak mengubah tata letak) ----------
+.bn-dev {
+    position: fixed; left: 1rem; bottom: 1rem; z-index: 1080; font-size: .875rem;
+    summary {
+        display: inline-flex; align-items: center; gap: .4rem; padding: .5rem .85rem; list-style: none; cursor: pointer;
+        color: #fff; font-weight: 700; border-radius: 999px; background: rgba($navy, .92);
+        border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 10px 24px -8px rgba(0, 0, 0, .5);
+        -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); user-select: none;
+        &::-webkit-details-marker { display: none; }
+        i { color: $warning; }
+        &:hover { background: $navy; }
+    }
+    &[open] summary { background: $primary; i { color: #fff; } }
+}
+.bn-dev-panel {
+    position: absolute; left: 0; bottom: calc(100% + .6rem); width: 15rem; display: grid; gap: .4rem; padding: .8rem;
+    background: #fff; border: 1px solid $border-color; border-radius: 1rem; box-shadow: 0 24px 48px -16px rgba($navy, .45);
+    form { margin: 0; }
+    button {
+        display: flex; align-items: center; gap: .6rem; width: 100%; padding: .55rem .7rem; text-align: left; font-weight: 600;
+        color: $dark; background: $light; border: 0; border-radius: .7rem; transition: background .15s, color .15s;
+        i { color: $primary; }
+        &:hover { background: rgba($primary, .12); color: $primary; }
+    }
+}
+.bn-dev-title { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: $body-secondary-color; }
+.bn-dev-now { font-size: .78rem; color: $body-secondary-color; padding-bottom: .2rem; }
+
+// ---------- jarak tepi: semua konten di layout publik tidak menempel ke pinggir layar ----------
+.bn-pub .container-xxl { padding-left: clamp(1.25rem, 5vw, 3.5rem); padding-right: clamp(1.25rem, 5vw, 3.5rem); }

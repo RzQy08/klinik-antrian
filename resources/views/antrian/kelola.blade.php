@@ -1,152 +1,236 @@
+@php
+    $warna = 'pt-c'.(ord(strtoupper(substr((string) $poli->kode_poli, 0, 1))) % 6);
+    $berikutnya = $daftarMenunggu->first();
+    $setelahnya = $daftarMenunggu->slice(1, 3)->pluck('nomor_antrian');
+@endphp
 <x-app-layout>
     <x-slot name="header">
-        <a href="{{ route('antrian.index') }}" class="small"><i class="bi bi-arrow-left me-1"></i>Kembali ke daftar poli</a>
-        <div class="d-flex align-items-center gap-3 mt-3">
-            <span class="kode kode-lg">{{ $poli->kode_poli }}</span>
+        <a href="{{ route('antrian.index') }}" class="pt-back"><i class="bi bi-arrow-left" aria-hidden="true"></i>Semua poli</a>
+        <div class="pt-kelola-head {{ $warna }}">
+            <span class="pt-kode pt-kode-lg" aria-hidden="true">{{ $poli->kode_poli }}</span>
             <div>
-                <h1 class="h2 mb-1">{{ $poli->nama_poli }}</h1>
-                <p class="text-body-secondary mb-0">Panggil pasien, panggil ulang yang belum datang, dan selesaikan pelayanan.</p>
+                <h1 class="pt-title mb-1">{{ $poli->nama_poli }}</h1>
+                <p class="pt-sub">Panggil pasien, panggil ulang yang belum datang, lalu selesaikan pelayanan.</p>
             </div>
         </div>
     </x-slot>
 
-    @include('partials.flash')
+    <div class="pt-page {{ $warna }}">
+        @include('partials.flash')
 
-    <livewire:pemberitahu-antrian-baru :poli-id="$poli->id" />
+        <livewire:pemberitahu-antrian-baru :poli-id="$poli->id" />
 
-    @unless ($layananBerjalan)
-        <div class="alert alert-danger" role="alert"><i class="bi bi-clock-history me-1"></i> {{ \App\Services\JamOperasional::pesanLayananSelesai() }}</div>
-    @endunless
+        @unless ($layananBerjalan)
+            <div class="alert alert-danger d-flex gap-2" role="alert"><i class="bi bi-clock-history mt-1" aria-hidden="true"></i><div>{{ \App\Services\JamOperasional::pesanLayananSelesai() }}</div></div>
+        @endunless
 
-    @php $berikutnya = $daftarMenunggu->first(); @endphp
+        <section aria-label="Ringkasan poli" class="mb-4">
+            <div class="pt-stats">
+                <div class="pt-stat pt-c0"><span class="pt-stat-ico"><i class="bi bi-people"></i></span><div><div class="pt-stat-n">{{ $daftarMenunggu->count() }}</div><div class="pt-stat-l">Menunggu</div></div></div>
+                <div class="pt-stat pt-c1"><span class="pt-stat-ico"><i class="bi bi-megaphone"></i></span><div><div class="pt-stat-n">{{ $sedangDilayani->count() }}</div><div class="pt-stat-l">Sedang ditangani</div></div></div>
+                <div class="pt-stat pt-c2"><span class="pt-stat-ico"><i class="bi bi-person-x"></i></span><div><div class="pt-stat-n">{{ $tidakHadir->count() }}</div><div class="pt-stat-l">Tidak hadir</div></div></div>
+                <div class="pt-stat pt-c5"><span class="pt-stat-ico"><i class="bi bi-person-badge"></i></span><div><div class="pt-stat-n">{{ $dokters->count() }}</div><div class="pt-stat-l">Dokter bertugas</div></div></div>
+            </div>
+        </section>
 
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'people', 'label' => 'Menunggu', 'nilai' => $daftarMenunggu->count(), 'warna' => 'primary'])</div>
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'megaphone', 'label' => 'Sedang ditangani', 'nilai' => $sedangDilayani->count(), 'warna' => 'warning'])</div>
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'person-x', 'label' => 'Tidak hadir', 'nilai' => $tidakHadir->count(), 'warna' => 'danger'])</div>
-        <div class="col-6 col-lg-3">@include('partials.stat', ['ikon' => 'person-badge', 'label' => 'Dokter bertugas', 'nilai' => $dokters->count(), 'warna' => 'success'])</div>
-    </div>
+        {{-- Navigasi lompat untuk layar kecil --}}
+        <nav class="pt-jump d-lg-none" aria-label="Loncat ke bagian">
+            <a href="#bagian-ditangani">Ditangani <span class="n">{{ $sedangDilayani->count() }}</span></a>
+            <a href="#bagian-menunggu">Menunggu <span class="n">{{ $daftarMenunggu->count() }}</span></a>
+            <a href="#bagian-tidak-hadir">Tidak hadir <span class="n">{{ $tidakHadir->count() }}</span></a>
+        </nav>
 
-    <div class="row g-4">
+        <div class="row g-4">
 
-        {{-- Aksi utama petugas ditaruh paling atas di layar kecil --}}
-        <div class="col-lg-4 order-first order-lg-last">
-            <div class="card sticky-lg-top" style="top: 5.5rem">
-                <div class="card-header"><h2 class="card-title-sm">Panggil berikutnya</h2></div>
-                <div class="card-body">
-                    @if (! $berikutnya)
-                        <p class="text-body-secondary mb-0">Belum ada pasien yang menunggu.</p>
-                    @elseif ($dokters->isEmpty())
-                        <p class="mb-0">Belum ada dokter aktif di poli ini. Tambahkan atau aktifkan dokter lewat menu Dokter.</p>
-                    @else
-                        <div class="board board-pattern p-4 mb-3">
-                            <div class="small board-muted">
-                                Nomor berikutnya
+            {{-- Konsol panggil --}}
+            <div class="col-lg-4 order-first">
+                <div class="pt-console-wrap">
+                    <section class="pt-console" aria-labelledby="judul-panggil">
+                        <h2 class="pt-console-label" id="judul-panggil">
+                            <i class="bi bi-megaphone-fill" aria-hidden="true"></i>Nomor berikutnya
+                            @if ($berikutnya && $berikutnya->limpahan)
+                                <span class="pt-lim">Limpahan {{ $berikutnya->nomor_lama }}</span>
+                            @endif
+                        </h2>
+
+                        @if (! $berikutnya)
+                            <p class="pt-console-empty"><i class="bi bi-emoji-smile" aria-hidden="true"></i><span>Belum ada pasien yang menunggu. Halaman ini memberi tahu saat ada yang mendaftar.</span></p>
+                        @elseif ($dokters->isEmpty())
+                            <div class="pt-console-no" aria-label="Nomor {{ $berikutnya->nomor_antrian }}">{{ $berikutnya->nomor_antrian }}</div>
+                            <p class="pt-console-empty"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>Belum ada dokter aktif di poli ini. Minta admin mengaktifkan dokter lewat menu Dokter.</span></p>
+                        @else
+                            <div class="pt-console-no">{{ $berikutnya->nomor_antrian }}</div>
+                            <div class="pt-console-name">{{ $berikutnya->pasien->nama }}</div>
+                            <div class="pt-console-meta">
                                 @if ($berikutnya->limpahan)
-                                    <span class="badge text-bg-warning ms-1">Limpahan {{ $berikutnya->nomor_lama }}</span>
+                                    Dari {{ $berikutnya->tanggal_asal->locale('id')->translatedFormat('j M') }}
+                                @else
+                                    <span class="pt-since" data-since="{{ $berikutnya->waktu_daftar->toIso8601String() }}" data-awalan="Menunggu " data-akhiran="">Menunggu {{ $berikutnya->waktu_daftar->locale('id')->diffForHumans(null, true) }}</span>
                                 @endif
                             </div>
-                            <div class="numeral mt-1" style="font-size: 4.5rem">{{ $berikutnya->nomor_antrian }}</div>
-                            <div class="small board-muted mt-2">{{ $berikutnya->pasien->nama }}</div>
-                        </div>
 
-                        <form method="POST" action="{{ route('antrian.panggil', $poli) }}" class="d-grid gap-3">
-                            @csrf
-                            <div>
-                                <label for="dokter_id" class="form-label">Dokter yang bertugas</label>
-                                <select name="dokter_id" id="dokter_id" required class="form-select">
-                                    @foreach ($dokters as $dokter)
-                                        <option value="{{ $dokter->id }}">{{ $dokter->nama }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-warning btn-lg" @disabled(! $layananBerjalan)><i class="bi bi-megaphone-fill me-2"></i>Panggil {{ $berikutnya->nomor_antrian }}</button>
-                        </form>
-                    @endif
+                            <form method="POST" action="{{ route('antrian.panggil', $poli) }}" class="d-grid gap-3 mt-4 pt-guard">
+                                @csrf
+                                <div>
+                                    <label for="dokter_id" class="form-label">Dokter yang bertugas</label>
+                                    <select name="dokter_id" id="dokter_id" required class="form-select" data-poli="{{ $poli->id }}">
+                                        @foreach ($dokters as $dokter)
+                                            <option value="{{ $dokter->id }}">{{ $dokter->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-warning pt-call" @disabled(! $layananBerjalan)>
+                                    <i class="bi bi-megaphone-fill me-2" aria-hidden="true"></i>Panggil {{ $berikutnya->nomor_antrian }}
+                                </button>
+                            </form>
+
+                            @if ($setelahnya->isNotEmpty())
+                                <div class="pt-after">Setelah ini: <b>{{ $setelahnya->implode(', ') }}</b>@if ($daftarMenunggu->count() > 4) dan {{ $daftarMenunggu->count() - 4 }} lagi @endif</div>
+                            @endif
+                        @endif
+                    </section>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-8 d-grid gap-4 align-content-start">
+            {{-- Daftar --}}
+            <div class="col-lg-8 d-grid gap-4 align-content-start">
 
-            <div class="card">
-                <div class="card-header"><h2 class="card-title-sm">Sedang ditangani</h2></div>
-                @if ($sedangDilayani->isEmpty())
-                    <div class="card-body text-body-secondary">Belum ada pasien yang dipanggil.</div>
-                @else
-                    <ul class="list-group list-group-flush">
-                        @foreach ($sedangDilayani as $antrian)
-                            <li class="list-group-item p-3 p-md-4">
-                                <div class="d-flex flex-wrap align-items-center gap-3">
-                                    <span class="numeral fs-2 text-navy" style="min-width: 5.5rem">{{ $antrian->nomor_antrian }}</span>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-medium">{{ $antrian->pasien->nama }}</div>
-                                        <div class="small text-body-secondary">{{ $antrian->dokter?->nama ?? '-' }}@if ($antrian->jumlah_panggil > 1), panggilan ke-{{ $antrian->jumlah_panggil }}@endif</div>
+                <section class="pt-sec" id="bagian-ditangani" aria-labelledby="h-ditangani">
+                    <div class="pt-sec-head"><h2 id="h-ditangani">Sedang ditangani</h2><span class="pt-sec-n">{{ $sedangDilayani->count() }}</span></div>
+                    @if ($sedangDilayani->isEmpty())
+                        <div class="pt-empty"><i class="bi bi-person-check" aria-hidden="true"></i><div>Belum ada pasien yang dipanggil. Tekan tombol panggil untuk memulai.</div></div>
+                    @else
+                        <ul class="pt-list">
+                            @foreach ($sedangDilayani as $antrian)
+                                <li class="pt-case is-{{ $antrian->status }}">
+                                    <div class="pt-case-main">
+                                        <span class="pt-no">{{ $antrian->nomor_antrian }}</span>
+                                        <div class="pt-case-body">
+                                            <div class="pt-case-name">{{ $antrian->pasien->nama }}</div>
+                                            <div class="pt-case-meta">
+                                                <span><i class="bi bi-person-badge" aria-hidden="true"></i>{{ $antrian->dokter?->nama ?? '-' }}</span>
+                                                @if ($antrian->jumlah_panggil > 1)<span><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Panggilan ke-{{ $antrian->jumlah_panggil }}</span>@endif
+                                                @if ($antrian->status === 'dipanggil' && $antrian->waktu_dipanggil)
+                                                    <span class="pt-since" data-since="{{ $antrian->waktu_dipanggil->toIso8601String() }}" data-awalan="Dipanggil " data-akhiran=" lalu"><i class="bi bi-clock" aria-hidden="true"></i>Dipanggil {{ $antrian->waktu_dipanggil->format('H.i') }}</span>
+                                                @elseif ($antrian->waktu_mulai_dilayani)
+                                                    <span class="pt-since" data-since="{{ $antrian->waktu_mulai_dilayani->toIso8601String() }}" data-awalan="Dilayani " data-akhiran=""><i class="bi bi-clock" aria-hidden="true"></i>Mulai {{ $antrian->waktu_mulai_dilayani->format('H.i') }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @include('partials.status', ['status' => $antrian->status])
                                     </div>
-                                    @include('partials.status', ['status' => $antrian->status])
-                                </div>
-                                <div class="d-flex flex-wrap gap-2 mt-3">
-                                    @if ($antrian->status === 'dipanggil')
-                                        <form method="POST" action="{{ route('antrian.mulai-layani', $antrian) }}">@csrf<button type="submit" class="btn btn-primary btn-sm">Mulai layani</button></form>
-                                        <form method="POST" action="{{ route('antrian.panggil-ulang', $antrian) }}">@csrf<button type="submit" class="btn btn-outline-secondary btn-sm" @disabled(! $layananBerjalan)><i class="bi bi-arrow-repeat me-1"></i>Panggil ulang</button></form>
-                                        <form method="POST" action="{{ route('antrian.tidak-hadir', $antrian) }}">@csrf<button type="submit" class="btn btn-outline-danger btn-sm">Tidak hadir</button></form>
-                                    @elseif ($antrian->status === 'dilayani')
-                                        <form method="POST" action="{{ route('antrian.selesai', $antrian) }}">@csrf<button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-lg me-1"></i>Selesai</button></form>
-                                    @endif
-                                </div>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
 
-            <div class="card">
-                <div class="card-header"><h2 class="card-title-sm">Tidak hadir ({{ $tidakHadir->count() }})</h2></div>
-                @if ($tidakHadir->isEmpty())
-                    <div class="card-body text-body-secondary small">Tidak ada pasien yang terlewat. Pasien yang tidak hadir saat dipanggil muncul di sini dan bisa dipanggil ulang selama jam layanan.</div>
-                @else
-                    <ul class="list-group list-group-flush">
-                        @foreach ($tidakHadir as $antrian)
-                            <li class="list-group-item d-flex flex-wrap align-items-center gap-3 px-3 px-md-4 py-3">
-                                <span class="numeral fs-3 text-body-secondary" style="min-width: 5.5rem">{{ $antrian->nomor_antrian }}</span>
-                                <div class="flex-grow-1">
-                                    <div class="fw-medium">{{ $antrian->pasien->nama }}</div>
-                                    <div class="small text-body-secondary">Dipanggil {{ $antrian->jumlah_panggil }} kali, terakhir pukul {{ $antrian->waktu_dipanggil?->format('H.i') }}</div>
-                                </div>
-                                <form method="POST" action="{{ route('antrian.panggil-ulang', $antrian) }}">@csrf<button type="submit" class="btn btn-outline-secondary btn-sm" @disabled(! $layananBerjalan)><i class="bi bi-arrow-repeat me-1"></i>Panggil ulang</button></form>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
+                                    <div class="pt-acts">
+                                        @if ($antrian->status === 'dipanggil')
+                                            <form method="POST" action="{{ route('antrian.mulai-layani', $antrian) }}" class="pt-guard">@csrf<button type="submit" class="btn btn-primary"><i class="bi bi-play-fill me-1" aria-hidden="true"></i>Mulai layani<span class="visually-hidden"> {{ $antrian->nomor_antrian }}</span></button></form>
+                                            <form method="POST" action="{{ route('antrian.panggil-ulang', $antrian) }}" class="pt-guard">@csrf<button type="submit" class="btn btn-outline-secondary" @disabled(! $layananBerjalan)><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Panggil ulang<span class="visually-hidden"> {{ $antrian->nomor_antrian }}</span></button></form>
+                                            <form method="POST" action="{{ route('antrian.tidak-hadir', $antrian) }}" class="pt-guard">@csrf<button type="submit" class="btn btn-outline-danger"><i class="bi bi-person-x me-1" aria-hidden="true"></i>Tidak hadir<span class="visually-hidden"> {{ $antrian->nomor_antrian }}</span></button></form>
+                                        @elseif ($antrian->status === 'dilayani')
+                                            <form method="POST" action="{{ route('antrian.selesai', $antrian) }}" class="pt-guard">@csrf<button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Selesai<span class="visually-hidden"> {{ $antrian->nomor_antrian }}</span></button></form>
+                                        @endif
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </section>
 
-            <div class="card">
-                <div class="card-header"><h2 class="card-title-sm">Menunggu ({{ $daftarMenunggu->count() }})</h2></div>
-                @if ($daftarMenunggu->isEmpty())
-                    <div class="card-body text-body-secondary">Tidak ada pasien yang menunggu.</div>
-                @else
-                    <ol class="list-group list-group-flush">
-                        @foreach ($daftarMenunggu as $antrian)
-                            <li class="list-group-item d-flex flex-wrap align-items-center gap-3 px-3 px-md-4 py-3">
-                                <span class="numeral fs-3 text-body-secondary" style="min-width: 5.5rem">{{ $antrian->nomor_antrian }}</span>
-                                <span class="flex-grow-1">
-                                    {{ $antrian->pasien->nama }}
-                                    @if ($antrian->limpahan)
-                                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis ms-1">Limpahan {{ $antrian->nomor_lama }}</span>
-                                    @endif
-                                </span>
-                                <span class="small text-body-secondary">
-                                    @if ($antrian->limpahan)
-                                        dari {{ $antrian->tanggal_asal->locale('id')->translatedFormat('j M') }}
-                                    @else
-                                        menunggu {{ $antrian->waktu_daftar->locale('id')->diffForHumans(null, true) }}
-                                    @endif
-                                </span>
-                            </li>
-                        @endforeach
-                    </ol>
-                @endif
+                <section class="pt-sec" id="bagian-menunggu" aria-labelledby="h-menunggu">
+                    <div class="pt-sec-head"><h2 id="h-menunggu">Menunggu</h2><span class="pt-sec-n">{{ $daftarMenunggu->count() }}</span></div>
+                    @if ($daftarMenunggu->isEmpty())
+                        <div class="pt-empty"><i class="bi bi-inbox" aria-hidden="true"></i><div>Tidak ada pasien yang menunggu.</div></div>
+                    @else
+                        <ol class="pt-list">
+                            @foreach ($daftarMenunggu as $antrian)
+                                <li class="pt-case {{ $loop->first ? 'is-next' : '' }}">
+                                    <div class="pt-case-main">
+                                        <span class="pt-pos" aria-label="Urutan {{ $loop->iteration }}">{{ $loop->iteration }}</span>
+                                        <span class="pt-no">{{ $antrian->nomor_antrian }}</span>
+                                        <div class="pt-case-body">
+                                            <div class="pt-case-name">{{ $antrian->pasien->nama }}</div>
+                                            <div class="pt-case-meta">
+                                                @if ($antrian->limpahan)
+                                                    <span><span class="pt-lim">Limpahan {{ $antrian->nomor_lama }}</span> dari {{ $antrian->tanggal_asal->locale('id')->translatedFormat('j M') }}</span>
+                                                @else
+                                                    <span class="pt-since" data-since="{{ $antrian->waktu_daftar->toIso8601String() }}" data-awalan="Menunggu " data-akhiran=""><i class="bi bi-hourglass-split" aria-hidden="true"></i>Menunggu {{ $antrian->waktu_daftar->locale('id')->diffForHumans(null, true) }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @if ($loop->first)<span class="pt-next-tag">Berikutnya</span>@endif
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ol>
+                    @endif
+                </section>
+
+                <section class="pt-sec" id="bagian-tidak-hadir" aria-labelledby="h-tidak-hadir">
+                    <div class="pt-sec-head"><h2 id="h-tidak-hadir">Tidak hadir</h2><span class="pt-sec-n">{{ $tidakHadir->count() }}</span></div>
+                    @if ($tidakHadir->isEmpty())
+                        <div class="pt-empty"><i class="bi bi-people" aria-hidden="true"></i><div>Tidak ada pasien yang terlewat. Pasien yang tidak hadir saat dipanggil muncul di sini dan bisa dipanggil ulang selama jam layanan.</div></div>
+                    @else
+                        <ul class="pt-list">
+                            @foreach ($tidakHadir as $antrian)
+                                <li class="pt-case">
+                                    <div class="pt-case-main">
+                                        <span class="pt-no">{{ $antrian->nomor_antrian }}</span>
+                                        <div class="pt-case-body">
+                                            <div class="pt-case-name">{{ $antrian->pasien->nama }}</div>
+                                            <div class="pt-case-meta"><span>Dipanggil {{ $antrian->jumlah_panggil }} kali, terakhir pukul {{ $antrian->waktu_dipanggil?->format('H.i') }}</span></div>
+                                        </div>
+                                        <form method="POST" action="{{ route('antrian.panggil-ulang', $antrian) }}" class="pt-guard">@csrf<button type="submit" class="btn btn-outline-primary" @disabled(! $layananBerjalan)><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Panggil ulang<span class="visually-hidden"> {{ $antrian->nomor_antrian }}</span></button></form>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </section>
             </div>
         </div>
     </div>
+
+    <script>
+    (function () {
+        // Dokter terakhir yang dipilih diingat per poli, jadi petugas tidak memilih ulang tiap panggilan
+        var sel = document.getElementById('dokter_id');
+        if (sel) {
+            var kunci = 'pt.dokter.' + sel.dataset.poli;
+            try {
+                var tersimpan = localStorage.getItem(kunci);
+                if (tersimpan && sel.querySelector('option[value="' + tersimpan + '"]')) sel.value = tersimpan;
+                sel.addEventListener('change', function () { localStorage.setItem(kunci, sel.value); });
+            } catch (e) {}
+        }
+
+        // Waktu relatif yang ikut berjalan
+        function rel(menit) {
+            if (menit < 1) return 'baru saja';
+            if (menit < 60) return menit + ' mnt';
+            return Math.floor(menit / 60) + ' jam ' + (menit % 60) + ' mnt';
+        }
+        function segar() {
+            document.querySelectorAll('.pt-since[data-since]').forEach(function (el) {
+                var t = new Date(el.dataset.since);
+                if (isNaN(t)) return;
+                var m = Math.max(0, Math.floor((Date.now() - t) / 60000));
+                var ikon = el.querySelector('i');
+                var akhiran = m < 1 ? '' : (el.dataset.akhiran || '');
+                el.textContent = (el.dataset.awalan || '') + rel(m) + akhiran;
+                if (ikon) el.insertBefore(ikon, el.firstChild);
+            });
+        }
+        segar();
+        setInterval(segar, 30000);
+
+        // Cegah klik ganda pada tombol aksi
+        document.querySelectorAll('form.pt-guard').forEach(function (f) {
+            f.addEventListener('submit', function () {
+                setTimeout(function () {
+                    f.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+                    f.setAttribute('aria-busy', 'true');
+                }, 0);
+            });
+        });
+    })();
+    </script>
 </x-app-layout>

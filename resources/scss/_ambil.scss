@@ -1,0 +1,270 @@
+// =====================================================================
+// Halaman ambil antrian (kelas berawalan am-)
+// =====================================================================
+
+// Warna teks khusus halaman ini: lebih gelap dari bawaan tema supaya mudah dibaca
+$am-teks: #1B3540;
+$am-muted: #46606A;
+
+.am-page { min-width: 0; }
+
+// ---------- kepala halaman ----------
+.am-head {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 1rem 1.5rem; margin-bottom: clamp(1.25rem, 3vw, 2rem);
+}
+.am-title { font-size: clamp(1.9rem, 4.4vw, 2.9rem); line-height: 1.06; letter-spacing: -.03em; margin: 0 0 .6rem; }
+.am-lead { max-width: 34rem; margin: 0; color: $body-secondary-color; font-size: clamp(.98rem, 1.5vw, 1.1rem); }
+
+.am-pill {
+    display: inline-flex; align-items: center; gap: .55rem; padding: .45rem .95rem;
+    border-radius: 999px; font-size: .88rem; font-weight: 600; white-space: nowrap;
+}
+.am-pill-ok { background: rgba($success, .1); color: darken($success, 6%); }
+.am-pill-off { background: rgba($danger, .1); color: $danger; }
+.am-dot { width: .55rem; height: .55rem; border-radius: 50%; background: currentColor; }
+
+// ---------- kartu formulir ----------
+.am-card {
+    background: #fff; border: 1px solid $border-color; border-radius: $border-radius-xl;
+    box-shadow: 0 1px 2px rgba($dark, .04), 0 28px 56px -36px rgba($primary, .4);
+}
+.am-card-head { padding: clamp(1rem, 2.5vw, 1.5rem) clamp(1rem, 3vw, 2rem) 0; }
+.am-card-body { min-width: 0; margin: 0; border: 0; padding: clamp(1.25rem, 3vw, 2rem); }
+
+// ---------- langkah ----------
+.am-steps {
+    --am-p: 0;
+    position: relative; display: flex; margin: 0; padding: 0; list-style: none;
+    &::before, &::after {
+        content: ''; position: absolute; top: 1.2rem; left: 16.667%; height: 3px; border-radius: 3px;
+    }
+    &::before { right: 16.667%; background: #E3ECEF; }
+    &::after { width: calc((100% - 33.334%) * var(--am-p)); background: $primary; transition: width .4s cubic-bezier(.2, .8, .2, 1); }
+}
+.am-step { position: relative; z-index: 1; flex: 1 1 0; min-width: 0; }
+.am-step-btn {
+    display: flex; flex-direction: column; align-items: center; gap: .45rem; width: 100%;
+    padding: 0; border: 0; background: none; color: $body-secondary-color; font-weight: 600; font-size: .88rem;
+    &:focus-visible { outline: 2px solid $primary; outline-offset: 4px; border-radius: $border-radius; }
+}
+.am-step-no {
+    display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%;
+    background: #fff; border: 2px solid #D3E0E4; color: $body-secondary-color; transition: all .25s;
+    b { font-family: $headings-font-family; font-weight: 800; }
+    i { display: none; font-size: 1.15rem; }
+}
+.am-step.is-active {
+    .am-step-no { background: $primary; border-color: $primary; color: #fff; box-shadow: 0 0 0 .3rem rgba($primary, .2); }
+    .am-step-btn { color: $dark; }
+}
+.am-step.is-done {
+    .am-step-no { background: $primary; border-color: $primary; color: #fff; b { display: none; } i { display: block; } }
+    .am-step-btn { color: $primary; }
+}
+
+// ---------- panel ----------
+.am-js .am-panel { display: none; }
+.am-js .am-panel.is-active { display: block; animation: am-masuk .35s cubic-bezier(.2, .8, .2, 1) both; }
+.am-panel + .am-panel { margin-top: 2.25rem; }
+.am-panel-title { font-size: clamp(1.2rem, 2.4vw, 1.5rem); margin: 0 0 .3rem; }
+.am-panel-sub { margin: 0 0 1.4rem; color: $body-secondary-color; }
+
+// ---------- pilihan poli ----------
+.am-poli-grid {
+    display: grid; gap: .8rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr));
+}
+.am-poli-wrap { position: relative; min-width: 0; }
+.am-poli-input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.am-poli {
+    display: flex; align-items: center; gap: .9rem; height: 100%; padding: .95rem 1rem;
+    background: #fff; border: 1.5px solid $input-border-color; border-radius: $border-radius-lg; cursor: pointer;
+    transition: border-color .15s, box-shadow .15s, background-color .15s, transform .15s;
+    &:hover { border-color: $primary; transform: translateY(-2px); }
+}
+.am-poli-body { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: .15rem; }
+.am-poli-name { font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.am-poli-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font-size: .84rem; color: $body-secondary-color; }
+.am-busy { padding: .1rem .5rem; border-radius: 999px; background: rgba($warning, .22); color: #8A5A00; font-size: .75rem; font-weight: 700; }
+.am-poli-check { flex-shrink: 0; font-size: 1.35rem; color: $primary; opacity: 0; transform: scale(.5); transition: opacity .2s, transform .25s cubic-bezier(.3, 1.6, .5, 1); }
+.am-poli-input:checked + .am-poli {
+    border-color: $primary; background: rgba($primary, .06); box-shadow: 0 0 0 3px rgba($primary, .2);
+    .am-poli-check { opacity: 1; transform: none; }
+}
+.am-poli-input:focus-visible + .am-poli { outline: 3px solid rgba($primary, .45); outline-offset: 2px; }
+.am-poli-input:disabled + .am-poli { opacity: .55; cursor: not-allowed; transform: none; }
+.am-poli-grid.is-invalid .am-poli { border-color: $danger; }
+.am-inline-err { margin-top: .85rem; color: $danger; font-weight: 600; font-size: .92rem; }
+
+// ---------- isian ----------
+.am-fields { display: grid; gap: 1.15rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.am-full { grid-column: 1 / -1; }
+.am-opt { font-weight: 400; font-size: .85em; color: $body-secondary-color; margin-left: .25rem; }
+.am-nik-wrap { position: relative; }
+.am-nik { padding-right: 4rem; font-size: 1.15rem; font-weight: 600; letter-spacing: .1em; font-variant-numeric: tabular-nums; }
+.am-count {
+    position: absolute; top: 50%; right: .9rem; translate: 0 -50%;
+    font-size: .8rem; font-weight: 700; color: $body-secondary-color; font-variant-numeric: tabular-nums;
+    &.is-ok { color: $success; }
+}
+.am-meter { height: 4px; margin-top: .55rem; border-radius: 4px; background: #E3ECEF; overflow: hidden; }
+.am-meter span { display: block; width: 0; height: 100%; border-radius: 4px; background: $primary; transition: width .2s, background-color .2s; }
+.am-meter span.is-ok { background: $success; }
+.am-seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+.am-seg .choice-pill { height: 100%; min-height: 3rem; }
+.am-hp .input-group-text { background: $body-tertiary-bg; color: $success; font-size: 1.1rem; }
+
+@include media-breakpoint-down(sm) {
+    .am-fields { grid-template-columns: minmax(0, 1fr); }
+}
+
+// ---------- tinjau ----------
+.am-review { margin: 0; border: 1px solid $border-color; border-radius: $border-radius-lg; overflow: hidden; }
+.am-review > div {
+    display: flex; justify-content: space-between; gap: 1rem; padding: .85rem 1.1rem;
+    & + div { border-top: 1px solid $border-color; }
+}
+.am-review dt { flex-shrink: 0; font-weight: 500; color: $body-secondary-color; }
+.am-review dd { margin: 0; min-width: 0; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+.am-note {
+    display: flex; margin: 1.1rem 0 0; padding: .85rem 1rem; border-radius: $border-radius;
+    background: rgba($info, .08); color: darken($info, 8%); font-size: .9rem;
+    i { margin-top: .15rem; }
+}
+
+// ---------- tombol aksi ----------
+.am-js-only { display: none; }
+.am-js .am-js-only { display: inline-flex; align-items: center; justify-content: center; }
+.am-actions { display: flex; gap: .75rem; margin-top: 2rem; }
+.am-actions .btn { display: inline-flex; align-items: center; justify-content: center; }
+.am-actions .btn-lg { flex: 1 1 auto; }
+.am-actions [hidden] { display: none !important; }
+
+@include media-breakpoint-down(md) {
+    // Tombol selalu terjangkau ibu jari di layar kecil
+    .am-actions {
+        position: sticky; bottom: 0; z-index: 5; margin: 1.75rem calc(-1 * clamp(1.25rem, 3vw, 2rem)) calc(-1 * clamp(1.25rem, 3vw, 2rem));
+        padding: .85rem clamp(1.25rem, 3vw, 2rem) calc(.85rem + env(safe-area-inset-bottom));
+        background: rgba(#fff, .96); border-top: 1px solid $border-color; border-radius: 0 0 $border-radius-xl $border-radius-xl;
+        -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    }
+}
+
+// ---------- tiket langsung ----------
+.am-aside { min-width: 0; }
+@include media-breakpoint-up(lg) { .am-aside { position: sticky; top: 6rem; } }
+
+.am-ticket {
+    overflow: hidden; background: #fff; border: 1px solid $border-color; border-radius: $border-radius-xl;
+    box-shadow: 0 1.5rem 3rem -1.5rem rgba($dark, .4);
+}
+.am-ticket-top { padding: 1.4rem 1.5rem 1.9rem; text-align: center; }
+.am-ticket-label { font-size: .88rem; color: $on-navy-muted; }
+.am-ticket-poli { margin-top: .35rem; font-family: $headings-font-family; font-weight: 700; font-size: 1.2rem; color: #fff; overflow-wrap: anywhere; }
+.am-ticket-no {
+    display: flex; align-items: baseline; justify-content: center; gap: .15em; margin-top: .6rem;
+    font-size: clamp(3.8rem, 9vw, 5.6rem); color: $glow;
+}
+.am-ticket-dots { font-size: .6em; letter-spacing: .05em; opacity: .55; &.is-idle { opacity: .3; } }
+.am-pop { display: inline-block; animation: am-pop .4s cubic-bezier(.3, 1.6, .5, 1); }
+
+.am-ticket-meta { margin: 0; padding: .35rem 1.5rem 1rem; list-style: none; }
+.am-ticket-meta li {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .7rem 0;
+    & + li { border-top: 1px solid $border-color; }
+    span { color: $body-secondary-color; font-size: .92rem; }
+    b { min-width: 0; text-align: right; overflow-wrap: anywhere; }
+}
+
+// Layar kecil: tiket menjadi ringkas di atas formulir
+@include media-breakpoint-down(lg) {
+    .am-ticket { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .am-ticket-top { padding: 1rem 1.25rem 1.25rem; }
+    .am-ticket-no { font-size: 3.2rem; margin-top: .35rem; }
+    .am-ticket-meta {
+        display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; padding: .25rem 1rem .9rem;
+        li { flex-direction: column; align-items: flex-start; gap: .1rem; padding: .5rem 0; border: 0 !important; }
+        li b { text-align: left; font-size: .92rem; }
+        li span { font-size: .78rem; }
+    }
+}
+@include media-breakpoint-down(sm) {
+    .am-ticket-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .am-ticket-meta li:last-child { grid-column: 1 / -1; }
+    .am-step-btn { font-size: .8rem; }
+}
+
+// ---------- tips ----------
+.am-tips { margin: 1.25rem 0 0; padding: 0; list-style: none; display: grid; gap: .8rem; }
+.am-tips li { display: flex; gap: .75rem; font-size: .9rem; color: $body-secondary-color; }
+.am-tips i { flex-shrink: 0; display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .6rem; background: rgba($primary, .1); color: $primary; }
+
+// ---------- animasi ----------
+@keyframes am-masuk { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes am-pop { 0% { transform: scale(.6); opacity: .3; } 100% { transform: none; opacity: 1; } }
+@keyframes am-kedip { 0%, 100% { opacity: .2; } 50% { opacity: .7; } }
+@keyframes am-denyut { 0% { box-shadow: 0 0 0 0 rgba(23, 127, 85, .5); } 70% { box-shadow: 0 0 0 .5rem rgba(23, 127, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(23, 127, 85, 0); } }
+@media (prefers-reduced-motion: reduce) {
+    .am-dot, .am-ticket-dots, .am-pop, .am-js .am-panel.is-active { animation: none; }
+    .am-poli, .am-poli-check, .am-steps::after, .am-meter span { transition: none; }
+}
+
+
+// =====================================================================
+// Keterbacaan: teks lebih besar, kontras lebih tegas, gerak lebih tenang
+// =====================================================================
+.am-page { color: $am-teks; line-height: 1.6; }
+.am-lead { color: $am-muted; font-size: clamp(1rem, 1.6vw, 1.125rem); }
+
+.am-card { border-color: #CBDADF; box-shadow: 0 1px 3px rgba($dark, .06); }
+.am-card-body { padding: clamp(1.25rem, 3.5vw, 2.25rem); }
+
+.am-panel-title { font-size: clamp(1.3rem, 2.6vw, 1.6rem); line-height: 1.25; color: $dark; }
+.am-panel-sub { font-size: 1.02rem; color: $am-muted; }
+
+// langkah
+.am-step-btn { font-size: .95rem; color: $am-muted; }
+.am-step-no { border-color: #A9BEC5; color: $am-muted; }
+
+// isian: label jelas, kolom tinggi, garis tepi tegas
+.am-card .form-label { margin-bottom: .45rem; font-size: 1.02rem; font-weight: 600; color: $dark; }
+.am-card .form-control,
+.am-card .form-select {
+    min-height: 3.4rem; font-size: 1.06rem; color: $dark; background-color: #fff;
+    border-width: 1.5px; border-color: #8FA8B0;
+    &::placeholder { color: #6C838B; opacity: 1; }
+    &:focus { border-color: $primary; box-shadow: 0 0 0 .25rem rgba($primary, .25); }
+    &.is-invalid { border-color: $danger; }
+}
+.am-card .am-nik { font-size: 1.25rem; letter-spacing: .08em; }
+.am-card .form-text { margin-top: .5rem; font-size: .93rem; color: $am-muted; }
+.am-card .invalid-feedback { font-size: .95rem; font-weight: 600; }
+.am-opt {
+    display: inline-block; margin-left: .4rem; padding: .05rem .55rem; border-radius: 999px;
+    background: $body-tertiary-bg; color: $am-muted; font-size: .8rem; font-weight: 600; vertical-align: .05em;
+}
+.am-count { font-size: .88rem; color: $am-muted; &.is-ok { color: darken($success, 4%); } }
+
+// kartu poli
+.am-poli { padding: 1.05rem 1.1rem; border-width: 2px; border-color: #A9BEC5; }
+.am-poli:hover { transform: none; border-color: $primary; background: rgba($primary, .04); }
+.am-poli-name { font-size: 1.08rem; color: $dark; }
+.am-poli-meta { font-size: .93rem; color: $am-muted; }
+.am-poli-input:checked + .am-poli { background: rgba($primary, .09); box-shadow: 0 0 0 3px rgba($primary, .25); }
+
+// tinjau
+.am-review dt, .am-review dd { font-size: 1.02rem; }
+.am-review dt { color: $am-muted; }
+.am-note { font-size: .95rem; }
+
+// tombol
+.am-actions .btn { min-height: 3.25rem; font-size: 1.05rem; }
+
+// tiket dan tips
+.am-ticket-label { font-size: .95rem; }
+.am-ticket-meta li span { color: $am-muted; font-size: .95rem; }
+.am-tips li { font-size: .95rem; color: $am-muted; }
+
+// gerak lebih singkat dan tidak berulang-ulang
+.am-js .am-panel.is-active { animation-duration: .2s; }

@@ -15,11 +15,9 @@ class JadwalPraktikController extends Controller
 
     public function index(Dokter $dokter): View
     {
-        $jadwals = $dokter->jadwalPraktiks()->orderByRaw(
-            "FIELD(hari, 'senin','selasa','rabu','kamis','jumat','sabtu','minggu')"
-        )->get();
-
-        return view('admin.dokter.jadwal', compact('dokter', 'jadwals'));
+        // Editor mingguan ditangani komponen Livewire Admin\JadwalEditor.
+        // Urutan hari tidak lagi memakai FIELD() (hanya ada di MySQL), jadi jalan di database apa pun.
+        return view('admin.dokter.jadwal', compact('dokter'));
     }
 
     public function store(Request $request, Dokter $dokter): RedirectResponse
@@ -32,9 +30,7 @@ class JadwalPraktikController extends Controller
         ]);
 
         // Cegah dokter punya 2 jadwal di hari yang sama (data ambigu)
-        $sudahAda = $dokter->jadwalPraktiks()->where('hari', $validated['hari'])->exists();
-
-        if ($sudahAda) {
+        if ($dokter->jadwalPraktiks()->where('hari', $validated['hari'])->exists()) {
             return back()->with('error', 'Dokter ini sudah punya jadwal di hari tersebut. Hapus dulu jadwal lama kalau mau ganti.');
         }
 
