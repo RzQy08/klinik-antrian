@@ -1,6 +1,5 @@
 {{-- Rekomendasi dan simulasi jumlah dokter untuk satu poli. Variabel: $item, $target --}}
-<hr class="my-4">
-<h3 class="h6 mb-2">Rekomendasi jumlah dokter</h3>
+<h3 class="lp-h3">Rekomendasi jumlah dokter</h3>
 
 @if ($item['rekomendasi_dokter'] === null)
     <p class="mb-3">Dengan beban saat ini, sampai 10 dokter pun belum memenuhi target tunggu {{ $target }} menit. Perlu peninjauan jam layanan atau lama layanan per pasien.</p>
@@ -20,14 +19,14 @@
 @endif
 
 <div class="table-responsive">
-    <table class="table table-sm align-middle mb-2">
+    <table class="table table-sm align-middle mb-2 lp-sim">
         <thead>
             <tr>
                 <th scope="col">Dokter</th>
                 <th scope="col" class="text-end">Kapasitas terpakai (ρ)</th>
                 <th scope="col" class="text-end">Peluang harus menunggu</th>
                 <th scope="col" class="text-end">Rata-rata tunggu (Wq)</th>
-                <th scope="col"></th>
+                <th scope="col"><span class="visually-hidden">Keterangan</span></th>
             </tr>
         </thead>
         <tbody>
