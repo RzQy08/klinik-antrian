@@ -47,3 +47,17 @@
 @import 'nav';
 
 
+// Tanpa garis bawah pada semua tautan: normal, hover, fokus, aktif.
+// Fokus keyboard tetap terlihat lewat outline, jadi aksesibilitas aman.
+a,
+a:hover,
+a:focus,
+a:active,
+.btn,
+.btn:hover,
+.btn:focus,
+.dropdown-item,
+.dropdown-item:hover {
+    text-decoration: none;
+}
+

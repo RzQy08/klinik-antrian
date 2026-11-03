@@ -1,7 +1,8 @@
 // =====================================================================
 // Beranda publik dan footer (kelas berawalan bn-)
-// Setiap section adalah pita (band) selebar layar dengan pola sendiri:
-//   hero gelap -> statistik -> garis diagonal -> titik -> tanda tambah -> ajakan -> footer
+// Setiap section adalah pita (band) selebar layar dengan latar sendiri yang
+// saling menyambung halus:
+//   hero gelap -> statistik -> kisi teal muda -> putih bertitik -> mesh teal -> ajakan -> footer
 // =====================================================================
 
 @keyframes bn-melayang { 0%, 100% { translate: 0 0; } 50% { translate: 0 -9px; } }
@@ -10,34 +11,55 @@
 @keyframes bn-naik { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes bn-gulir-masuk { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes bn-gulir-keluar { from { transform: none; opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
+@keyframes bn-aurora { from { transform: translate(0, 0) scale(1); } to { transform: translate(-6rem, 5rem) scale(1.18); } }
 
 // Hindari geser horizontal akibat elemen dekoratif
 body { overflow-x: clip; }
 
 // ---------- pita (band) ----------
-.bn-band { position: relative; padding: clamp(3.5rem, 7vw, 6rem) 0; border-top: 1px solid rgba($primary, .1); }
+.bn-band { position: relative; isolation: isolate; padding: clamp(3.25rem, 7vw, 6rem) 0; border-top: 0; }
+// Pola halus di balik konten, memudar ke tepi supaya tidak ramai
+.bn-band::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 
-// garis diagonal halus
+// Antrian langsung: teal sangat muda, dua cahaya lembut, kisi tipis yang memudar
 .bn-band-stripes {
     padding-top: clamp(4rem, 8vw, 6.5rem);
-    background-color: #EAF4F6;
-    background-image:
-        repeating-linear-gradient(135deg, rgba($primary, .075) 0 2px, transparent 2px 16px),
-        linear-gradient(180deg, rgba(#fff, .7), transparent 22%);
+    background:
+        radial-gradient(46rem 26rem at 8% 0%, rgba($primary, .10), transparent 70%),
+        radial-gradient(40rem 26rem at 100% 100%, rgba($glow, .16), transparent 70%),
+        linear-gradient(180deg, #F7FBFC 0%, #EAF4F6 100%);
+    &::before {
+        background-image:
+            linear-gradient(rgba($primary, .06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba($primary, .06) 1px, transparent 1px);
+        background-size: 44px 44px;
+        -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 70%);
+        mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 70%);
+    }
 }
-// titik-titik
+
+// Menu staf: putih bersih, menyambung halus dari pita di atasnya
 .bn-band-dots {
-    background-color: #fff;
-    background-image: radial-gradient(rgba($primary, .2) 1.3px, transparent 1.4px);
-    background-size: 24px 24px;
+    background: linear-gradient(180deg, #EAF4F6 0, #fff 9rem, #fff 100%);
+    &::before {
+        background-image: radial-gradient(rgba($primary, .16) 1.2px, transparent 1.3px);
+        background-size: 26px 26px;
+        -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 40%, transparent 100%);
+        mask-image: linear-gradient(180deg, transparent 0, #000 40%, transparent 100%);
+    }
 }
-// tanda tambah medis + sorot warna, supaya kartu putih terlihat menonjol
+
+// Cara kerja: mesh teal lembut, tanda tambah sangat samar di tengah
 .bn-band-plus {
-    background-color: #D9ECF0;
-    background-image:
-        radial-gradient(40rem 22rem at 8% 0%, rgba($glow, .35), transparent 70%),
-        radial-gradient(36rem 24rem at 100% 100%, rgba($primary, .22), transparent 70%),
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M32 24v16M24 32h16' stroke='%230B7A8F' stroke-opacity='.16' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+    background:
+        radial-gradient(42rem 24rem at 6% 0%, rgba($glow, .30), transparent 70%),
+        radial-gradient(38rem 26rem at 100% 100%, rgba($primary, .18), transparent 70%),
+        linear-gradient(180deg, #fff 0%, #E4F2F5 14rem, #DDEEF2 100%);
+    &::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M32 24v16M24 32h16' stroke='%230B7A8F' stroke-opacity='.10' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+        -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 75%);
+        mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 75%);
+    }
 }
 
 .bn-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: clamp(1.5rem, 3vw, 2.25rem); }
@@ -62,8 +84,19 @@ body { overflow-x: clip; }
         -webkit-mask-image: radial-gradient(ellipse at 72% 38%, #000 0%, transparent 72%);
         mask-image: radial-gradient(ellipse at 72% 38%, #000 0%, transparent 72%);
     }
+    // Cahaya aurora yang bergerak pelan
+    &::after {
+        content: ''; position: absolute; z-index: -1; pointer-events: none;
+        top: -10rem; right: -8rem; width: 34rem; height: 34rem; border-radius: 50%;
+        background: radial-gradient(circle, rgba($glow, .24), transparent 65%); filter: blur(30px);
+        animation: bn-aurora 14s ease-in-out infinite alternate;
+    }
     .row > * { animation: bn-naik .7s cubic-bezier(.2, .8, .2, 1) both; }
     .row > *:nth-child(2) { animation-delay: .15s; }
+}
+@include media-breakpoint-down(md) {
+    .bn-hero::after { top: -6rem; right: -9rem; width: 22rem; height: 22rem; filter: blur(22px); }
+    .bn-band-stripes::before { background-size: 32px 32px; }
 }
 
 .bn-status {
@@ -137,6 +170,8 @@ body { overflow-x: clip; }
 .bn-stat {
     display: flex; align-items: center; gap: .9rem; padding: 1.1rem 1.2rem; background: #fff;
     border: 1px solid $border-color; border-radius: 1.25rem; box-shadow: 0 22px 44px -22px rgba($navy, .5);
+    transition: transform .25s, box-shadow .25s;
+    &:hover { transform: translateY(-4px); box-shadow: 0 28px 48px -22px rgba($navy, .6); }
     .numeral { font-size: clamp(1.7rem, 3vw, 2.3rem); color: $navy; }
 }
 .bn-stat-label { font-size: .82rem; color: $body-secondary-color; margin-top: .25rem; }
@@ -188,7 +223,6 @@ body { overflow-x: clip; }
 }
 .bn-link { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; font-weight: 600; i { transition: transform .15s; } &:hover i { transform: translateX(3px); } }
 .bn-kosong { grid-column: 1 / -1; padding: 2rem; text-align: center; color: $body-secondary-color; background: #fff; border: 1px dashed $border-color; border-radius: 1.4rem; }
-@media (prefers-reduced-motion: reduce) { .bn-roll-in.is-masuk, .bn-roll-out { animation: none; } .bn-roll-out { display: none; } }
 
 // ---------- menu staf ----------
 .bn-menu {
@@ -265,10 +299,15 @@ body { overflow-x: clip; }
 // ---------- ajakan (selebar layar) ----------
 .bn-cta-band {
     padding: clamp(3rem, 6vw, 5rem) 0; color: #fff; position: relative; overflow: hidden; isolation: isolate;
-    background: radial-gradient(34rem 18rem at 100% 0, rgba($glow, .4), transparent 70%), linear-gradient(135deg, $primary, #095E6F);
+    background:
+        radial-gradient(34rem 18rem at 100% 0, rgba($glow, .35), transparent 70%),
+        radial-gradient(28rem 16rem at 0 100%, rgba(#fff, .10), transparent 70%),
+        linear-gradient(135deg, #0B7A8F 0%, #08566A 100%);
     &::before {
         content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 21v14M21 28h14' stroke='white' stroke-opacity='.1' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 21v14M21 28h14' stroke='white' stroke-opacity='.07' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+        -webkit-mask-image: linear-gradient(90deg, transparent 20%, #000 100%);
+        mask-image: linear-gradient(90deg, transparent 20%, #000 100%);
     }
 }
 .bn-cta {
@@ -324,3 +363,11 @@ body { overflow-x: clip; }
 
 // ---------- jarak tepi: semua konten di layout publik tidak menempel ke pinggir layar ----------
 .bn-pub .container-xxl { padding-left: clamp(1.25rem, 5vw, 3.5rem); padding-right: clamp(1.25rem, 5vw, 3.5rem); }
+
+// ---------- gerak dikurangi bila pengguna memintanya ----------
+@media (prefers-reduced-motion: reduce) {
+    .bn-hero::after { animation: none; }
+    .bn-stat { transition: none; }
+    .bn-roll-in.is-masuk, .bn-roll-out { animation: none; }
+    .bn-roll-out { display: none; }
+}

@@ -52,3 +52,35 @@ window.bootstrap = bootstrap;
 
     pindah(aktif());
 })();
+
+
+// Angka statistik beranda berhitung dari 0 saat terlihat
+(function () {
+    const daftar = document.querySelectorAll('.bn-stat .numeral');
+
+    if (! daftar.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+
+    const pengamat = new IntersectionObserver(function (entri) {
+        entri.forEach(function (e) {
+            if (! e.isIntersecting) return;
+
+            const el = e.target;
+            const target = parseInt(el.textContent, 10);
+            pengamat.unobserve(el);
+
+            if (isNaN(target) || target === 0) return;
+
+            const mulai = performance.now(), durasi = 900;
+            const langkah = function (t) {
+                const p = Math.min(1, (t - mulai) / durasi);
+                el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+                if (p < 1) requestAnimationFrame(langkah);
+            };
+            requestAnimationFrame(langkah);
+        });
+    }, { threshold: 0.4 });
+
+    daftar.forEach(function (el) { pengamat.observe(el); });
+})();
