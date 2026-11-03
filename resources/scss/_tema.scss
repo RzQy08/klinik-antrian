@@ -1,0 +1,135 @@
+// =====================================================================
+// Penyelarasan warna dan responsif (diimpor PALING AKHIR di rs.scss)
+//
+// Satu keluarga warna dari atas ke bawah:
+//   strip + navbar (gelap, sama dengan hero) -> hero -> pita terang yang menyambung
+//   halus -> ajakan (gelap, sama dengan hero) -> footer (gelap)
+// =====================================================================
+
+$tema-gelap-1: #052B38;   // ujung atas hero
+$tema-gelap-2: $navy;     // tengah hero
+$tema-gelap-3: #0A5568;   // ujung bawah hero
+$tema-terang:  #F4FAFB;   // warna pita terang pertama (sambungan dari kartu statistik)
+
+// ---------- strip + navbar: sama dengan latar hero ----------
+.nv-strip {
+    background: $tema-gelap-1;
+    border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+
+.nv-wrap,
+.nv-wrap.is-scrolled {
+    background:
+        radial-gradient(34rem 10rem at 92% -70%, rgba($glow, .22), transparent 70%),
+        linear-gradient(90deg, $tema-gelap-1 0%, #063A4D 55%, #08485D 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    box-shadow: none;
+}
+// saat digulir: tetap gelap, hanya diberi bayangan halus
+.nv-wrap.is-scrolled { box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .55); }
+
+// teks dan tombol selalu terang (tidak lagi berganti putih saat digulir)
+.nv-wrap {
+    .nv-brand .brand-name, .brand-name { color: #fff; }
+    .brand-sub { color: $on-navy-muted; }
+
+    .nv-link {
+        color: $on-navy-muted;
+        &:hover { color: #fff; background: rgba(255, 255, 255, .09); }
+        &.is-on { color: #fff; background: rgba(255, 255, 255, .13); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
+    }
+    .nv-btn-ghost {
+        color: #fff; background: transparent; border-color: rgba(255, 255, 255, .28);
+        &:hover { color: #fff; background: rgba(255, 255, 255, .1); }
+    }
+    .nv-burger {
+        background: rgba(255, 255, 255, .13);
+        &:hover { background: rgba(255, 255, 255, .2); }
+        span { background: #fff; }
+    }
+    .nv-role { background: rgba(255, 255, 255, .14); color: #fff; }
+    .nv-user {
+        color: #fff; background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .22);
+        &:hover, &.show { background: rgba(255, 255, 255, .16); }
+    }
+}
+
+// ---------- hero: lebih rapi di semua ukuran ----------
+.bn-hero { padding-top: clamp(2.5rem, 6vw, 5rem); }
+.bn-title { font-size: clamp(2.1rem, 5.2vw, 4rem); text-wrap: balance; }
+.bn-lead { text-wrap: pretty; }
+.bn-board, .bn-chip { will-change: transform; }
+
+// ---------- sambungan hero -> pita terang ----------
+// Kartu statistik menimpa tepi bawah hero. Bagian bawah kartu memakai warna yang sama
+// dengan pita sesudahnya, jadi tidak ada garis pemisah.
+.bn-stats-wrap {
+    background: linear-gradient(180deg, transparent 3.25rem, $tema-terang 3.25rem);
+    padding-bottom: 1rem;
+}
+.bn-band-stripes {
+    padding-top: clamp(2.5rem, 5vw, 4rem);
+    background:
+        radial-gradient(40rem 26rem at 100% 100%, rgba($glow, .14), transparent 70%),
+        linear-gradient(180deg, $tema-terang 0%, #EAF4F6 100%);
+    &::before {
+        -webkit-mask-image: radial-gradient(ellipse at 50% 100%, #000 0%, transparent 70%);
+        mask-image: radial-gradient(ellipse at 50% 100%, #000 0%, transparent 70%);
+    }
+}
+
+// pita menu staf dan cara kerja: tetap menyambung (sudah #EAF4F6 -> putih -> teal muda)
+.bn-band-plus { background: radial-gradient(42rem 24rem at 6% 0%, rgba($glow, .22), transparent 70%), linear-gradient(180deg, #fff 0%, #E4F2F5 14rem, #D8EBF0 100%); }
+
+// ---------- ajakan dan footer: kembali ke warna hero ----------
+.bn-cta-band {
+    background:
+        radial-gradient(34rem 18rem at 100% 0, rgba($glow, .26), transparent 70%),
+        linear-gradient(135deg, $tema-gelap-3 0%, $tema-gelap-2 100%);
+}
+.ft { background: linear-gradient(180deg, $tema-gelap-2 0%, $tema-gelap-1 100%); }
+// beranda sudah punya pita ajakan sendiri, jadi kotak ajakan di footer disembunyikan
+.bn-pub:has(.bn-cta-band) .ft-cta { display: none; }
+
+// ---------- gerak yang lebih halus ----------
+@media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+}
+.bn-poli, .bn-tile, .bn-stat, .bn-menu { transition-timing-function: cubic-bezier(.22, 1, .36, 1); }
+.bn-hero .row > * { animation-duration: .6s; }
+
+// ---------- responsif ----------
+@include media-breakpoint-down(lg) {
+    .bn-hero { padding-bottom: clamp(5.5rem, 14vw, 7.5rem); }
+    .bn-stage { max-width: 22rem; }
+}
+
+@include media-breakpoint-down(md) {
+    .bn-head { align-items: flex-start; }
+    .bn-head > .btn { width: 100%; }
+    .bn-cta .btn { width: 100%; }
+    .bn-stat { padding: .9rem 1rem; gap: .7rem; }
+    .bn-stat-ico { width: 2.5rem; height: 2.5rem; font-size: 1.15rem; }
+}
+
+@include media-breakpoint-down(sm) {
+    // tombol hero tersusun penuh, mudah dijangkau ibu jari
+    .bn-hero .d-flex.flex-wrap.gap-3 { gap: .6rem !important; }
+    .bn-hero .d-flex.flex-wrap.gap-3 .btn { flex: 1 1 100%; }
+    .bn-facts { column-gap: 1.1rem; font-size: .86rem; }
+
+    // ilustrasi hero disederhanakan supaya tidak sesak
+    .bn-stage { max-width: 100%; padding: .5rem 0 0; }
+    .bn-chip { display: none; }
+    .bn-board { animation: none; padding: 1.1rem; }
+    .bn-board-no { font-size: 4rem; margin: .4rem 0 .8rem; }
+
+    .bn-stats-wrap { margin-top: -2.5rem; background: linear-gradient(180deg, transparent 2.5rem, $tema-terang 2.5rem); }
+    .bn-hero { padding-bottom: 5rem; }
+    .bn-band { padding: 2.75rem 0; }
+}
+
+// layar sangat lebar: konten tidak melebar tanpa batas
+@media (min-width: 1700px) {
+    .bn-pub .container-xxl { max-width: 92rem; }
+}

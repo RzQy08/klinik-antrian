@@ -36,33 +36,33 @@
         }
     @endphp
 
-    {{-- ============ HERO (selebar layar) ============ --}}
+    {{-- ============ HERO ============ --}}
     <section class="bn-hero">
         <div class="container-xxl position-relative">
             <div class="row align-items-center g-5">
                 <div class="col-lg-7">
                     @if (\App\Services\JamOperasional::aktif())
                         @if (\App\Services\JamOperasional::pendaftaranDibuka())
-                            <span class="bn-status"><span class="bn-status-dot"></span>Pendaftaran dibuka sampai pukul {{ \App\Services\JamOperasional::tampil(config('operasional.pendaftaran_tutup')) }}</span>
+                            <span class="bn-status"><span class="bn-status-dot"></span>Pendaftaran buka sampai pukul {{ \App\Services\JamOperasional::tampil(config('operasional.pendaftaran_tutup')) }}</span>
                         @else
-                            <span class="bn-status bn-status-off"><span class="bn-status-dot"></span>Pendaftaran ditutup</span>
+                            <span class="bn-status bn-status-off"><span class="bn-status-dot"></span>Pendaftaran sedang tutup</span>
                         @endif
                     @else
-                        <span class="bn-status"><span class="bn-status-dot"></span>Antrian online aktif</span>
+                        <span class="bn-status"><span class="bn-status-dot"></span>Pendaftaran online dibuka</span>
                     @endif
 
-                    <h1 class="bn-title">Antri dari ponsel.<br><span class="bn-title-accent">Datang saat giliran tiba.</span></h1>
-                    <p class="bn-lead">Ambil nomor poliklinik dalam hitungan detik, lihat perkiraan waktu tunggu yang dihitung dari data nyata, dan dapat kabar lewat WhatsApp begitu nomor Anda dipanggil.</p>
+                    <h1 class="bn-title">Ambil nomor dari HP,<br><span class="bn-title-accent">tak perlu antre di loket.</span></h1>
+                    <p class="bn-lead">Pilih poli, isi NIK dan nama, nomor antrian langsung jadi. Perkiraan lama menunggu tampil di tiket, dan bila Anda mengisi nomor WhatsApp, kami kabari saat nomor Anda dipanggil.</p>
 
                     <div class="d-flex flex-wrap gap-3 mb-4">
                         <a href="{{ route('antrian.create') }}" class="btn btn-lg bn-btn-glow"><i class="bi bi-ticket-perforated me-2"></i>Ambil nomor antrian</a>
-                        <a href="{{ route('antrian.layar') }}" class="btn btn-lg bn-btn-ghost"><i class="bi bi-tv me-2"></i>Papan antrian</a>
+                        <a href="{{ route('antrian.layar') }}" class="btn btn-lg bn-btn-ghost"><i class="bi bi-tv me-2"></i>Lihat papan antrian</a>
                     </div>
 
                     <ul class="bn-facts list-unstyled mb-0">
-                        <li><i class="bi bi-person-check"></i>Tanpa akun</li>
-                        <li><i class="bi bi-hourglass-split"></i>Estimasi otomatis</li>
-                        <li><i class="bi bi-whatsapp"></i>Notifikasi WhatsApp</li>
+                        <li><i class="bi bi-person-check"></i>Tanpa buat akun</li>
+                        <li><i class="bi bi-hourglass-split"></i>Ada perkiraan waktu tunggu</li>
+                        <li><i class="bi bi-whatsapp"></i>Dikabari lewat WhatsApp</li>
                     </ul>
                 </div>
 
@@ -88,11 +88,11 @@
 
                         <div class="bn-chip bn-chip-1">
                             <span class="bn-chip-icon bn-chip-icon-warn"><i class="bi bi-megaphone-fill"></i></span>
-                            <span class="lh-sm"><b class="d-block">Dipanggil A017</b><small class="text-body-secondary">Silakan menuju Poli Umum</small></span>
+                            <span class="lh-sm"><b class="d-block">Dipanggil A017</b><small class="text-body-secondary">Silakan ke Poli Umum</small></span>
                         </div>
                         <div class="bn-chip bn-chip-2">
                             <span class="bn-chip-icon bn-chip-icon-ok"><i class="bi bi-whatsapp"></i></span>
-                            <span class="lh-sm"><b class="d-block">Giliran Anda!</b><small class="text-body-secondary">Terkirim ke WhatsApp</small></span>
+                            <span class="lh-sm"><b class="d-block">Giliran Anda!</b><small class="text-body-secondary">Pesan masuk ke WhatsApp</small></span>
                         </div>
                     </div>
                 </div>
@@ -105,21 +105,21 @@
         <div class="container-xxl">
             <div class="bn-stats">
                 <div class="bn-stat"><span class="bn-stat-ico"><i class="bi bi-people"></i></span><div><div class="numeral">{{ $statistik['menunggu'] }}</div><div class="bn-stat-label">Pasien menunggu</div></div></div>
-                <div class="bn-stat"><span class="bn-stat-ico bn-stat-ico-ok"><i class="bi bi-check2-circle"></i></span><div><div class="numeral">{{ $statistik['selesai'] }}</div><div class="bn-stat-label">Selesai dilayani</div></div></div>
-                <div class="bn-stat"><span class="bn-stat-ico bn-stat-ico-navy"><i class="bi bi-hospital"></i></span><div><div class="numeral">{{ $statistik['poli'] }}</div><div class="bn-stat-label">Poli aktif</div></div></div>
-                <div class="bn-stat"><span class="bn-stat-ico bn-stat-ico-warn"><i class="bi bi-person-badge"></i></span><div><div class="numeral">{{ $statistik['dokter'] }}</div><div class="bn-stat-label">Dokter bertugas</div></div></div>
+                <div class="bn-stat"><span class="bn-stat-ico bn-stat-ico-ok"><i class="bi bi-check2-circle"></i></span><div><div class="numeral">{{ $statistik['selesai'] }}</div><div class="bn-stat-label">Sudah dilayani</div></div></div>
+                <div class="bn-stat"><span class="bn-stat-ico bn-stat-ico-navy"><i class="bi bi-hospital"></i></span><div><div class="numeral">{{ $statistik['poli'] }}</div><div class="bn-stat-label">Poli buka</div></div></div>
+                <div class="bn-stat"><span class="bn-stat-ico bn-stat-ico-warn"><i class="bi bi-person-badge"></i></span><div><div class="numeral">{{ $statistik['dokter'] }}</div><div class="bn-stat-label">Dokter aktif</div></div></div>
             </div>
         </div>
     </section>
 
-    {{-- ============ ANTRIAN LANGSUNG (pita garis diagonal) ============ --}}
+    {{-- ============ ANTRIAN LANGSUNG ============ --}}
     <section id="antrian" class="bn-band bn-band-stripes" style="scroll-margin-top: 4.5rem">
         <div class="container-xxl">
             <div class="bn-head">
                 <div>
-                    <span class="bn-eyebrow"><span class="bn-live-dot bn-live-dot-dark"></span>Langsung</span>
-                    <h2 class="bn-h2">Antrian hari ini</h2>
-                    <p class="bn-sub">Diperbarui otomatis tiap beberapa detik. Tidak perlu memuat ulang halaman.</p>
+                    <span class="bn-eyebrow"><span class="bn-live-dot bn-live-dot-dark"></span>Hari ini</span>
+                    <h2 class="bn-h2">Antrian di tiap poli</h2>
+                    <p class="bn-sub">Angka di sini berubah sendiri, tidak perlu menyegarkan halaman.</p>
                 </div>
                 <a href="{{ route('antrian.layar') }}" class="btn btn-primary"><i class="bi bi-tv me-2"></i>Buka papan semua poli</a>
             </div>
@@ -128,7 +128,7 @@
         </div>
     </section>
 
-    {{-- ============ MENU STAF (pita titik), hanya setelah login ============ --}}
+    {{-- ============ MENU STAF, hanya setelah login ============ --}}
     @if ($menuStaf)
         <section class="bn-band bn-band-dots">
             <div class="container-xxl">
@@ -151,14 +151,14 @@
         </section>
     @endif
 
-    {{-- ============ CARA KERJA (pita teal berpola tanda tambah) ============ --}}
+    {{-- ============ CARA KERJA ============ --}}
     <section id="cara-kerja" class="bn-band bn-band-plus" style="scroll-margin-top: 4.5rem">
         <div class="container-xxl">
             <div class="bn-head bn-head-center">
                 <div>
-                    <span class="bn-eyebrow">Mudah</span>
+                    <span class="bn-eyebrow">Alur</span>
                     <h2 class="bn-h2">Cara kerjanya</h2>
-                    <p class="bn-sub mx-auto">Tiga langkah dari rumah sampai ruang periksa.</p>
+                    <p class="bn-sub mx-auto">Dari rumah sampai masuk ruang periksa.</p>
                 </div>
             </div>
 
@@ -166,7 +166,7 @@
                 <article class="bn-tile bn-tile-a">
                     <span class="bn-step">1</span>
                     <h3>Ambil nomor</h3>
-                    <p>Pilih poli dan isi NIK serta nama. Tiket langsung tampil lengkap dengan perkiraan waktu tunggu.</p>
+                    <p>Pilih poli, lalu isi NIK dan nama. Tiket langsung keluar beserta perkiraan lama menunggu.</p>
                     <div class="bn-mini-form" aria-hidden="true">
                         <span class="bn-mini-chip is-on">Poli Umum</span><span class="bn-mini-chip">Poli Gigi</span><span class="bn-mini-chip">Poli Anak</span>
                         <span class="bn-mini-input">3201 &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 0004</span>
@@ -176,50 +176,51 @@
                 <article class="bn-tile bn-tile-b">
                     <span class="bn-step">2</span>
                     <h3>Pantau giliran</h3>
-                    <p>Tiket memperbarui diri otomatis. Lihat berapa orang di depan Anda.</p>
+                    <p>Tiket di HP ikut berubah sendiri, jadi Anda tahu sudah berapa orang di depan.</p>
                     <div class="bn-queue" aria-hidden="true"><span></span><span></span><span></span><span class="is-me">Anda</span></div>
                 </article>
 
                 <article class="bn-tile bn-tile-c">
                     <span class="bn-step">3</span>
                     <h3>Datang saat dipanggil</h3>
-                    <p>Nomor muncul di layar ruang tunggu dan tiket berubah menjadi "Giliran Anda!".</p>
+                    <p>Nomor Anda muncul di layar ruang tunggu, dan tiket berubah menjadi "Giliran Anda!".</p>
                 </article>
 
                 <article class="bn-tile bn-tile-wa">
                     <i class="bi bi-whatsapp bn-tile-icon"></i>
                     <h3>Kabar lewat WhatsApp</h3>
-                    <p>Isi nomor ponsel sekali, pesan masuk saat nomor Anda dipanggil.</p>
+                    <p>Isi nomor HP sekali saja. Pesan masuk begitu nomor Anda dipanggil.</p>
                 </article>
 
                 <article class="bn-tile bn-tile-navy">
-                    <span class="bn-tile-kicker">Perkiraan waktu tunggu</span>
+                    <span class="bn-tile-kicker">Contoh perkiraan di tiket</span>
                     <div class="numeral bn-tile-big">&plusmn; 12 <small>menit</small></div>
-                    <p>Dihitung dari teori antrian M/M/c dan data pelayanan 14 hari terakhir, bukan tebakan.</p>
+                    <p>Dihitung dengan teori antrian dari data pelayanan 14 hari terakhir, bukan sekadar tebakan.</p>
                 </article>
 
                 <article class="bn-tile bn-tile-tv">
                     <i class="bi bi-tv bn-tile-icon"></i>
                     <h3>Layar ruang tunggu</h3>
-                    <p>Papan antrian besar diperbarui tiap 2 detik dan terbaca dari jauh, jadi pasien tidak perlu bertanya ke loket.</p>
+                    <p>Nomor di papan besar diperbarui tiap 2 detik dan terbaca dari jauh, jadi pasien tak perlu bolak-balik bertanya ke loket.</p>
                     <a href="{{ route('antrian.layar') }}" class="bn-link mt-auto pt-3">Lihat papan antrian <i class="bi bi-arrow-right"></i></a>
                 </article>
             </div>
         </div>
     </section>
 
-    {{-- ============ AJAKAN (selebar layar) ============ --}}
+    {{-- ============ AJAKAN ============ --}}
     <section class="bn-cta-band">
         <div class="container-xxl">
             <div class="bn-cta">
                 <div>
-                    <h2>Siap ambil nomor antrian?</h2>
-                    <p>Tanpa akun, tanpa antre berdiri. Cukup NIK dan nama.</p>
+                    <h2>Siap ambil nomor?</h2>
+                    <p>Cukup NIK dan nama, tanpa buat akun.</p>
                 </div>
                 <a href="{{ route('antrian.create') }}" class="btn btn-lg bn-btn-glow">Ambil nomor sekarang<i class="bi bi-arrow-right ms-2"></i></a>
             </div>
         </div>
     </section>
+
     {{-- Akses cepat untuk pengembangan: melayang di pojok, hanya saat APP_ENV=local --}}
     @if (app()->isLocal())
         <details class="bn-dev">
