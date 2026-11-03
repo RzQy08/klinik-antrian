@@ -1,137 +1,199 @@
 @props(['title' => null, 'wide' => false, 'full' => false])
+@php
+    $jamAktif = \App\Services\JamOperasional::aktif();
+    $buka = \App\Services\JamOperasional::pendaftaranDibuka();
+    $jam = fn (string $kunci) => \App\Services\JamOperasional::tampil((string) config('operasional.'.$kunci));
+
+    $statusTeks = ! $jamAktif
+        ? 'Antrian online aktif'
+        : ($buka ? 'Pendaftaran dibuka sampai pukul '.$jam('pendaftaran_tutup') : 'Pendaftaran ditutup, dibuka lagi pukul '.$jam('pendaftaran_buka'));
+    $statusPendek = ! $jamAktif ? 'Antrian online aktif' : ($buka ? 'Pendaftaran dibuka' : 'Pendaftaran ditutup');
+
+    $menu = [
+        ['Beranda', route('beranda'), request()->routeIs('beranda'), 'house-door'],
+        ['Ambil antrian', route('antrian.create'), request()->routeIs('antrian.create'), 'ticket-perforated'],
+        ['Antrian hari ini', route('beranda').'#antrian', false, 'list-ol'],
+        ['Papan antrian', route('antrian.layar'), request()->routeIs('antrian.layar'), 'tv'],
+    ];
+
+    $ctaBar = ! request()->routeIs('antrian.create');
+    $nama = config('rumahsakit.nama', 'RS Bersama');
+    $namaLengkap = config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama');
+    $kontak = array_filter([
+        'geo-alt' => config('rumahsakit.alamat'),
+        'telephone' => config('rumahsakit.telepon'),
+        'whatsapp' => config('rumahsakit.whatsapp'),
+        'envelope' => config('rumahsakit.email'),
+    ]);
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     @include('partials.head', ['title' => $title])
 </head>
-<body class="d-flex flex-column min-vh-dvh bn-pub">
+<body @class(['d-flex flex-column min-vh-dvh bn-pub', 'has-ctabar' => $ctaBar])>
 
-<nav class="navbar navbar-expand-xl topbar sticky-top">
-    <div class="container-xxl">
-        <a class="navbar-brand me-xl-4" href="{{ route('beranda') }}" aria-label="{{ config('rumahsakit.nama') }}, ke beranda">
-            @include('partials.brand')
-        </a>
+<a class="nv-skip" href="#konten">Lewati ke konten</a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuUtama" aria-controls="menuUtama" aria-expanded="false" aria-label="Buka menu">
-            <i class="bi bi-list fs-2 lh-1"></i>
+<div class="nv-strip" role="status">
+    <span><span class="nv-dot {{ $jamAktif && ! $buka ? 'off' : '' }}" aria-hidden="true"></span>{{ $statusTeks }}</span>
+    @if ($jamAktif)<span><i class="bi bi-clock" aria-hidden="true"></i>Layanan sampai pukul {{ $jam('layanan_selesai') }}</span>@endif
+</div>
+
+<header class="nv-wrap" id="nvWrap">
+    <nav class="nv" aria-label="Navigasi utama">
+        <a class="nv-brand" href="{{ route('beranda') }}" aria-label="{{ $nama }}, ke beranda">@include('partials.brand')</a>
+
+        <ul class="nv-links">
+            @foreach ($menu as [$label, $url, $aktif, $ikon])
+                <li><a class="nv-link {{ $aktif ? 'is-on' : '' }}" href="{{ $url }}" @if ($aktif) aria-current="page" @endif><i class="bi bi-{{ $ikon }}" aria-hidden="true"></i>{{ $label }}</a></li>
+            @endforeach
+        </ul>
+
+        <div class="nv-actions">
+            @auth
+                <a href="{{ route('dashboard') }}" class="nv-btn nv-btn-cta"><i class="bi bi-speedometer2" aria-hidden="true"></i>Buka dashboard</a>
+            @else
+                <a href="{{ route('login') }}" class="nv-btn nv-btn-ghost"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Masuk staf</a>
+                <a href="{{ route('antrian.create') }}" class="nv-btn nv-btn-cta">Ambil nomor<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            @endauth
+        </div>
+
+        <button class="nv-burger" type="button" id="nvBurger" data-bs-toggle="offcanvas" data-bs-target="#nvSheet" aria-controls="nvSheet" aria-label="Buka menu">
+            <span></span><span></span><span></span>
         </button>
+    </nav>
+</header>
 
-        <div class="collapse navbar-collapse" id="menuUtama">
-            <ul class="navbar-nav me-auto gap-xl-1 mt-3 mt-xl-0">
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('beranda') ? 'active' : '' }}" href="{{ route('beranda') }}"><i class="bi bi-house-door me-2"></i>Beranda</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('antrian.create') ? 'active' : '' }}" href="{{ route('antrian.create') }}"><i class="bi bi-ticket-perforated me-2"></i>Ambil antrian</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('beranda') }}#antrian"><i class="bi bi-list-ol me-2"></i>Antrian hari ini</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('antrian.layar') ? 'active' : '' }}" href="{{ route('antrian.layar') }}"><i class="bi bi-tv me-2"></i>Papan antrian</a>
-                </li>
-            </ul>
+{{-- Lembar menu di HP --}}
+<div class="offcanvas offcanvas-end nv-sheet" tabindex="-1" id="nvSheet" aria-labelledby="nvSheetJudul">
+    <div class="offcanvas-header">
+        <div id="nvSheetJudul">@include('partials.brand')</div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Tutup menu"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="nv-sheet-status {{ $jamAktif && ! $buka ? 'off' : '' }}"><span class="nv-dot" aria-hidden="true"></span>{{ $statusTeks }}</div>
 
-            <div class="nav-actions d-flex flex-column flex-xl-row gap-2 mt-3 mt-xl-0">
-                @auth
-                    <a href="{{ route('dashboard') }}" class="btn btn-primary btn-sm"><i class="bi bi-speedometer2 me-1"></i>Buka dashboard</a>
-                @else
-                    <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-in-right me-1"></i>Masuk staf</a>
-                    <a href="{{ route('antrian.create') }}" class="btn btn-primary btn-sm">Ambil nomor</a>
-                @endauth
-            </div>
+        <ul class="nv-sheet-links">
+            @foreach ($menu as [$label, $url, $aktif, $ikon])
+                <li><a class="nv-sheet-link {{ $aktif ? 'is-on' : '' }}" href="{{ $url }}" @if ($aktif) aria-current="page" @endif><span class="ic"><i class="bi bi-{{ $ikon }}" aria-hidden="true"></i></span>{{ $label }}</a></li>
+            @endforeach
+        </ul>
+
+        <div class="nv-sheet-foot">
+            @auth
+                <a href="{{ route('dashboard') }}" class="nv-btn nv-btn-cta"><i class="bi bi-speedometer2" aria-hidden="true"></i>Buka dashboard</a>
+            @else
+                <a href="{{ route('antrian.create') }}" class="nv-btn nv-btn-cta">Ambil nomor antrian<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                <a href="{{ route('login') }}" class="nv-btn nv-btn-ghost"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Masuk staf</a>
+            @endauth
         </div>
     </div>
-</nav>
+</div>
 
 @if ($full)
-    <main class="flex-grow-1">{{ $slot }}</main>
+    <main id="konten" tabindex="-1" class="flex-grow-1">{{ $slot }}</main>
 @else
-    <main class="container-xxl py-4 py-md-5 flex-grow-1" @if (! $wide) style="max-width: 46rem" @endif>
+    <main id="konten" tabindex="-1" class="container-xxl py-4 py-md-5 flex-grow-1" @if (! $wide) style="max-width: 46rem" @endif>
         {{ $slot }}
     </main>
 @endif
 
-@php
-    $poliFooter = \App\Models\Poli::where('aktif', true)->orderBy('kode_poli')->get(['id', 'nama_poli']);
-    $waTujuan = config('rumahsakit.whatsapp') ? \App\Services\WhatsAppService::normalisasi((string) config('rumahsakit.whatsapp')) : null;
-
-    $jamLayanan = config('rumahsakit.jam_layanan');
-    if (! $jamLayanan && \App\Services\JamOperasional::aktif()) {
-        $jamLayanan = 'Pendaftaran '.\App\Services\JamOperasional::tampil(config('operasional.pendaftaran_buka')).' sampai '.\App\Services\JamOperasional::tampil(config('operasional.pendaftaran_tutup')).' WIB';
-    }
-@endphp
-<footer class="bn-footer">
+{{-- Footer --}}
+<footer class="ft" aria-label="Footer">
     <div class="container-xxl">
-        <div class="bn-footer-top">
-            <div class="bn-footer-brand">
-                <a href="{{ route('beranda') }}" class="text-decoration-none">@include('partials.brand', ['terang' => true])</a>
-                <p>{{ config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama') }} melayani pendaftaran antrian poliklinik secara online, lengkap dengan perkiraan waktu tunggu dan pemberitahuan saat giliran Anda tiba.</p>
 
-                @if (config('rumahsakit.instagram') || config('rumahsakit.facebook') || $waTujuan)
-                    <div class="bn-social">
-                        @if (config('rumahsakit.instagram'))<a href="{{ config('rumahsakit.instagram') }}" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>@endif
-                        @if (config('rumahsakit.facebook'))<a href="{{ config('rumahsakit.facebook') }}" target="_blank" rel="noopener" aria-label="Facebook"><i class="bi bi-facebook"></i></a>@endif
-                        @if ($waTujuan)<a href="https://wa.me/{{ $waTujuan }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>@endif
-                    </div>
-                @endif
+        @if ($ctaBar)
+            <div class="ft-cta">
+                <div>
+                    <h2>Berobat tanpa berdiri lama di loket</h2>
+                    <p>Ambil nomor dari ponsel, lihat perkiraan waktu tunggu, lalu datang saat giliran Anda hampir tiba.</p>
+                </div>
+                <a href="{{ route('antrian.create') }}" class="btn btn-light btn-lg"><i class="bi bi-ticket-perforated me-2" aria-hidden="true"></i>Ambil nomor antrian</a>
+            </div>
+        @endif
+
+        <div class="ft-grid">
+            <div>
+                <a href="{{ route('beranda') }}" class="d-inline-block text-decoration-none" aria-label="{{ $nama }}, ke beranda">@include('partials.brand', ['terang' => true])</a>
+                <p class="ft-desc">{{ $namaLengkap }}. Sistem antrian poliklinik dengan perkiraan waktu tunggu yang dihitung dari teori antrian.</p>
             </div>
 
-            <nav aria-label="Layanan poliklinik">
-                <h4>Layanan poliklinik</h4>
-                <ul>
-                    @forelse ($poliFooter as $p)
-                        <li><a href="{{ route('antrian.create') }}">{{ $p->nama_poli }}</a></li>
-                    @empty
-                        <li>Daftar poli akan segera tersedia</li>
-                    @endforelse
+            <nav aria-labelledby="ft-nav">
+                <h2 class="ft-h" id="ft-nav">Untuk pasien</h2>
+                <ul class="ft-list">
+                    <li><a href="{{ route('antrian.create') }}"><i class="bi bi-ticket-perforated" aria-hidden="true"></i>Ambil nomor antrian</a></li>
+                    <li><a href="{{ route('beranda') }}#antrian"><i class="bi bi-list-ol" aria-hidden="true"></i>Antrian hari ini</a></li>
+                    <li><a href="{{ route('antrian.layar') }}"><i class="bi bi-tv" aria-hidden="true"></i>Papan antrian</a></li>
                 </ul>
             </nav>
 
-            <nav aria-label="Tautan cepat">
-                <h4>Tautan cepat</h4>
-                <ul>
-                    <li><a href="{{ route('antrian.create') }}">Ambil nomor antrian</a></li>
-                    <li><a href="{{ route('beranda') }}#antrian">Antrian hari ini</a></li>
-                    <li><a href="{{ route('antrian.layar') }}">Papan antrian</a></li>
-                    <li><a href="{{ route('beranda') }}#cara-kerja">Cara kerja</a></li>
+            <nav aria-labelledby="ft-staf">
+                <h2 class="ft-h" id="ft-staf">Untuk staf</h2>
+                <ul class="ft-list">
+                    @auth
+                        <li><a href="{{ route('dashboard') }}"><i class="bi bi-speedometer2" aria-hidden="true"></i>Buka dashboard</a></li>
+                    @else
+                        <li><a href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Masuk staf</a></li>
+                    @endauth
                 </ul>
             </nav>
 
             <div>
-                <h4>Hubungi kami</h4>
-                <ul class="bn-contact">
-                    @if (config('rumahsakit.alamat'))
-                        <li><i class="bi bi-geo-alt"></i><span>{{ config('rumahsakit.alamat') }}@if (config('rumahsakit.maps')) <a href="{{ config('rumahsakit.maps') }}" target="_blank" rel="noopener" class="bn-contact-link">Lihat peta</a>@endif</span></li>
-                    @endif
-                    @if (config('rumahsakit.telepon'))
-                        <li><i class="bi bi-telephone"></i><a href="tel:{{ preg_replace('/[^0-9+]/', '', config('rumahsakit.telepon')) }}">{{ config('rumahsakit.telepon') }}</a></li>
-                    @endif
-                    @if ($waTujuan)
-                        <li><i class="bi bi-whatsapp"></i><a href="https://wa.me/{{ $waTujuan }}" target="_blank" rel="noopener">{{ config('rumahsakit.whatsapp') }}</a></li>
-                    @endif
-                    @if (config('rumahsakit.email'))
-                        <li><i class="bi bi-envelope"></i><a href="mailto:{{ config('rumahsakit.email') }}">{{ config('rumahsakit.email') }}</a></li>
-                    @endif
-                    <li><i class="bi bi-clock"></i><span>{{ $jamLayanan ?: 'Pendaftaran antrian online tersedia' }}</span></li>
-                </ul>
+                <h2 class="ft-h">Jam layanan</h2>
+                <span class="ft-status"><span class="nv-dot {{ $jamAktif && ! $buka ? 'off' : '' }}" aria-hidden="true"></span>{{ $statusPendek }}</span>
+                @if ($jamAktif)
+                    <dl class="ft-jam">
+                        <div><dt>Pendaftaran</dt><dd>{{ $jam('pendaftaran_buka') }} sampai {{ $jam('pendaftaran_tutup') }}</dd></div>
+                        <div><dt>Layanan</dt><dd>sampai {{ $jam('layanan_selesai') }}</dd></div>
+                    </dl>
+                @else
+                    <p class="mb-0 text-on-navy-muted">Pendaftaran antrian online tersedia setiap saat selama klinik beroperasi.</p>
+                @endif
+
+                @if ($kontak)
+                    <ul class="ft-list mt-3">
+                        @foreach ($kontak as $ikon => $isi)
+                            <li><span><i class="bi bi-{{ $ikon }} me-2" aria-hidden="true"></i>{{ $isi }}</span></li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
         </div>
 
-        <div class="bn-footer-bottom">
-            <span>&copy; {{ now()->year }} {{ config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama') }}. Seluruh hak dilindungi.</span>
-            <span class="bn-footer-note"><i class="bi bi-shield-check"></i>Data pribadi dipakai hanya untuk keperluan pendaftaran dan pelayanan.</span>
-            <span class="bn-footer-links">
-                @auth
-                    <a href="{{ route('dashboard') }}">Dashboard</a>
-                @else
-                    <a href="{{ route('login') }}">Login staf</a>
-                @endauth
-                <a href="#top" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;"><i class="bi bi-arrow-up"></i> Ke atas</a>
-            </span>
+        <div class="ft-bottom">
+            <span>&copy; {{ now()->year }} {{ $namaLengkap }}. Seluruh hak dilindungi.</span>
+            <button type="button" class="ft-top" id="ftTop"><i class="bi bi-arrow-up" aria-hidden="true"></i>Kembali ke atas</button>
         </div>
     </div>
 </footer>
+
+{{-- Bilah ajakan di HP --}}
+@if ($ctaBar)
+    <div class="nv-ctabar">
+        <span><span class="nv-dot {{ $jamAktif && ! $buka ? 'off' : '' }}" aria-hidden="true"></span>{{ $statusPendek }}</span>
+        <a href="{{ route('antrian.create') }}" class="nv-btn nv-btn-cta">Ambil nomor<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    </div>
+@endif
+
+<script>
+(function () {
+    var wrap = document.getElementById('nvWrap'), burger = document.getElementById('nvBurger'), sheet = document.getElementById('nvSheet');
+    var tunggu = false;
+    function geser() { wrap.classList.toggle('is-scrolled', window.scrollY > 8); tunggu = false; }
+    window.addEventListener('scroll', function () { if (!tunggu) { tunggu = true; requestAnimationFrame(geser); } }, { passive: true });
+    geser();
+    if (sheet && burger) {
+        sheet.addEventListener('show.bs.offcanvas', function () { burger.classList.add('is-open'); });
+        sheet.addEventListener('hidden.bs.offcanvas', function () { burger.classList.remove('is-open'); });
+    }
+    var atas = document.getElementById('ftTop');
+    if (atas) atas.addEventListener('click', function () {
+        var diam = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: diam ? 'auto' : 'smooth' });
+    });
+})();
+</script>
 
 </body>
 </html>

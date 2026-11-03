@@ -26,7 +26,12 @@
     }
 
     $inisial = mb_strtoupper(mb_substr(trim(preg_replace('/^(dr|drg)\.?\s+/i', '', (string) $user?->name)), 0, 1));
-    $pendek = ['Antrian hari ini' => 'Antrian'];
+    $pendek = ['Antrian hari ini' => 'Antrian', 'Ringkasan' => 'Ringkas'];
+
+    // Dock bawah memuat paling banyak 5 tombol; kalau menu lebih banyak, sisanya lewat tombol "Menu"
+    $adaMenuLain = count($nav) > 5;
+    $dock = $adaMenuLain ? array_slice($nav, 0, 4) : $nav;
+    $nama = config('rumahsakit.nama', 'RS Bersama');
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -35,81 +40,79 @@
 </head>
 <body class="has-bottomnav">
 
-<nav class="navbar navbar-expand-lg topbar sticky-top">
-    <div class="container-xxl">
-        <a class="navbar-brand" href="{{ route('dashboard') }}" aria-label="{{ config('rumahsakit.nama') }}, ke dashboard">
-            @include('partials.brand')
-        </a>
+<a class="nv-skip" href="#konten">Lewati ke konten</a>
 
-        {{-- Menu layar lebar --}}
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav me-auto gap-1">
-                @foreach ($nav as [$label, $url, $aktif, $ikon])
-                    <li class="nav-item">
-                        <a class="nav-link {{ $aktif ? 'active' : '' }}" href="{{ $url }}" @if ($aktif) aria-current="page" @endif>{{ $label }}</a>
-                    </li>
-                @endforeach
-            </ul>
+<header class="nv-wrap" id="nvWrap">
+    <nav class="nv nv-staff" aria-label="Navigasi utama">
+        <a class="nv-brand" href="{{ route('dashboard') }}" aria-label="{{ $nama }}, ke dashboard">@include('partials.brand')</a>
+
+        <ul class="nv-links">
+            @foreach ($nav as [$label, $url, $aktif, $ikon])
+                <li><a class="nv-link {{ $aktif ? 'is-on' : '' }}" href="{{ $url }}" @if ($aktif) aria-current="page" @endif><i class="bi bi-{{ $ikon }}" aria-hidden="true"></i>{{ $label }}</a></li>
+            @endforeach
+        </ul>
+
+        <div class="nv-actions">
+            <span class="nv-role">{{ $roleLabel }}</span>
+            <a href="{{ route('antrian.create') }}" target="_blank" rel="noopener" class="nv-btn nv-btn-ghost" title="Halaman pasien (tab baru)"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Halaman pasien<span class="visually-hidden"> (tab baru)</span></a>
 
             <div class="dropdown">
-                <button class="user-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="nv-user" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu akun {{ $user?->name }}">
                     <span class="avatar">{{ $inisial }}</span>
-                    <span class="text-start lh-sm d-none d-lg-block">
-                        <span class="d-block fw-semibold small">{{ $user?->name }}</span>
-                        <span class="d-block text-body-secondary" style="font-size: .75rem">{{ $roleLabel }}</span>
-                    </span>
-                    <i class="bi bi-chevron-down small text-body-secondary"></i>
+                    <span class="nama">{{ $user?->name }}</span>
+                    <i class="bi bi-chevron-down small" aria-hidden="true"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2"></i>Profil</a></li>
-                    <li><a class="dropdown-item" href="{{ route('beranda') }}"><i class="bi bi-house me-2"></i>Beranda</a></li>
-                    <li><a class="dropdown-item" href="{{ route('antrian.create') }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-2"></i>Halaman pasien</a></li>
+                <ul class="dropdown-menu dropdown-menu-end nv-menu">
+                    <li class="nv-menu-head">
+                        <span class="avatar">{{ $inisial }}</span>
+                        <span><b>{{ $user?->name }}</b><small>{{ $user?->email }}</small></span>
+                    </li>
+                    <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-person" aria-hidden="true"></i>Profil dan keamanan</a></li>
+                    <li><a class="dropdown-item" href="{{ route('beranda') }}"><i class="bi bi-house" aria-hidden="true"></i>Beranda</a></li>
+                    <li><a class="dropdown-item" href="{{ route('antrian.layar') }}" target="_blank" rel="noopener"><i class="bi bi-tv" aria-hidden="true"></i>Papan antrian</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Keluar</button>
+                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Keluar</button>
                         </form>
                     </li>
                 </ul>
             </div>
         </div>
 
-        {{-- Tombol menu layar kecil --}}
-        <button class="navbar-toggler border-0 px-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuSeluler" aria-controls="menuSeluler" aria-label="Buka menu">
-            <i class="bi bi-list fs-2"></i>
+        <button class="nv-burger" type="button" id="nvBurger" data-bs-toggle="offcanvas" data-bs-target="#nvSheet" aria-controls="nvSheet" aria-label="Buka menu">
+            <span></span><span></span><span></span>
         </button>
-    </div>
-</nav>
+    </nav>
+</header>
 
-{{-- Menu layar kecil --}}
-<div class="offcanvas offcanvas-end" tabindex="-1" id="menuSeluler" aria-labelledby="menuSelulerJudul">
+{{-- Lembar menu di HP --}}
+<div class="offcanvas offcanvas-end nv-sheet" tabindex="-1" id="nvSheet" aria-labelledby="nvSheetJudul">
     <div class="offcanvas-header">
-        <div class="d-flex align-items-center gap-2" id="menuSelulerJudul">
-            <span class="avatar">{{ $inisial }}</span>
-            <div class="lh-sm">
-                <div class="fw-semibold">{{ $user?->name }}</div>
-                <div class="small text-body-secondary">{{ $roleLabel }}</div>
-            </div>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
+        <div id="nvSheetJudul">@include('partials.brand')</div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Tutup menu"></button>
     </div>
-    <div class="offcanvas-body d-flex flex-column">
-        <div class="list-group list-group-flush mb-3">
+    <div class="offcanvas-body">
+        <div class="nv-sheet-user">
+            <span class="avatar">{{ $inisial }}</span>
+            <span><b>{{ $user?->name }}</b><small>{{ $roleLabel }}</small></span>
+        </div>
+
+        <ul class="nv-sheet-links">
             @foreach ($nav as [$label, $url, $aktif, $ikon])
-                <a href="{{ $url }}" class="list-group-item list-group-item-action d-flex align-items-center gap-3 {{ $aktif ? 'active' : '' }}">
-                    <i class="bi bi-{{ $ikon }}"></i> {{ $label }}
-                </a>
+                <li><a class="nv-sheet-link {{ $aktif ? 'is-on' : '' }}" href="{{ $url }}" @if ($aktif) aria-current="page" @endif><span class="ic"><i class="bi bi-{{ $ikon }}" aria-hidden="true"></i></span>{{ $label }}</a></li>
             @endforeach
+        </ul>
+
+        <div class="nv-sheet-foot">
+            <a href="{{ route('profile.edit') }}" class="nv-btn nv-btn-ghost"><i class="bi bi-person" aria-hidden="true"></i>Profil dan keamanan</a>
+            <a href="{{ route('antrian.create') }}" target="_blank" rel="noopener" class="nv-btn nv-btn-ghost"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Halaman pasien<span class="visually-hidden"> (tab baru)</span></a>
+            <form method="POST" action="{{ route('logout') }}" class="d-grid">
+                @csrf
+                <button type="submit" class="nv-btn nv-btn-ghost text-danger"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>Keluar</button>
+            </form>
         </div>
-        <div class="list-group list-group-flush mt-auto">
-            <a href="{{ route('profile.edit') }}" class="list-group-item list-group-item-action"><i class="bi bi-person me-3"></i>Profil</a>
-            <a href="{{ route('beranda') }}" class="list-group-item list-group-item-action"><i class="bi bi-house me-3"></i>Beranda</a>
-        </div>
-        <form method="POST" action="{{ route('logout') }}" class="mt-3">
-            @csrf
-            <button type="submit" class="btn btn-outline-danger w-100"><i class="bi bi-box-arrow-right me-2"></i>Keluar</button>
-        </form>
     </div>
 </div>
 
@@ -121,20 +124,49 @@
     </div>
 @endisset
 
-<main class="container-xxl py-4">
+<main id="konten" tabindex="-1" class="container-xxl py-4">
     {{ $slot }}
+
+    <footer class="nv-foot">
+        <span>{{ config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama') }} &middot; {{ config('rumahsakit.sub', 'Sistem Antrian Poliklinik') }}</span>
+        <nav aria-label="Pintasan">
+            <a href="{{ route('antrian.create') }}" target="_blank" rel="noopener">Halaman pasien</a>
+            <a href="{{ route('antrian.layar') }}" target="_blank" rel="noopener">Papan antrian</a>
+        </nav>
+    </footer>
 </main>
 
+{{-- Dock bawah di HP dan tablet --}}
 @if (count($nav) > 0)
-    <nav class="bottomnav" aria-label="Menu cepat">
-        @foreach (array_slice($nav, 0, 5) as [$label, $url, $aktif, $ikon])
-            <a href="{{ $url }}" class="{{ $aktif ? 'active' : '' }}" @if ($aktif) aria-current="page" @endif>
-                <i class="bi bi-{{ $ikon }}"></i>
+    <nav class="nv-dock" aria-label="Menu cepat">
+        @foreach ($dock as [$label, $url, $aktif, $ikon])
+            <a href="{{ $url }}" class="{{ $aktif ? 'is-on' : '' }}" @if ($aktif) aria-current="page" @endif>
+                <i class="bi bi-{{ $ikon }}" aria-hidden="true"></i>
                 <span>{{ $pendek[$label] ?? $label }}</span>
             </a>
         @endforeach
+        @if ($adaMenuLain)
+            <button type="button" data-bs-toggle="offcanvas" data-bs-target="#nvSheet" aria-controls="nvSheet">
+                <i class="bi bi-grid" aria-hidden="true"></i>
+                <span>Menu</span>
+            </button>
+        @endif
     </nav>
 @endif
+
+<script>
+(function () {
+    var wrap = document.getElementById('nvWrap'), burger = document.getElementById('nvBurger'), sheet = document.getElementById('nvSheet');
+    var tunggu = false;
+    function geser() { wrap.classList.toggle('is-scrolled', window.scrollY > 8); tunggu = false; }
+    window.addEventListener('scroll', function () { if (!tunggu) { tunggu = true; requestAnimationFrame(geser); } }, { passive: true });
+    geser();
+    if (sheet && burger) {
+        sheet.addEventListener('show.bs.offcanvas', function () { burger.classList.add('is-open'); });
+        sheet.addEventListener('hidden.bs.offcanvas', function () { burger.classList.remove('is-open'); });
+    }
+})();
+</script>
 
 </body>
 </html>

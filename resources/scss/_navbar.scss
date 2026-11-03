@@ -1,0 +1,117 @@
+// =====================================================================
+// Navbar melayang (kelas berawalan nb-): pil kaca, indikator geser,
+// tombol burger beranimasi, satu tombol aksi yang menonjol.
+// Dipakai di layout publik dan layout staf.
+// =====================================================================
+
+html { scroll-padding-top: 6rem; }
+
+.nb { position: sticky; top: 0; z-index: 1030; padding: .75rem clamp(.5rem, 2.5vw, 1.5rem) .75rem; pointer-events: none; }
+.nb-bar {
+    pointer-events: auto; position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem;
+    max-width: 82rem; margin: 0 auto; padding: .5rem .6rem .5rem 1rem; border-radius: 1.6rem;
+    background: rgba(#fff, .78); border: 1px solid rgba($primary, .14);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5);
+    box-shadow: 0 10px 30px -18px rgba($navy, .35);
+    transition: background .25s, box-shadow .25s, padding .25s;
+}
+.nb.is-scrolled .nb-bar { background: rgba(#fff, .94); box-shadow: 0 18px 40px -20px rgba($navy, .5); }
+@include media-breakpoint-up(xl) { .nb-bar { flex-wrap: nowrap; border-radius: 999px; } .nb.is-scrolled .nb-bar { padding-top: .35rem; padding-bottom: .35rem; } }
+
+.nb-brand { display: inline-flex; align-items: center; margin: 0; padding: 0; text-decoration: none; .brand-name { font-size: 1.1rem; } .brand-sub { display: none; } }
+@include media-breakpoint-up(sm) { .nb-brand .brand-sub { display: block; font-size: .72rem; } }
+
+// ---------- tombol burger ----------
+.nb-toggle {
+    display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; margin-left: auto; padding: 0; color: $dark;
+    background: rgba($primary, .08); border: 0; border-radius: 50%; transition: background .2s;
+    &:hover { background: rgba($primary, .16); }
+    &:focus-visible { outline: 3px solid rgba($primary, .45); outline-offset: 2px; }
+}
+.nb-burger { display: grid; gap: 4px; width: 1.15rem; i { display: block; height: 2px; border-radius: 2px; background: currentColor; transition: transform .25s, opacity .2s; transform-origin: center; } }
+.nb-toggle[aria-expanded='true'] .nb-burger {
+    i:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    i:nth-child(2) { opacity: 0; }
+    i:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+}
+.nb-staff .nb-toggle { margin-left: 0; }
+
+// ---------- tautan ----------
+.nb-collapse { flex-basis: 100%; }
+@include media-breakpoint-up(xl) { .nb-collapse { flex-basis: auto; flex-grow: 1; display: flex !important; align-items: center; gap: 1rem; } }
+.nb-links {
+    position: relative; display: flex; flex-direction: column; gap: .15rem; margin: .5rem 0 0; padding: 0; list-style: none;
+    @include media-breakpoint-up(xl) { flex-direction: row; align-items: center; margin: 0 auto; gap: .1rem; }
+}
+.nb-link {
+    position: relative; z-index: 1; display: flex; align-items: center; gap: .55rem; padding: .7rem .95rem; border-radius: 999px;
+    color: $body-secondary-color; font-size: .93rem; font-weight: 600; white-space: nowrap; text-decoration: none; transition: color .2s, background .2s;
+    .bi { font-size: 1.05rem; opacity: .85; }
+    &:hover { color: $dark; text-decoration: none; }
+    &:focus-visible { outline: 3px solid rgba($primary, .45); outline-offset: 1px; }
+    &.active { color: $primary; background: rgba($primary, .1); }
+    @include media-breakpoint-up(xl) { padding: .55rem .9rem; }
+}
+// dengan JavaScript aktif, indikator geser menggantikan latar tautan aktif di layar lebar
+.nb-ind { display: none; }
+@include media-breakpoint-up(xl) {
+    .nb-js .nb-link.active { background: transparent; }
+    .nb-js .nb-ind {
+        display: block; position: absolute; top: 0; left: 0; width: 0; height: 0; border-radius: 999px; opacity: 0; pointer-events: none;
+        background: rgba($primary, .11); transition: transform .35s cubic-bezier(.3, .9, .3, 1.1), width .35s, height .35s, opacity .2s;
+    }
+}
+.nb-staff .nb-link { @include media-breakpoint-up(xl) { padding: .5rem .8rem; } }
+
+// ---------- kanan: status dan tombol ----------
+.nb-actions { display: flex; flex-direction: column; align-items: stretch; gap: .6rem; padding: .5rem 0 .25rem; }
+@include media-breakpoint-up(xl) { .nb-actions { flex-direction: row; align-items: center; padding: 0; } }
+.nb-staff .nb-actions { flex-direction: row; align-items: center; gap: .6rem; padding: 0; }
+
+.nb-status {
+    display: inline-flex; align-items: center; gap: .5rem; padding: .35rem .8rem; border-radius: 999px; white-space: nowrap;
+    font-size: .78rem; font-weight: 700; color: darken($success, 6%); background: rgba($success, .1);
+    &.is-off { color: $danger; background: rgba($danger, .1); }
+}
+.nb-dot { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; animation: nb-denyut 2s infinite; }
+@keyframes nb-denyut { 0% { box-shadow: 0 0 0 0 rgba(23, 127, 85, .5); } 70% { box-shadow: 0 0 0 .45rem rgba(23, 127, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(23, 127, 85, 0); } }
+
+.nb-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: .5rem 1.15rem; border-radius: 999px;
+    font-size: .92rem; font-weight: 700; white-space: nowrap; text-decoration: none; transition: transform .15s, box-shadow .15s, background .15s;
+    &:hover { text-decoration: none; transform: translateY(-1px); }
+    &:focus-visible { outline: 3px solid rgba($primary, .45); outline-offset: 2px; }
+}
+.nb-btn-ghost { color: $dark; background: transparent; border: 1px solid rgba($navy, .18); &:hover { color: $primary; border-color: $primary; background: rgba($primary, .05); } }
+.nb-btn-cta {
+    color: #fff; border: 0; background: linear-gradient(135deg, $primary, #12B5A0);
+    box-shadow: 0 10px 22px -10px rgba($primary, .8);
+    .bi { transition: transform .15s; }
+    &:hover { color: #fff; box-shadow: 0 14px 26px -10px rgba($primary, .9); .bi { transform: translateX(3px); } }
+}
+
+// ---------- akun staf ----------
+.nb-user {
+    display: inline-flex; align-items: center; gap: .55rem; padding: .25rem .65rem .25rem .3rem; color: $dark; background: rgba($primary, .07);
+    border: 1px solid transparent; border-radius: 999px; transition: background .2s, border-color .2s;
+    &:hover, &[aria-expanded='true'] { background: rgba($primary, .13); border-color: rgba($primary, .25); }
+    &:focus-visible { outline: 3px solid rgba($primary, .45); outline-offset: 2px; }
+}
+.nb-user-text { text-align: left; font-size: .82rem; line-height: 1.2; color: $body-secondary-color; .fw-semibold { color: $dark; } }
+.nb-menu {
+    min-width: 15.5rem; margin-top: .75rem !important; padding: .5rem; border: 1px solid $border-color; border-radius: 1.2rem; box-shadow: 0 24px 48px -16px rgba($navy, .4);
+    .dropdown-item { display: flex; align-items: center; padding: .6rem .75rem; border-radius: .7rem; font-weight: 500; &:hover { background: rgba($primary, .08); } }
+}
+.nb-menu-head { display: flex; align-items: center; gap: .75rem; padding: .6rem .6rem .4rem; }
+
+// ---------- menu layar kecil (staf) ----------
+.nb-offcanvas { border-radius: 1.5rem 0 0 1.5rem; max-width: 20rem; }
+.nb-oc-list { display: grid; gap: .25rem; }
+.nb-oc-item {
+    display: flex; align-items: center; gap: .85rem; padding: .85rem 1rem; border-radius: 1rem; color: $dark; font-weight: 600; text-decoration: none; transition: background .15s, color .15s;
+    .bi { font-size: 1.2rem; color: $primary; }
+    &:hover { background: rgba($primary, .08); color: $dark; text-decoration: none; }
+    &.active { background: rgba($primary, .12); color: $primary; }
+}
+
+@media (prefers-reduced-motion: reduce) { .nb-dot { animation: none; } .nb-bar, .nb-burger i, .nb-ind, .nb-btn { transition: none; } }
