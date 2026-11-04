@@ -1,171 +1,233 @@
-// =====================================================================
-// Navigasi dan footer (kelas berawalan nv- dan ft-)
-// Pulau navigasi: transparan di atas (mengikuti warna header), putih saat di-scroll.
-// Lembar menu di HP, dock di bawah untuk staf, dan footer gelap dengan ajakan bertindak.
+﻿// =====================================================================
+// Navigasi, merek, avatar, dan footer (kelas nv-, ft-, brand-, avatar)
+//
+//  - Latar putih adalah lapisan ::before yang hanya berganti opacity.
+//  - Warna navbar memakai variabel --nv-* yang berubah bersamaan,
+//    dengan satu durasi dan satu kurva yang sama.
+//  - Menu penuh tampil mulai 1200px; di bawahnya dipakai hamburger.
+//  - Desain datar: warna solid, tanpa gradien, tanpa bayangan berat.
 // =====================================================================
 
-// kurva animasi: ease-out terasa lembut di akhir gerakan, ease-soft untuk perubahan warna
-$ease-out: cubic-bezier(.22, 1, .36, 1);
 $ease-soft: cubic-bezier(.4, 0, .2, 1);
+$nv-t: .25s;
 
-// ---------- merek ----------
+html { scrollbar-gutter: stable; }
+
+// ---------- merek (dipakai partials/brand.blade.php) ----------
+.brand-name { font-family: $headings-font-family; font-weight: 800; font-size: 1.15rem; color: $dark; letter-spacing: -.01em; }
+.brand-sub { font-size: .75rem; font-weight: 500; color: $body-secondary-color; }
+.brand-light .brand-name { color: #fff; }
+.brand-light .brand-sub { color: $on-navy-muted; }
 .brand-mark {
-    background: linear-gradient(145deg, #14A6BE 0%, #0B7A8F 55%, #07627A 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 6px 14px -6px rgba($primary, .8);
+    position: relative; flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: .75rem; background: $primary;
+    &::before, &::after { content: ''; position: absolute; left: 50%; top: 50%; background: #fff; border-radius: 2px; transform: translate(-50%, -50%); }
+    &::before { width: 1.25rem; height: .36rem; }
+    &::after { width: .36rem; height: 1.25rem; }
 }
+.brand-mark-light { background: rgba(255, 255, 255, .16); }
+
+// ---------- avatar ----------
+// Dasar (konteks terang). Dipakai juga di tabel dokter dan editor jadwal.
+.avatar {
+    display: inline-grid; place-items: center; flex-shrink: 0; width: 2rem; height: 2rem; border-radius: 50%;
+    background: rgba($primary, .12); color: $primary;
+    font-size: .85rem; font-weight: 700; line-height: 1; text-transform: uppercase; user-select: none;
+}
+// di tombol akun navbar: ikut warna navbar (navy di atas, putih setelah scroll)
+.nv-user .avatar { background: var(--nv-av-bg); color: var(--nv-av-fg); transition: background-color $nv-t $ease-soft, color $nv-t $ease-soft; }
+// di dropdown dan lembar menu: latarnya selalu terang
+.nv-menu .avatar, .nv-sheet .avatar { width: 2.5rem; height: 2.5rem; font-size: .95rem; background: rgba($primary, .12); color: $primary; }
+
+// ---------- merek di navbar ----------
 .nv-brand { display: inline-flex; align-items: center; flex-shrink: 0; text-decoration: none; border-radius: .8rem; }
-.nv-brand .brand-name { font-size: 1.2rem; }
-.nv-brand .brand-sub { display: none; }
+.nv-brand .brand-name { font-size: 1.2rem; color: var(--nv-strong); transition: color $nv-t $ease-soft; }
+.nv-brand .brand-sub { display: none; color: var(--nv-fg); transition: color $nv-t $ease-soft; }
 @include media-breakpoint-up(sm) { .nv-brand .brand-sub { display: block; } }
+// navbar staf lebih padat: sub-judul hanya di layar sangat lebar
+.nv-staff .brand-sub { display: none; }
+@include media-breakpoint-up(xxl) { .nv-staff .brand-sub { display: block; } }
 
 // ---------- lewati ke konten ----------
 .nv-skip {
-    position: absolute; left: 1rem; top: -5rem; z-index: 2000; padding: .7rem 1.1rem; border-radius: .7rem;
+    position: absolute; left: 1rem; top: -5rem; z-index: 2000; padding: .7rem 1.1rem; border-radius: .6rem;
     background: $dark; color: #fff; font-weight: 600; text-decoration: none; transition: top .15s;
     &:focus { top: 1rem; color: #fff; }
 }
 
-// ---------- pita status paling atas ----------
+// ---------- pita status paling atas (publik) ----------
 .nv-strip {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .2rem 1.5rem;
-    padding: .5rem 1rem; background: $navy; color: $on-navy; font-size: .88rem; font-weight: 500; text-align: center;
+    padding: .45rem 1rem; background: $navy; color: $on-navy; font-size: .85rem; font-weight: 500; text-align: center;
 }
 .nv-strip span { display: inline-flex; align-items: center; gap: .5rem; }
-.nv-dot { width: .55rem; height: .55rem; border-radius: 50%; background: $glow; }
+.nv-dot { width: .5rem; height: .5rem; border-radius: 50%; background: $glow; flex-shrink: 0; }
 .nv-dot.off { background: #F59A8F; }
 
-// ---------- pulau navigasi ----------
-// Bilah selebar layar. Di posisi atas warnanya sama dengan .nv-strip (navy) sehingga menyatu;
-// setelah di-scroll (.is-scrolled) berubah putih dengan bayangan. Warna teks dan tombol ikut berganti.
-// Isi (.nv) dibatasi 82.5rem (1320px) dan bergutter .75rem, sama persis dengan .container-xxl,
-// jadi tepi kiri-kanan navigasi sejajar dengan konten halaman dan simetris.
+// ---------- bilah navigasi ----------
 .nv-wrap {
-    position: sticky; top: 0; z-index: 1030; background: $navy;
-    transition: background-color .45s $ease-soft, box-shadow .45s $ease-soft;
+    --nv-fg: #{$on-navy-muted};
+    --nv-strong: #fff;
+    --nv-hover-bg: #{rgba(#fff, .09)};
+    --nv-on-bg: #{rgba(#fff, .14)};
+    --nv-on-fg: #fff;
+    --nv-line: #{rgba(#fff, .26)};
+    --nv-btn-bg: transparent;
+    --nv-burger-bg: #{rgba(#fff, .12)};
+    --nv-burger-hover: #{rgba(#fff, .2)};
+    --nv-av-bg: #{rgba(#fff, .16)};
+    --nv-av-fg: #fff;
+    --nv-focus: #{$glow};
+
+    position: sticky; top: 0; z-index: 1030; isolation: isolate; background: $navy;
+
+    // lapisan putih: hanya opacity yang beranimasi
+    &::before {
+        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+        background: #fff; opacity: 0; border-bottom: 1px solid $border-color;
+        transition: opacity $nv-t $ease-soft;
+    }
+
+    &.is-scrolled {
+        --nv-fg: #{$body-secondary-color};
+        --nv-strong: #{$dark};
+        --nv-hover-bg: #{rgba($dark, .06)};
+        --nv-on-bg: #{rgba($primary, .1)};
+        --nv-on-fg: #{$primary};
+        --nv-line: #{$border-color};
+        --nv-btn-bg: #fff;
+        --nv-burger-bg: #{rgba($dark, .06)};
+        --nv-burger-hover: #{rgba($dark, .1)};
+        --nv-av-bg: #{rgba($primary, .12)};
+        --nv-av-fg: #{$primary};
+        --nv-focus: #{rgba($primary, .6)};
+        &::before { opacity: 1; }
+    }
+
+    // dipakai sekali saat halaman dimuat, supaya tidak ada animasi awal
+    &.no-t, &.no-t * { transition: none !important; }
 }
-.nv-wrap.is-scrolled { background: #fff; box-shadow: 0 1px 0 rgba($border-color, .9), 0 14px 30px -20px rgba($dark, .45); }
+
 .nv {
     display: flex; align-items: center; gap: .75rem; max-width: 82.5rem; margin: 0 auto;
-    padding: .65rem .75rem; min-height: 4.1rem;
+    padding: .6rem .75rem; min-height: 4.1rem;
 }
+.bn-pub .nv { padding-inline: clamp(1.25rem, 5vw, 3.5rem); }
 
-.nv-links { display: none; align-items: center; gap: .15rem; margin: 0 auto 0 1.25rem; padding: 0; list-style: none; }
+// ---------- tautan ----------
+.nv-links {
+    display: none; flex: 1 1 auto; min-width: 0; align-items: center; gap: .1rem;
+    margin: 0 0 0 1rem; padding: 0; list-style: none;
+}
 .nv-link {
-    position: relative; display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; padding: 0 .95rem; border-radius: .85rem;
-    color: $body-secondary-color; font-size: .95rem; font-weight: 600; white-space: nowrap; text-decoration: none;
-    transition: color .35s $ease-soft, background-color .35s $ease-soft, box-shadow .35s $ease-soft;
-    .bi { font-size: 1.05rem; }
-    &:hover { color: $dark; background: rgba($dark, .05); }
-    &.is-on { color: $primary; background: rgba($primary, .1); box-shadow: inset 0 0 0 1px rgba($primary, .16); }
+    display: inline-flex; align-items: center; gap: .5rem; min-height: 2.5rem; padding: 0 .75rem; border-radius: .6rem;
+    color: var(--nv-fg); font-size: .95rem; font-weight: 600; white-space: nowrap; text-decoration: none;
+    transition: color $nv-t $ease-soft, background-color $nv-t $ease-soft;
+    .bi { display: none; font-size: 1.05rem; }
+    &:hover { color: var(--nv-strong); background: var(--nv-hover-bg); }
+    &.is-on { color: var(--nv-on-fg); background: var(--nv-on-bg); }
 }
-.nv-actions { display: none; align-items: center; gap: .5rem; margin-left: auto; }
-.nv-links + .nv-actions { margin-left: 0; }
+@include media-breakpoint-up(xxl) { .nv-link { padding: 0 .9rem; .bi { display: inline-block; } } }
 
+.nv-actions { display: none; flex-shrink: 0; align-items: center; gap: .5rem; margin-left: auto; }
+
+// ---------- tombol ----------
 .nv-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 2.75rem; padding: 0 1.15rem;
-    border-radius: .9rem; font-size: .95rem; font-weight: 700; white-space: nowrap; text-decoration: none; border: 1px solid transparent;
-    transition: transform .35s $ease-out, box-shadow .35s $ease-soft, background-color .35s $ease-soft, border-color .35s $ease-soft, color .35s $ease-soft;
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.5rem; padding: 0 1rem;
+    border-radius: .6rem; font-size: .95rem; font-weight: 600; white-space: nowrap; text-decoration: none; border: 1px solid transparent;
+    transition: background-color $nv-t $ease-soft, border-color $nv-t $ease-soft, color $nv-t $ease-soft;
 }
-.nv-btn-ghost { color: $dark; border-color: $border-color; background: #fff; &:hover { background: $body-tertiary-bg; color: $dark; } }
+.nv-btn-icon { width: 2.5rem; padding: 0; }
+.nv-btn-ghost {
+    color: var(--nv-strong); background: var(--nv-btn-bg); border-color: var(--nv-line);
+    &:hover { color: var(--nv-strong); background: var(--nv-hover-bg); }
+}
 .nv-btn-cta {
-    color: #fff; background: linear-gradient(135deg, #14A0B8 0%, #0B7A8F 100%); box-shadow: 0 10px 22px -12px rgba($primary, .9);
-    &:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 14px 26px -12px rgba($primary, 1); }
-    .bi { transition: transform .4s $ease-out; }
-    &:hover .bi { transform: translateX(3px); }
+    color: #fff; background: $primary;
+    &:hover { color: #fff; background: darken($primary, 6%); }
 }
+// di atas latar navy, tombol utama memakai warna terang supaya kontras
+.nv-wrap:not(.is-scrolled) .nv-btn-cta { background: $glow; color: $navy; &:hover { background: darken($glow, 8%); color: $navy; } }
 
-// tombol hamburger yang berubah jadi silang
+// ---------- hamburger ----------
 .nv-burger {
-    display: grid; place-content: center; margin-left: auto; width: 2.9rem; height: 2.9rem; padding: 0; border: 0; border-radius: .9rem;
-    background: rgba($dark, .06); transition: background-color .35s $ease-soft;
-    &:hover { background: rgba($dark, .1); }
-    span { display: block; width: 1.2rem; height: 2px; border-radius: 2px; background: $dark; transition: transform .4s $ease-out, opacity .25s $ease-soft, background-color .35s $ease-soft; }
-    span + span { margin-top: .28rem; }
-    &.is-open span:nth-child(1) { transform: translateY(.4rem) rotate(45deg); }
-    &.is-open span:nth-child(2) { opacity: 0; }
-    &.is-open span:nth-child(3) { transform: translateY(-.4rem) rotate(-45deg); }
-}
-// ---- tampilan di posisi atas (latar navy): teks dan tombol terang ----
-.nv-wrap:not(.is-scrolled) {
-    .nv-brand .brand-name { color: #fff; }
-    .nv-brand .brand-sub { color: $on-navy-muted; }
-    .nv-link {
-        color: $on-navy-muted;
-        &:hover { color: #fff; background: rgba(255, 255, 255, .09); }
-        &.is-on { color: #fff; background: rgba(255, 255, 255, .13); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
+    display: grid; place-content: center; flex-shrink: 0; margin-left: auto; width: 2.6rem; height: 2.6rem; padding: 0;
+    border: 0; border-radius: .6rem; background: var(--nv-burger-bg);
+    transition: background-color $nv-t $ease-soft;
+    &:hover { background: var(--nv-burger-hover); }
+    span {
+        display: block; width: 1.15rem; height: 2px; border-radius: 2px; background: var(--nv-strong);
+        transition: transform $nv-t $ease-soft, opacity .2s $ease-soft, background-color $nv-t $ease-soft;
     }
-    .nv-btn-ghost { color: #fff; background: transparent; border-color: rgba(255, 255, 255, .28); &:hover { background: rgba(255, 255, 255, .1); color: #fff; } }
-    .nv-burger { background: rgba(255, 255, 255, .13); &:hover { background: rgba(255, 255, 255, .2); } span { background: #fff; } }
-    .nv-role { background: rgba(255, 255, 255, .14); color: #fff; }
-    .nv-user { color: #fff; background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .22); &:hover, &.show { background: rgba(255, 255, 255, .16); } }
+    span + span { margin-top: .27rem; }
+    &.is-open span:nth-child(1) { transform: translateY(.33rem) rotate(45deg); }
+    &.is-open span:nth-child(2) { opacity: 0; }
+    &.is-open span:nth-child(3) { transform: translateY(-.33rem) rotate(-45deg); }
 }
 
-@include media-breakpoint-up(lg) {
+@include media-breakpoint-up(xl) {
     .nv-links, .nv-actions { display: flex; }
     .nv-burger { display: none; }
 }
-// staf: menu tampil mulai layar lebih lebar karena isinya lebih banyak
-.nv-staff .nv-burger { display: grid; }
-.nv-staff .nv-links, .nv-staff .nv-actions { display: none; }
-@include media-breakpoint-up(lg) {
-    .nv-staff .nv-burger { display: none; }
-    .nv-staff .nv-links, .nv-staff .nv-actions { display: flex; }
-}
 
 // ---------- menu pengguna (staf) ----------
-.nv-role { display: none; padding: .25rem .75rem; border-radius: 999px; background: rgba($primary, .1); color: $primary; font-size: .82rem; font-weight: 700; }
-@include media-breakpoint-up(xl) { .nv-role { display: inline-flex; } }
 .nv-user {
-    display: inline-flex; align-items: center; gap: .6rem; min-height: 2.9rem; padding: .25rem .8rem .25rem .3rem;
-    border: 1px solid $border-color; border-radius: 999px; background: #fff; color: $dark; font-weight: 600; font-size: .92rem;
-    &:hover, &.show { background: $body-tertiary-bg; }
+    display: inline-flex; align-items: center; gap: .5rem; min-height: 2.5rem; padding: .25rem .65rem .25rem .3rem;
+    border: 1px solid var(--nv-line); border-radius: 999px; background: var(--nv-btn-bg); color: var(--nv-strong);
+    font-weight: 600; font-size: .92rem;
+    transition: background-color $nv-t $ease-soft, border-color $nv-t $ease-soft, color $nv-t $ease-soft;
+    &:hover, &.show { background: var(--nv-hover-bg); }
+    .nama { display: none; max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bi { font-size: .75rem; }
 }
-.nv-user .nama { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nv-menu { min-width: 17rem; margin-top: .6rem !important; padding: .5rem; border: 1px solid $border-color; border-radius: 1.1rem; box-shadow: 0 24px 48px -20px rgba($dark, .45); }
-.nv-menu-head { display: flex; align-items: center; gap: .75rem; padding: .7rem .75rem .9rem; margin-bottom: .4rem; border-bottom: 1px solid $border-color; }
-.nv-menu-head .avatar { width: 2.75rem; height: 2.75rem; }
-.nv-menu-head b { display: block; line-height: 1.2; }
-.nv-menu-head small { color: $body-secondary-color; }
-.nv-menu .dropdown-item { display: flex; align-items: center; gap: .75rem; min-height: 2.75rem; border-radius: .7rem; font-weight: 500; }
-.nv-menu .dropdown-item .bi { font-size: 1.1rem; color: $body-secondary-color; }
+@include media-breakpoint-up(xxl) { .nv-user .nama { display: inline; } }
+
+.nv-menu { min-width: 17rem; margin-top: .5rem !important; padding: .4rem; border: 1px solid $border-color; border-radius: .9rem; box-shadow: 0 12px 28px -12px rgba($dark, .25); }
+.nv-menu-head { display: flex; align-items: center; gap: .75rem; padding: .65rem .7rem .8rem; margin-bottom: .35rem; border-bottom: 1px solid $border-color; }
+.nv-menu-head b { display: block; line-height: 1.2; color: $dark; }
+.nv-menu-head small { display: block; color: $body-secondary-color; overflow-wrap: anywhere; }
+.nv-menu .dropdown-item { display: flex; align-items: center; gap: .75rem; min-height: 2.6rem; border-radius: .55rem; font-weight: 500; }
+.nv-menu .dropdown-item .bi { font-size: 1.05rem; color: $body-secondary-color; }
 .nv-menu .dropdown-item.text-danger .bi { color: inherit; }
 
 // ---------- lembar menu di HP ----------
-.nv-sheet { width: min(24rem, 92vw) !important; border: 0; border-radius: 1.5rem 0 0 1.5rem; }
-.nv-sheet .offcanvas-header { padding: 1.1rem 1.25rem; border-bottom: 1px solid $border-color; }
-.nv-sheet .offcanvas-body { display: flex; flex-direction: column; gap: 1rem; padding: 1.1rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom)); }
-.nv-sheet-status { display: flex; align-items: center; gap: .65rem; padding: .8rem 1rem; border-radius: 1rem; background: rgba($success, .1); color: darken($success, 10%); font-weight: 600; font-size: .92rem; }
+.nv-sheet { width: min(24rem, 92vw) !important; border: 0; border-radius: 1.25rem 0 0 1.25rem; }
+.nv-sheet .offcanvas-header { padding: 1rem 1.25rem; border-bottom: 1px solid $border-color; }
+.nv-sheet .offcanvas-body { display: flex; flex-direction: column; gap: 1rem; padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)); }
+.nv-sheet-status { display: flex; align-items: center; gap: .65rem; padding: .75rem 1rem; border-radius: .8rem; background: rgba($success, .1); color: darken($success, 10%); font-weight: 600; font-size: .92rem; }
 .nv-sheet-status.off { background: rgba($danger, .1); color: darken($danger, 8%); }
-.nv-sheet-links { display: grid; gap: .25rem; margin: 0; padding: 0; list-style: none; }
+.nv-sheet-links { display: grid; gap: .2rem; margin: 0; padding: 0; list-style: none; }
 .nv-sheet-link {
-    display: flex; align-items: center; gap: .9rem; min-height: 3.4rem; padding: .5rem .85rem; border-radius: 1rem;
+    display: flex; align-items: center; gap: .9rem; min-height: 3.2rem; padding: .45rem .8rem; border-radius: .8rem;
     color: $dark; font-weight: 600; text-decoration: none;
-    .ic { display: grid; place-items: center; flex-shrink: 0; width: 2.4rem; height: 2.4rem; border-radius: .75rem; background: $body-tertiary-bg; color: $primary; font-size: 1.1rem; }
+    .ic { display: grid; place-items: center; flex-shrink: 0; width: 2.3rem; height: 2.3rem; border-radius: .6rem; background: $body-tertiary-bg; color: $primary; font-size: 1.05rem; }
     &:hover { background: $body-tertiary-bg; color: $dark; }
     &.is-on { background: rgba($primary, .1); color: $primary; .ic { background: $primary; color: #fff; } }
 }
+// tombol di lembar menu memakai tampilan terang, bukan variabel navbar
+.nv-sheet .nv-btn-ghost { color: $dark; background: #fff; border-color: $border-color; &:hover { background: $body-tertiary-bg; color: $dark; } }
+.nv-sheet .nv-btn-cta { background: $primary; color: #fff; }
 .nv-sheet-foot { display: grid; gap: .6rem; margin-top: auto; }
-.nv-sheet-user { display: flex; align-items: center; gap: .75rem; padding: .85rem 1rem; border-radius: 1rem; background: $body-tertiary-bg; }
+.nv-sheet-user { display: flex; align-items: center; gap: .75rem; padding: .8rem 1rem; border-radius: .8rem; background: $body-tertiary-bg; }
 .nv-sheet-user b { display: block; line-height: 1.2; }
 .nv-sheet-user small { color: $body-secondary-color; }
 
-// ---------- dock bawah (staf, HP dan tablet) ----------
+// ---------- dock bawah (staf, HP) ----------
 .nv-dock {
     position: fixed; left: .75rem; right: .75rem; bottom: calc(.75rem + env(safe-area-inset-bottom)); z-index: 1030;
-    display: flex; gap: .2rem; max-width: 34rem; margin: 0 auto; padding: .4rem; border-radius: 1.35rem;
-    background: rgba(13, 40, 48, .93); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    box-shadow: 0 20px 44px -16px rgba(0, 0, 0, .55);
+    display: flex; gap: .2rem; max-width: 34rem; margin: 0 auto; padding: .35rem; border-radius: 1.1rem;
+    background: $navy;
     a, button {
-        flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .15rem; min-height: 3.5rem; padding: .35rem .2rem;
-        border: 0; border-radius: 1rem; background: none; color: $on-navy-muted; font-size: .74rem; font-weight: 600; text-decoration: none;
-        i { font-size: 1.3rem; line-height: 1.1; }
+        flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .15rem; min-height: 3.4rem; padding: .35rem .2rem;
+        border: 0; border-radius: .8rem; background: none; color: $on-navy-muted; font-size: .74rem; font-weight: 600; text-decoration: none;
+        transition: color $nv-t $ease-soft, background-color $nv-t $ease-soft;
+        i { font-size: 1.25rem; line-height: 1.1; }
         span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         &.is-on { background: rgba(255, 255, 255, .14); color: #fff; }
         &:hover { color: #fff; }
         &:focus-visible { outline: 3px solid $glow; outline-offset: -2px; }
     }
 }
-body.has-bottomnav { padding-bottom: calc(5.9rem + env(safe-area-inset-bottom)); }
+body.has-bottomnav { padding-bottom: calc(5.6rem + env(safe-area-inset-bottom)); }
 @include media-breakpoint-up(md) {
     .nv-dock { display: none; }
     body.has-bottomnav { padding-bottom: 0; }
@@ -174,14 +236,12 @@ body.has-bottomnav { padding-bottom: calc(5.9rem + env(safe-area-inset-bottom));
 // ---------- bilah ajakan di HP (publik) ----------
 .nv-ctabar {
     position: fixed; left: .75rem; right: .75rem; bottom: calc(.75rem + env(safe-area-inset-bottom)); z-index: 1029;
-    display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem .6rem .6rem 1.1rem;
-    border-radius: 1.3rem; background: rgba(13, 40, 48, .94); color: $on-navy; font-size: .9rem; font-weight: 600;
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 20px 44px -16px rgba(0, 0, 0, .55);
+    display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .55rem .55rem .55rem 1rem;
+    border-radius: 1.1rem; background: $navy; color: $on-navy; font-size: .9rem; font-weight: 600;
     span { display: inline-flex; align-items: center; gap: .55rem; min-width: 0; line-height: 1.25; }
+    .nv-btn-cta { background: $glow; color: $navy; &:hover { background: darken($glow, 8%); color: $navy; } }
 }
-@include media-breakpoint-up(lg) {
-    .nv-ctabar { display: none; }
-}
+@include media-breakpoint-up(lg) { .nv-ctabar { display: none; } }
 
 // ---------- footer staf ----------
 .nv-foot {
@@ -192,36 +252,20 @@ body.has-bottomnav { padding-bottom: calc(5.9rem + env(safe-area-inset-bottom));
 .nv-foot nav { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
 
 // ---------- footer publik ----------
-// Tanpa margin atas dan tanpa sudut membulat: footer menempel langsung ke section di atasnya (tidak ada celah).
-// Jarak antara konten dan footer diatur oleh padding bawah <main> / section itu sendiri.
-// Ruang untuk bilah ajakan di HP ditaruh sebagai padding footer (bukan padding body) supaya tidak ada celah putih di bawah footer.
-.ft {
-    position: relative; isolation: isolate; overflow: hidden; margin-top: 0;
-    padding-top: clamp(1.75rem, 4vw, 3rem); color: $on-navy;
-    background: linear-gradient(180deg, #0E2A33 0%, #08191F 100%);
-    &::before {
-        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 21v14M21 28h14' stroke='white' stroke-opacity='.045' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
-        -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 85%); mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
-    }
-    a { color: $on-navy-muted; text-decoration: none; &:hover { color: #fff; text-decoration: none; } }
-}
-body.has-ctabar .ft { padding-bottom: calc(4.9rem + env(safe-area-inset-bottom)); }
-@include media-breakpoint-up(lg) {
-    body.has-ctabar .ft { padding-bottom: 0; }
-}
+.ft { position: relative; margin-top: 0; padding-top: clamp(1.75rem, 4vw, 3rem); color: $on-navy; background: #0A1F26; }
+.ft a { color: $on-navy-muted; text-decoration: none; &:hover { color: #fff; text-decoration: none; } }
+body.has-ctabar .ft { padding-bottom: calc(4.8rem + env(safe-area-inset-bottom)); }
+@include media-breakpoint-up(lg) { body.has-ctabar .ft { padding-bottom: 0; } }
 
 .ft-cta {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem 2rem;
-    margin-bottom: clamp(2rem, 5vw, 3.5rem); padding: clamp(1.25rem, 3vw, 2rem); border-radius: 1.5rem;
-    background: linear-gradient(135deg, #12A0B8 0%, #0A5A6F 100%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
-    h2 { margin: 0 0 .3rem; color: #fff; font-size: clamp(1.3rem, 3vw, 1.9rem); line-height: 1.15; }
+    margin-bottom: clamp(2rem, 5vw, 3.5rem); padding: clamp(1.25rem, 3vw, 2rem); border-radius: 1.1rem;
+    background: $primary;
+    h2 { margin: 0 0 .3rem; color: #fff; font-size: clamp(1.3rem, 3vw, 1.8rem); line-height: 1.15; }
     p { margin: 0; max-width: 34rem; color: #D6EFF3; }
-    .btn { min-height: 3rem; font-weight: 700; color: #0A4F63; &:hover { color: #0A4F63; text-decoration: none; transform: translateY(-1px); } }
+    .btn { min-height: 3rem; font-weight: 700; color: $navy; &:hover { color: $navy; text-decoration: none; } }
 }
-@include media-breakpoint-down(sm) {
-    .ft-cta { border-radius: 1.2rem; .btn { width: 100%; } }
-}
+@include media-breakpoint-down(sm) { .ft-cta { .btn { width: 100%; } } }
 .ft-grid { display: grid; gap: 2rem 2.5rem; grid-template-columns: minmax(0, 1fr); padding-bottom: clamp(1.75rem, 4vw, 2.75rem); }
 @media (min-width: 576px) { .ft-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 992px) { .ft-grid { grid-template-columns: 1.6fr 1fr 1fr 1.3fr; } }
@@ -230,40 +274,39 @@ body.has-ctabar .ft { padding-bottom: calc(4.9rem + env(safe-area-inset-bottom))
 .ft-list { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
 .ft-list a { display: inline-flex; align-items: center; gap: .55rem; min-height: 2rem; }
 .ft-list .bi { color: $glow; opacity: .85; }
-.ft-status { display: inline-flex; align-items: center; gap: .55rem; margin-bottom: .8rem; padding: .35rem .85rem; border-radius: 999px; background: rgba(255, 255, 255, .08); font-size: .88rem; font-weight: 600; color: $on-navy; }
+.ft-status { display: inline-flex; align-items: center; gap: .55rem; margin-bottom: .8rem; padding: .3rem .8rem; border-radius: 999px; background: rgba(255, 255, 255, .08); font-size: .88rem; font-weight: 600; color: $on-navy; }
 .ft-jam { display: grid; gap: .45rem; margin: 0; }
-.ft-jam div { display: flex; justify-content: space-between; gap: 1rem; padding-bottom: .45rem; border-bottom: 1px dashed rgba(255, 255, 255, .14); }
+.ft-jam div { display: flex; justify-content: space-between; gap: 1rem; padding-bottom: .45rem; border-bottom: 1px solid rgba(255, 255, 255, .12); }
 .ft-jam dt { font-weight: 500; color: $on-navy-muted; }
 .ft-jam dd { margin: 0; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; text-align: right; }
 .ft-bottom {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem;
     padding: 1.15rem 0 1.4rem; border-top: 1px solid rgba(255, 255, 255, .1); color: $on-navy-muted; font-size: .88rem;
 }
-@include media-breakpoint-down(sm) {
-    .ft-bottom { flex-direction: column; align-items: flex-start; }
-}
+@include media-breakpoint-down(sm) { .ft-bottom { flex-direction: column; align-items: flex-start; } }
 .ft-top {
     display: inline-flex; align-items: center; gap: .5rem; min-height: 2.5rem; padding: 0 1rem; border: 1px solid rgba(255, 255, 255, .2); border-radius: 999px;
     background: none; color: $on-navy; font-weight: 600; font-size: .88rem;
     &:hover { background: rgba(255, 255, 255, .1); }
 }
 
-.nv a:focus-visible, .nv button:focus-visible, .nv-sheet a:focus-visible, .ft a:focus-visible, .ft button:focus-visible {
-    outline: 3px solid rgba($primary, .6); outline-offset: 2px;
-}
-.ft a:focus-visible, .ft button:focus-visible { outline-color: $glow; }
+// ---------- fokus keyboard ----------
+.nv a:focus-visible, .nv button:focus-visible { outline: 3px solid var(--nv-focus); outline-offset: 2px; }
+.nv-sheet a:focus-visible, .nv-sheet button:focus-visible { outline: 3px solid rgba($primary, .6); outline-offset: 2px; }
+.ft a:focus-visible, .ft button:focus-visible { outline: 3px solid $glow; outline-offset: 2px; }
 
-// ---------- transisi halus untuk elemen lain ----------
-.nv-sheet-link, .nv-sheet-link .ic, .nv-user, .nv-menu .dropdown-item, .nv-dock a, .nv-dock button, .nv-foot a, .ft a, .ft-top {
-    transition: color .3s $ease-soft, background-color .3s $ease-soft, border-color .3s $ease-soft, box-shadow .3s $ease-soft;
+// ---------- transisi untuk elemen sisanya ----------
+.nv-sheet-link, .nv-sheet-link .ic, .nv-menu .dropdown-item, .nv-foot a, .ft a, .ft-top {
+    transition: color $nv-t $ease-soft, background-color $nv-t $ease-soft, border-color $nv-t $ease-soft;
 }
 
-// ---------- tanpa garis bawah di semua tautan navigasi dan footer (normal, hover, fokus, aktif) ----------
+// ---------- tanpa garis bawah ----------
 .nv a, .nv-sheet a, .nv-dock a, .nv-ctabar a, .nv-foot a, .ft a, .nv-menu a {
     &, &:hover, &:focus, &:focus-visible, &:active { text-decoration: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .nv-wrap, .nv-link, .nv-btn, .nv-burger, .nv-burger span, .nv-btn-cta .bi,
-    .nv-sheet-link, .nv-sheet-link .ic, .nv-user, .nv-menu .dropdown-item, .nv-dock a, .nv-dock button, .nv-foot a, .ft a, .ft-top { transition: none; }
+    .nv-wrap::before, .nv-link, .nv-btn, .nv-burger, .nv-burger span, .nv-user, .nv-user .avatar,
+    .nv-brand .brand-name, .nv-brand .brand-sub,
+    .nv-sheet-link, .nv-sheet-link .ic, .nv-menu .dropdown-item, .nv-dock a, .nv-dock button, .nv-foot a, .ft a, .ft-top { transition: none; }
 }

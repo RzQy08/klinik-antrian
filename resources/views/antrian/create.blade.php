@@ -1,4 +1,4 @@
-<x-public-layout title="Ambil nomor antrian" :wide="true">
+<x-public-layout :wide="true">
     <div class="am-page">
         <script>document.currentScript.parentElement.classList.add('am-js');</script>
 

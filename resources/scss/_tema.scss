@@ -11,48 +11,9 @@ $tema-gelap-2: $navy;     // tengah hero
 $tema-gelap-3: #0A5568;   // ujung bawah hero
 $tema-terang:  #F4FAFB;   // warna pita terang pertama (sambungan dari kartu statistik)
 
-// ---------- strip + navbar: sama dengan latar hero ----------
-.nv-strip {
-    background: $tema-gelap-1;
-    border-bottom: 1px solid rgba(255, 255, 255, .06);
-}
-
-.nv-wrap,
-.nv-wrap.is-scrolled {
-    background:
-        radial-gradient(34rem 10rem at 92% -70%, rgba($glow, .22), transparent 70%),
-        linear-gradient(90deg, $tema-gelap-1 0%, #063A4D 55%, #08485D 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, .08);
-    box-shadow: none;
-}
-// saat digulir: tetap gelap, hanya diberi bayangan halus
-.nv-wrap.is-scrolled { box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .55); }
-
-// teks dan tombol selalu terang (tidak lagi berganti putih saat digulir)
-.nv-wrap {
-    .nv-brand .brand-name, .brand-name { color: #fff; }
-    .brand-sub { color: $on-navy-muted; }
-
-    .nv-link {
-        color: $on-navy-muted;
-        &:hover { color: #fff; background: rgba(255, 255, 255, .09); }
-        &.is-on { color: #fff; background: rgba(255, 255, 255, .13); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
-    }
-    .nv-btn-ghost {
-        color: #fff; background: transparent; border-color: rgba(255, 255, 255, .28);
-        &:hover { color: #fff; background: rgba(255, 255, 255, .1); }
-    }
-    .nv-burger {
-        background: rgba(255, 255, 255, .13);
-        &:hover { background: rgba(255, 255, 255, .2); }
-        span { background: #fff; }
-    }
-    .nv-role { background: rgba(255, 255, 255, .14); color: #fff; }
-    .nv-user {
-        color: #fff; background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .22);
-        &:hover, &.show { background: rgba(255, 255, 255, .16); }
-    }
-}
+// ---------- strip + navbar ----------
+// Warna strip dan navbar diatur di _nav.scss agar tidak ada dua aturan
+// yang saling menimpa (terutama saat navbar di-scroll).
 
 // ---------- hero: lebih rapi di semua ukuran ----------
 .bn-hero { padding-top: clamp(2.5rem, 6vw, 5rem); }

@@ -2,28 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Antrian;
-use App\Models\Dokter;
 use App\Models\Poli;
+use App\Services\RingkasanAntrian;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
 class BerandaController extends Controller
 {
     /**
-     * Halaman awal publik. Kartu antrian per poli ditangani komponen Livewire BerandaPoli
-     * supaya bisa diperbarui tanpa memuat ulang halaman. Statistik di sini dihitung saat halaman dibuka.
+     * Halaman awal publik. Panel antrian di hero membaca endpoint antrianHariIni() secara berkala
+     * (tanpa memuat ulang halaman); kartu per poli ditangani komponen Livewire BerandaPoli.
+     * Data awal ikut dikirim saat halaman dibuka supaya panel langsung terisi.
      */
     public function index(): View
     {
-        $polis = Poli::where('aktif', true)->orderBy('kode_poli')->get();
+        $ringkasan = RingkasanAntrian::ambil();
 
-        $statistik = [
-            'menunggu' => Antrian::hariIni()->menunggu()->count(),
-            'selesai' => Antrian::hariIni()->selesai()->count(),
-            'poli' => $polis->count(),
-            'dokter' => Dokter::where('aktif', true)->count(),
-        ];
+        return view('beranda', [
+            'polis' => Poli::where('aktif', true)->orderBy('kode_poli')->get(),
+            'ringkasan' => $ringkasan,
+            'statistik' => $ringkasan['ringkasan'],
+            'dokterHariIni' => $ringkasan['dokter'],
+        ]);
+    }
 
-        return view('beranda', compact('polis', 'statistik'));
+    /** Data antrian hari ini (JSON) untuk panel di hero. Publik, hanya berisi nomor dan jumlah. */
+    public function antrianHariIni(): JsonResponse
+    {
+        return response()
+            ->json(RingkasanAntrian::ambil())
+            ->header('Cache-Control', 'no-store');
     }
 }

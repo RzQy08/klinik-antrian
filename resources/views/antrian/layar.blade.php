@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    @include('partials.head', ['title' => 'Papan antrian', 'js' => false])
+    @include('partials.head', ['js' => false])
     @livewireStyles
 </head>
 <body class="pa-body">

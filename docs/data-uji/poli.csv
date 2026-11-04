@@ -1,0 +1,5 @@
+﻿no;nama_poli;kode_poli;aktif;catatan
+1;Poli Mata;M;Ya;Poli utama skenario
+2;Poli Saraf;N;Ya;Dokter Nanda punya akun login
+3;Poli Fisioterapi;F;Ya;Dokter Fajar tanpa akun login
+4;Poli Kulit;K;Tidak;Poli nonaktif untuk uji filter

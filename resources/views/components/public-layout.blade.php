@@ -65,7 +65,7 @@
     </nav>
 </header>
 
-{{-- Lembar menu di HP --}}
+{{-- Lembar menu di HP dan tablet --}}
 <div class="offcanvas offcanvas-end nv-sheet" tabindex="-1" id="nvSheet" aria-labelledby="nvSheetJudul">
     <div class="offcanvas-header">
         <div id="nvSheetJudul">@include('partials.brand')</div>
@@ -179,14 +179,25 @@
 <script>
 (function () {
     var wrap = document.getElementById('nvWrap'), burger = document.getElementById('nvBurger'), sheet = document.getElementById('nvSheet');
-    var tunggu = false;
-    function geser() { wrap.classList.toggle('is-scrolled', window.scrollY > 8); tunggu = false; }
-    window.addEventListener('scroll', function () { if (!tunggu) { tunggu = true; requestAnimationFrame(geser); } }, { passive: true });
-    geser();
+    if (!wrap) return;
+
+    // Navbar tetap gelap; .is-scrolled hanya menambah bayangan.
+    // Dua ambang (24px aktif, 8px mati) mencegah bayangan berkedip di batas.
+    var scrolled = false;
+    function baca() {
+        var y = window.scrollY;
+        if (!scrolled && y > 24) scrolled = true;
+        else if (scrolled && y < 8) scrolled = false;
+        wrap.classList.toggle('is-scrolled', scrolled);
+    }
+    baca();
+    window.addEventListener('scroll', baca, { passive: true });
+
     if (sheet && burger) {
         sheet.addEventListener('show.bs.offcanvas', function () { burger.classList.add('is-open'); });
         sheet.addEventListener('hidden.bs.offcanvas', function () { burger.classList.remove('is-open'); });
     }
+
     var atas = document.getElementById('ftTop');
     if (atas) atas.addEventListener('click', function () {
         var diam = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -1,0 +1,12 @@
+﻿no;dokter;poli_kode;hari;jam_mulai;jam_selesai;kuota
+1;"dr. Maya Kusuma, Sp.M";M;senin;08:00;12:00;24
+2;"dr. Maya Kusuma, Sp.M";M;rabu;08:00;12:00;24
+3;"dr. Maya Kusuma, Sp.M";M;jumat;13:00;16:00;20
+4;"dr. Nanda Pratama, Sp.S";N;selasa;08:00;12:00;20
+5;"dr. Nanda Pratama, Sp.S";N;kamis;08:00;12:00;20
+6;"dr. Nanda Pratama, Sp.S";N;sabtu;08:00;11:00;16
+7;dr. Fajar Ramadhan;F;senin;14:00;17:00;16
+8;dr. Fajar Ramadhan;F;selasa;14:00;17:00;16
+9;dr. Fajar Ramadhan;F;rabu;14:00;17:00;16
+10;dr. Fajar Ramadhan;F;kamis;14:00;17:00;16
+11;dr. Fajar Ramadhan;F;jumat;14:00;17:00;16

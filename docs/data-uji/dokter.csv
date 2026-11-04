@@ -1,0 +1,5 @@
+﻿no;nama;poli_kode;no_sip;aktif;buat_akun;email;password;catatan
+1;"dr. Maya Kusuma, Sp.M";M;SIP-MANUAL-001;Ya;Ya;maya.manual@klinik.test;MayaManual#2026;Dokter utama Poli Mata
+2;"dr. Nanda Pratama, Sp.S";N;SIP-MANUAL-002;Ya;Ya;nanda.manual@klinik.test;NandaManual#2026;Dokter utama Poli Saraf
+3;dr. Fajar Ramadhan;F;SIP-MANUAL-003;Ya;Tidak;;;Dikelola petugas, tanpa akun login
+4;"drg. Rina Marlina";M;SIP-MANUAL-004;Tidak;Tidak;;;Dokter nonaktif untuk uji dropdown

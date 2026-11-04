@@ -20,6 +20,11 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('/', [BerandaController::class, 'index'])->name('beranda');
 
+// Data antrian hari ini (JSON) untuk panel di hero beranda. Diletakkan sebelum route /antrian/{...} lain.
+Route::get('/antrian/hari-ini', [BerandaController::class, 'antrianHariIni'])
+    ->middleware('throttle:60,1')
+    ->name('antrian.hari-ini');
+
 Route::post('/demo/masuk/{role}', DemoLoginController::class)
     ->whereIn('role', ['admin', 'petugas', 'dokter'])
     ->name('demo.masuk');

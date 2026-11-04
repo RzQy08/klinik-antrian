@@ -11,7 +11,6 @@
 @keyframes bn-naik { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes bn-gulir-masuk { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes bn-gulir-keluar { from { transform: none; opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
-@keyframes bn-aurora { from { transform: translate(0, 0) scale(1); } to { transform: translate(-6rem, 5rem) scale(1.18); } }
 
 // Hindari geser horizontal akibat elemen dekoratif
 body { overflow-x: clip; }
@@ -77,25 +76,10 @@ body { overflow-x: clip; }
         radial-gradient(40rem 30rem at -8% 108%, rgba($primary, .75), transparent 62%),
         linear-gradient(160deg, #052B38 0%, $navy 52%, #0A5568 100%);
 
-    &::before {
-        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-        background-image: linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
-        background-size: 48px 48px;
-        -webkit-mask-image: radial-gradient(ellipse at 72% 38%, #000 0%, transparent 72%);
-        mask-image: radial-gradient(ellipse at 72% 38%, #000 0%, transparent 72%);
-    }
-    // Cahaya aurora yang bergerak pelan
-    &::after {
-        content: ''; position: absolute; z-index: -1; pointer-events: none;
-        top: -10rem; right: -8rem; width: 34rem; height: 34rem; border-radius: 50%;
-        background: radial-gradient(circle, rgba($glow, .24), transparent 65%); filter: blur(30px);
-        animation: bn-aurora 14s ease-in-out infinite alternate;
-    }
     .row > * { animation: bn-naik .7s cubic-bezier(.2, .8, .2, 1) both; }
     .row > *:nth-child(2) { animation-delay: .15s; }
 }
 @include media-breakpoint-down(md) {
-    .bn-hero::after { top: -6rem; right: -9rem; width: 22rem; height: 22rem; filter: blur(22px); }
     .bn-band-stripes::before { background-size: 32px 32px; }
 }
 
@@ -126,41 +110,33 @@ body { overflow-x: clip; }
     .bi { color: $glow; font-size: 1.05rem; }
 }
 
-// ---------- papan kaca ----------
-.bn-stage { position: relative; max-width: 24rem; margin: 0 auto; padding: 1.75rem 0; }
-.bn-glass { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .2); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
-.bn-board {
-    padding: 1.4rem; border-radius: 1.6rem; transform: rotate(-1.5deg);
-    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .25);
-    animation: bn-melayang 7s ease-in-out infinite;
-}
-.bn-board-label { display: inline-flex; align-items: center; gap: .5rem; font-size: .78rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: $on-navy-muted; }
+// ---------- tampilan panggilan (ilustrasi di hero) ----------
+// Mirip layar panggilan di ruang tunggu: kepala berwarna, nomor besar di latar putih, ringkasan di bawah.
 .bn-live-dot { width: .6rem; height: .6rem; border-radius: 50%; background: $glow; animation: bn-denyut-hijau 2s infinite; }
 .bn-live-dot-dark { background: $success; animation-name: bn-denyut-gelap; }
-.bn-board-no { font-size: clamp(4.5rem, 9vw, 6.5rem); color: $glow; margin: .6rem 0 1.1rem; text-shadow: 0 0 50px rgba($glow, .4); }
-.bn-board-rows {
-    display: grid; gap: .5rem;
-    li { display: flex; align-items: center; gap: .8rem; padding: .55rem .8rem; border-radius: .9rem; background: rgba(255, 255, 255, .07); color: $on-navy; font-size: .95rem; }
-    li span:nth-child(2) { flex: 1; }
-    .kode { min-width: 2rem; height: 2rem; font-size: 1rem; border-radius: .55rem; }
-    b { color: #fff; font-size: 1.25rem; }
-}
 
-.bn-chip {
-    position: absolute; display: flex; align-items: center; gap: .7rem; padding: .6rem 1rem .6rem .6rem;
-    background: #fff; color: $dark; border-radius: 1rem; font-size: .9rem; white-space: nowrap;
-    box-shadow: 0 18px 36px rgba(0, 0, 0, .3); animation: bn-melayang 5s ease-in-out infinite;
+.bn-display {
+    max-width: 25rem; margin: 0 auto; overflow: hidden; background: #fff; border-radius: 1.5rem;
+    box-shadow: 0 30px 60px -28px rgba(0, 0, 0, .55);
 }
-.bn-chip-1 { top: 0; right: -.5rem; animation-delay: -1.5s; }
-.bn-chip-2 { bottom: .25rem; left: -.5rem; animation-delay: -3s; }
-.bn-chip-icon { display: inline-grid; place-items: center; width: 2.3rem; height: 2.3rem; border-radius: .7rem; font-size: 1.05rem; }
-.bn-chip-icon-warn { background: rgba($warning, .24); color: #8A5A00; }
-.bn-chip-icon-ok { background: rgba($success, .14); color: $success; }
-
-@include media-breakpoint-down(lg) {
-    .bn-board { transform: none; }
-    .bn-chip-1 { right: 0; }
-    .bn-chip-2 { left: 0; }
+.bn-display-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .85rem 1.4rem;
+    background: $primary; color: #fff; font-size: .9rem; font-weight: 600;
+}
+.bn-display-live { display: inline-flex; align-items: center; gap: .55rem; }
+.bn-display-live i { width: .55rem; height: .55rem; border-radius: 50%; background: #fff; }
+.bn-display-jam { font-variant-numeric: tabular-nums; opacity: .9; }
+.bn-display-body { padding: 1.6rem 1.4rem 1.5rem; text-align: center; }
+.bn-display-poli { display: inline-flex; align-items: center; gap: .65rem; font-weight: 700; font-size: 1.05rem; color: $dark; }
+.bn-display-poli .kode { min-width: 2.2rem; height: 2.2rem; font-size: 1.1rem; border-radius: .6rem; }
+.bn-display-no { margin: .9rem 0 .6rem; font-size: clamp(4.6rem, 9vw, 6.4rem); color: $navy; }
+.bn-display-hint { font-size: .92rem; color: $body-secondary-color; }
+.bn-display-foot {
+    display: grid; grid-template-columns: 1fr 1fr; background: $light; border-top: 1px solid $border-color;
+    > div { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; padding: .95rem 1.4rem; }
+    > div + div { border-left: 1px solid $border-color; }
+    small { font-size: .82rem; color: $body-secondary-color; }
+    b { font-size: 1.35rem; color: $navy; }
 }
 
 // ---------- statistik: menimpa tepi bawah hero ----------
@@ -297,19 +273,7 @@ body { overflow-x: clip; }
 }
 
 // ---------- ajakan (selebar layar) ----------
-.bn-cta-band {
-    padding: clamp(3rem, 6vw, 5rem) 0; color: #fff; position: relative; overflow: hidden; isolation: isolate;
-    background:
-        radial-gradient(34rem 18rem at 100% 0, rgba($glow, .35), transparent 70%),
-        radial-gradient(28rem 16rem at 0 100%, rgba(#fff, .10), transparent 70%),
-        linear-gradient(135deg, #0B7A8F 0%, #08566A 100%);
-    &::before {
-        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 21v14M21 28h14' stroke='white' stroke-opacity='.07' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
-        -webkit-mask-image: linear-gradient(90deg, transparent 20%, #000 100%);
-        mask-image: linear-gradient(90deg, transparent 20%, #000 100%);
-    }
-}
+.bn-cta-band { padding: clamp(3rem, 6vw, 5rem) 0; color: #fff; background: $primary; }
 .bn-cta {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem;
     h2 { color: #fff; font-size: clamp(1.7rem, 3.4vw, 2.5rem); letter-spacing: -.03em; margin: 0 0 .4rem; }
@@ -317,7 +281,7 @@ body { overflow-x: clip; }
 }
 
 // ---------- footer ----------
-.bn-footer { color: $on-navy-muted; background: radial-gradient(40rem 20rem at 0 0, rgba($primary, .35), transparent 70%), #052B38; }
+.bn-footer { color: $on-navy-muted; background: $navy; }
 .bn-footer a { color: $on-navy-muted; transition: color .15s; &:hover { color: $glow; text-decoration: none; } }
 .bn-footer-top { display: grid; gap: 2.5rem; padding: clamp(2.5rem, 5vw, 4rem) 0; grid-template-columns: 1fr; }
 @include media-breakpoint-up(md) { .bn-footer-top { grid-template-columns: 1fr 1fr; } }
@@ -366,7 +330,6 @@ body { overflow-x: clip; }
 
 // ---------- gerak dikurangi bila pengguna memintanya ----------
 @media (prefers-reduced-motion: reduce) {
-    .bn-hero::after { animation: none; }
     .bn-stat { transition: none; }
     .bn-roll-in.is-masuk, .bn-roll-out { animation: none; }
     .bn-roll-out { display: none; }

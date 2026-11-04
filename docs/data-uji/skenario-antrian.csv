@@ -1,0 +1,27 @@
+﻿langkah;poli_kode;perkiraan_nomor;pasien;aksi;status_setelah;catatan
+1;M;M001;Aditya Nugraha;Daftar lewat /antrian/ambil;menunggu;Pilih Poli Mata dan isi NIK 3273101403920001
+2;M;M002;Bunga Permatasari;Daftar lewat /antrian/ambil;menunggu;Isi NIK 3273106107950002
+3;M;M003;Candra Wijaya;Daftar lewat /antrian/ambil;menunggu;Isi NIK 3273100211880003
+4;N;N001;Dinda Maharani;Daftar lewat /antrian/ambil;menunggu;Isi NIK 3273107001000004
+5;N;N002;Eko Prasetyo;Daftar lewat /antrian/ambil;menunggu;Isi NIK 3273100905790005
+6;N;N003;Fitri Handayani;Daftar lewat /antrian/ambil;menunggu;Isi NIK 3273105712980006
+7;F;F001;Galih Ramadhan;Daftar lewat /antrian/ambil;menunggu;Isi NIK 3273102508030007
+8;F;F002;Hana Safitri;Daftar lewat /antrian/ambil;menunggu;Isi NIK 3273104506900008
+9;M;M004;Irfan Maulana;Daftar lewat /antrian/ambil;menunggu;Isi NIK 3273101209850009
+10;N;N004;Jihan Aulia;Daftar lewat /antrian/ambil;menunggu;Isi NIK 3273106804010010
+11;M;M001;Aditya Nugraha;Panggil M001 dengan dr. Maya;dipanggil;Buka Kelola Poli Mata
+12;M;M001;Aditya Nugraha;Mulai layani;dilayani;
+13;M;M001;Aditya Nugraha;Selesai;selesai;
+14;M;M002;Bunga Permatasari;Panggil M002 dengan dr. Maya;dipanggil;
+15;M;M002;Bunga Permatasari;Tidak hadir;tidak_hadir;
+16;M;M003;Candra Wijaya;Panggil M003 dengan dr. Maya;dipanggil;Biarkan di status ini
+17;M;M002;Bunga Permatasari;Panggil ulang dengan dr. Maya;dipanggil;Jumlah panggil menjadi 2
+18;M;M002;Bunga Permatasari;Mulai layani;dilayani;
+19;M;M002;Bunga Permatasari;Selesai;selesai;
+20;N;N001;Dinda Maharani;Panggil N001 dengan dr. Nanda;dipanggil;Buka Kelola Poli Saraf
+21;N;N001;Dinda Maharani;Mulai layani;dilayani;Biarkan di status ini
+22;N;N002;Eko Prasetyo;Panggil N002 dengan dr. Nanda;dipanggil;
+23;N;N002;Eko Prasetyo;Tidak hadir;tidak_hadir;Biarkan di status ini
+24;F;F001;Galih Ramadhan;Panggil F001 dengan dr. Fajar;dipanggil;Buka Kelola Poli Fisioterapi
+25;F;F001;Galih Ramadhan;Mulai layani;dilayani;
+26;F;F001;Galih Ramadhan;Selesai;selesai;

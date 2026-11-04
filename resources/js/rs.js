@@ -3,6 +3,9 @@ import * as bootstrap from 'bootstrap';
 
 window.bootstrap = bootstrap;
 
+// Panel antrian hari ini di beranda (hero) dan angka ringkasan
+import './beranda-antrian';
+
 // Navbar melayang: bayangan saat halaman digulir, dan indikator yang bergeser ke tautan yang disorot
 (function () {
     const header = document.querySelector('[data-nb]');

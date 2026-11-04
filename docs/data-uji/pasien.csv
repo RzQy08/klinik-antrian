@@ -1,0 +1,11 @@
+﻿urutan;nama;nik;tanggal_lahir;jenis_kelamin;no_hp;alamat;poli_kode;perkiraan_tiket;status_akhir
+1;Aditya Nugraha;3273101403920001;1992-03-14;L;081240000001;"Jl. Buah Batu No. 12, Bandung";M;M001;selesai
+2;Bunga Permatasari;3273106107950002;1995-07-21;P;081240000002;"Jl. Kiaracondong No. 45, Bandung";M;M002;selesai
+3;Candra Wijaya;3273100211880003;1988-11-02;L;081240000003;"Jl. Sukarno-Hatta No. 88, Bandung";M;M003;dipanggil
+4;Dinda Maharani;3273107001000004;2000-01-30;P;081240000004;"Jl. Riau No. 21, Bandung";N;N001;dilayani
+5;Eko Prasetyo;3273100905790005;1979-05-09;L;081240000005;"Jl. Cikutra No. 7, Bandung";N;N002;tidak_hadir
+6;Fitri Handayani;3273105712980006;1998-12-17;P;081240000006;"Jl. Pahlawan No. 33, Bandung";N;N003;menunggu
+7;Galih Ramadhan;3273102508030007;2003-08-25;L;081240000007;"Jl. Dipatiukur No. 56, Bandung";F;F001;selesai
+8;Hana Safitri;3273104506900008;1990-06-05;P;081240000008;"Jl. Gatot Subroto No. 19, Bandung";F;F002;menunggu
+9;Irfan Maulana;3273101209850009;1985-09-12;L;081240000009;"Jl. Soekarno-Hatta No. 101, Bandung";M;M004;menunggu
+10;Jihan Aulia;3273106804010010;2001-04-28;P;081240000010;"Jl. Antapani No. 14, Bandung";N;N004;menunggu

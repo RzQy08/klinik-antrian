@@ -157,9 +157,8 @@
 <script>
 (function () {
     var wrap = document.getElementById('nvWrap'), burger = document.getElementById('nvBurger'), sheet = document.getElementById('nvSheet');
-    var tunggu = false;
-    function geser() { wrap.classList.toggle('is-scrolled', window.scrollY > 8); tunggu = false; }
-    window.addEventListener('scroll', function () { if (!tunggu) { tunggu = true; requestAnimationFrame(geser); } }, { passive: true });
+    function geser() { wrap.classList.toggle('is-scrolled', window.scrollY > 8); }
+    window.addEventListener('scroll', geser, { passive: true });
     geser();
     if (sheet && burger) {
         sheet.addEventListener('show.bs.offcanvas', function () { burger.classList.add('is-open'); });

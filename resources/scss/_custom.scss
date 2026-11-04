@@ -1,5 +1,6 @@
 // =====================================================================
 // Gaya khusus rumah sakit di atas Bootstrap
+// Navbar, merek (brand), avatar, dan footer ada di _nav.scss
 // =====================================================================
 
 // ---------- dasar ----------
@@ -16,61 +17,6 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 { letter-spacing: -.015em; 
 .text-on-navy-muted { color: $on-navy-muted !important; }
 .bg-navy { background-color: $navy !important; }
 .bg-navy-soft { background-color: $navy-soft !important; }
-
-// ---------- merek ----------
-.brand-name { font-family: $headings-font-family; font-weight: 800; font-size: 1.15rem; color: $dark; letter-spacing: -.01em; }
-.brand-sub { font-size: .75rem; font-weight: 500; color: $body-secondary-color; }
-.brand-light .brand-name { color: #fff; }
-.brand-light .brand-sub { color: $on-navy-muted; }
-.brand-mark {
-    position: relative; flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: .75rem; background: $primary;
-    &::before, &::after { content: ''; position: absolute; left: 50%; top: 50%; background: #fff; border-radius: 2px; transform: translate(-50%, -50%); }
-    &::before { width: 1.25rem; height: .36rem; }
-    &::after { width: .36rem; height: 1.25rem; }
-}
-.brand-mark-light { background: rgba(255, 255, 255, .16); }
-
-// ---------- navigasi ----------
-.topbar {
-    background: rgba(#fff, .92); border-bottom: 1px solid $border-color;
-    padding-top: calc(.8rem + env(safe-area-inset-top, 0px)); padding-bottom: .8rem;
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    .navbar-brand { margin-right: 1.5rem; padding: 0; }
-    .brand-mark { margin-right: .25rem; }
-    .brand-name { font-size: 1.2rem; line-height: 1.1; }
-    .brand-sub { font-size: .78rem; line-height: 1.2; margin-top: .2rem !important; }
-    .navbar-toggler {
-        color: $dark; border: 0; border-radius: $border-radius; padding: .3rem .5rem;
-        &:hover { background: $body-tertiary-bg; }
-        &:focus { box-shadow: 0 0 0 .2rem rgba($primary, .22); }
-    }
-}
-@include media-breakpoint-down(xl) {
-    .topbar.navbar-expand-xl .navbar-collapse { border-top: 1px solid $border-color; margin-top: .65rem; padding-bottom: .85rem; }
-    .topbar.navbar-expand-xl .nav-link { padding: .75rem .9rem; }
-    .topbar.navbar-expand-xl .nav-actions .btn { padding-top: .6rem; padding-bottom: .6rem; }
-}
-.topbar .nav-link {
-        color: $body-secondary-color; border-radius: $border-radius; padding: .55rem .95rem; font-size: .95rem; white-space: nowrap;
-    &:hover { background: $body-tertiary-bg; color: $dark; }
-    &.active { background: rgba($primary, .1); color: $primary; font-weight: 600; }
-}
-.avatar { display: inline-grid; place-items: center; flex-shrink: 0; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: rgba($primary, .12); color: $primary; font-weight: 700; font-size: .95rem; }
-.user-toggle { border: 0; background: transparent; border-radius: $border-radius; padding: .3rem .5rem; &:hover { background: $body-tertiary-bg; } }
-
-.bottomnav {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; display: flex;
-    background: #fff; border-top: 1px solid $border-color; padding-bottom: env(safe-area-inset-bottom);
-    a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .1rem; min-width: 0; padding: .5rem .25rem; font-size: .6875rem; font-weight: 600; color: $body-secondary-color; text-decoration: none; }
-    a i { font-size: 1.35rem; line-height: 1.2; }
-    a span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    a.active { color: $primary; }
-}
-body.has-bottomnav { padding-bottom: calc(4.25rem + env(safe-area-inset-bottom)); }
-@include media-breakpoint-up(md) {
-    .bottomnav { display: none; }
-    body.has-bottomnav { padding-bottom: 0; }
-}
 
 // ---------- pita judul halaman ----------
 .page-band {
