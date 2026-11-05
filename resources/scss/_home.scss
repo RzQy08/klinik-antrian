@@ -1,72 +1,115 @@
 // =====================================================================
-// Beranda publik versi terang (kelas berawalan hm-)
-// Memakai palet tema: teal $primary, navy $navy, aksen $glow. Tidak mengubah kelas bn-*
-// (kartu poli Livewire, menu staf, panel dev tetap memakai gaya di _beranda.scss).
+// Beranda publik (kelas berawalan hm-)
+//
+// Hero gelap yang menyelip di bawah navbar pil, kartu info kaca, tiket dengan blok bergeser,
+// pita statistik gelap, banner empat langkah, dan warna pembeda tiap poli lewat [data-w].
+// Palet tetap palet tema ($primary teal, $navy, $glow). Kelas bn-* (kartu poli Livewire,
+// menu staf, panel dev) ada di _beranda.scss.
+//
+// Kelas yang dipakai resources/js/beranda-antrian.js (hm-slide, hm-callbox, hm-tab, dst.)
+// jangan diganti namanya tanpa mengubah skrip itu.
 // =====================================================================
 
-$hm-gelap-1: #052B38;
+$hm-gelap-1: $navy-deep;
 $hm-gelap-3: #0A5568;
 $hm-garis: $border-color;
 $hm-teks-redup: $body-secondary-color;
 $hm-ease: cubic-bezier(.22, 1, .36, 1);
 
+// Warna pembeda tiap poli, berurutan sesuai daftar poli (kode poli). Semuanya lolos kontras 4,5:1
+// dengan teks putih. Dipasang lewat atribut data-w="0".."5" di kartu, dokter, dan panduan.
+$poli-warna: (#0B7A8F, #1F6FB5, #177F55, #A8650A, #7A4FC2, #C2417A);
+@for $i from 1 through length($poli-warna) {
+    [data-w="#{$i - 1}"] { --c: #{nth($poli-warna, $i)}; }
+}
+$c: var(--c, #{$primary});
+$c-lembut: unquote('color-mix(in srgb, var(--c, #{$primary}) 12%, #fff)');
+
 @keyframes hm-denyut { 0% { box-shadow: 0 0 0 0 currentColor; } 70% { box-shadow: 0 0 0 .5rem transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 @keyframes hm-isi { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes hm-loncat { 0% { transform: scale(.82); opacity: 0; filter: blur(8px); } 55% { transform: scale(1.04); opacity: 1; filter: none; } 100% { transform: none; } }
 @keyframes hm-naik { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-@keyframes hm-kilau { to { background-position: -200% 0; } }
 
 // ---------- umum ----------
 .hm-section { padding: clamp(3rem, 7vw, 5.5rem) 0; background: #fff; }
 .hm-soft { background: linear-gradient(180deg, #fff 0%, #EEF6F8 100%); }
 .hm-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; margin-bottom: clamp(1.4rem, 3vw, 2.2rem); }
-.hm-h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); letter-spacing: -.03em; line-height: 1.12; margin: .35rem 0 0; }
-.hm-sub { margin: .7rem 0 0; color: $hm-teks-redup; max-width: 38rem; }
+.hm-h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); letter-spacing: -.025em; line-height: 1.1; margin: .5rem 0 0; text-transform: uppercase; color: $navy; text-wrap: balance; }
+.hm-sub { margin: .7rem 0 0; color: $hm-teks-redup; max-width: 38rem; text-wrap: pretty; }
 .hm-eyebrow { display: block; font-size: .74rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: $primary; }
 .hm-eyebrow-soft { display: inline-block; padding: .3rem .8rem; border-radius: 999px; background: rgba($primary, .1); letter-spacing: .08em; }
 .hm-empty { padding: 2rem; text-align: center; color: $hm-teks-redup; background: $light; border-radius: $border-radius-lg; }
 
-.hm-btn { font-weight: 700; transition: transform .25s $hm-ease, box-shadow .25s, background .2s, border-color .2s; white-space: nowrap; }
-.hm-btn-primary { background: $primary; color: #fff; border: 0; box-shadow: 0 14px 26px -12px rgba($primary, .8); &:hover { background: darken($primary, 6%); color: #fff; transform: translateY(-2px); } }
+.hm-btn { font-weight: 700; transition: transform .25s $hm-ease, box-shadow .25s, background .2s, border-color .2s, color .2s; white-space: nowrap; }
+.hm-btn-primary { background: $primary; color: #fff; border: 0; box-shadow: 0 14px 26px -12px rgba($primary, .8); &:hover { background: $navy; color: #fff; transform: translateY(-2px); } }
 .hm-btn-ghost { background: #fff; color: $primary; border: 1.5px solid rgba($primary, .3); &:hover { color: $primary; border-color: $primary; transform: translateY(-2px); } }
 
 // ---------- hero ----------
 .hm-hero {
-    position: relative; isolation: isolate; overflow: hidden;
-    padding: clamp(2.5rem, 5vw, 4.5rem) 0 clamp(6.5rem, 11vw, 9rem);
+    position: relative; isolation: isolate; overflow: hidden; color: $on-navy;
+    // hero menyelip ke bawah navbar pil, jadi tingginya ditambah setinggi navbar
+    margin-top: calc(-1 * var(--nv-h));
+    padding: calc(var(--nv-h) + clamp(2.25rem, 5vw, 4.25rem)) 0 clamp(1.75rem, 3.5vw, 2.75rem);
     background:
-        radial-gradient(52rem 30rem at 92% -8%, rgba($glow, .38), transparent 62%),
-        radial-gradient(40rem 26rem at -8% 0, rgba($primary, .14), transparent 62%),
-        linear-gradient(180deg, #E8F4F6 0%, #F5FAFB 62%, #fff 100%);
+        radial-gradient(46rem 30rem at 88% 0%, rgba($glow, .22), transparent 62%),
+        radial-gradient(38rem 28rem at 0% 100%, rgba($primary, .5), transparent 64%),
+        linear-gradient(165deg, $hm-gelap-1 0%, $navy 55%, $hm-gelap-3 100%);
 
-    // tanda tambah besar yang sangat samar, dan cincin tipis
+    // kisi tipis yang memudar ke bawah
     &::before {
-        content: ''; position: absolute; z-index: -1; pointer-events: none; right: -3rem; top: 3rem; width: 19rem; height: 19rem; opacity: .08;
-        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4v40M4 24h40' stroke='%230B7A8F' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+        background-image: linear-gradient(rgba(#fff, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(#fff, .06) 1px, transparent 1px);
+        background-size: 44px 44px;
+        -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 82%);
+        mask-image: linear-gradient(180deg, #000 0%, transparent 82%);
     }
+    // tanda tambah besar yang sangat samar
     &::after {
-        content: ''; position: absolute; z-index: -1; pointer-events: none; left: -9rem; bottom: 1rem; width: 19rem; height: 19rem; border-radius: 50%;
-        border: 2px solid rgba($primary, .12);
+        content: ''; position: absolute; z-index: -1; pointer-events: none; right: -5rem; top: 5rem; width: 27rem; height: 27rem; opacity: .06;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4v40M4 24h40' stroke='white' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
     }
 }
-.hm-hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32rem); gap: clamp(1.75rem, 5vw, 4rem); align-items: center; }
+// garis detak jantung di dasar hero, penanda layanan kesehatan yang tidak umum dipakai template
+.hm-ecg {
+    position: absolute; left: 0; bottom: 0; z-index: -1; width: 100%; height: 8rem; pointer-events: none;
+    fill: none; stroke: rgba($glow, .3); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;
+    path { vector-effect: non-scaling-stroke; }
+}
+.hm-hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 31rem); gap: clamp(1.75rem, 5vw, 4rem); align-items: center; }
 .hm-hero-copy, .hm-panel { min-width: 0; }
 .hm-hero-copy { animation: hm-naik .7s $hm-ease both; }
 .hm-panel { animation: hm-naik .7s .12s $hm-ease both; }
 
-.hm-pill { display: inline-flex; align-items: center; gap: .6rem; margin-bottom: 1.3rem; padding: .45rem 1rem; border-radius: 999px; font-size: .85rem; font-weight: 700; color: $success; background: rgba($success, .1); border: 1px solid rgba($success, .22);
-    &.hm-pill-off { color: $danger; background: rgba($danger, .08); border-color: rgba($danger, .25); } }
+.hm-pill { display: inline-flex; align-items: center; gap: .6rem; margin-bottom: 1.4rem; padding: .45rem 1rem; border-radius: 999px; font-size: .85rem; font-weight: 700; color: $glow; background: rgba($glow, .1); border: 1px solid rgba($glow, .3);
+    &.hm-pill-off { color: #FFB4AE; background: rgba($danger, .18); border-color: rgba(#FFB4AE, .35); } }
 .hm-dot { width: .55rem; height: .55rem; border-radius: 50%; background: currentColor; animation: hm-denyut 2s infinite; }
-.hm-title { font-size: clamp(2.1rem, 4.8vw, 3.7rem); line-height: 1.05; letter-spacing: -.035em; margin-bottom: 1.2rem; text-wrap: balance; }
-.hm-accent { color: $primary; }
-.hm-lead { font-size: clamp(1rem, 1.5vw, 1.15rem); color: $hm-teks-redup; max-width: 34rem; margin-bottom: 1.8rem; text-wrap: pretty; }
-.hm-cta-row { display: flex; flex-wrap: wrap; gap: .8rem; margin-bottom: 1.5rem; }
-.hm-facts { display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; font-size: .88rem; font-weight: 600; color: #2D4852; li { display: flex; align-items: center; gap: .5rem; } i { color: $success; font-size: 1.1rem; } }
+.hm-title { color: #fff; font-size: clamp(2.2rem, 5.2vw, 4.3rem); line-height: 1; letter-spacing: -.03em; text-transform: uppercase; margin-bottom: 1.3rem; text-wrap: balance; }
+.hm-accent { color: $glow; }
+.hm-lead { font-size: clamp(1rem, 1.5vw, 1.15rem); color: $on-navy-muted; max-width: 34rem; margin-bottom: 1.9rem; text-wrap: pretty; }
+.hm-cta-row { display: flex; flex-wrap: wrap; gap: .8rem; margin-bottom: 1.6rem; }
+.hm-facts { display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; font-size: .88rem; font-weight: 600; color: $on-navy; li { display: flex; align-items: center; gap: .5rem; } i { color: $glow; font-size: 1.1rem; } }
+
+// di atas latar gelap, tombol memakai warna terang supaya kontras
+.hm-hero .hm-btn-primary { background: $glow; color: $navy; box-shadow: 0 16px 32px -14px rgba($glow, .7); &:hover { background: #A8F6EA; color: $navy; } }
+.hm-hero .hm-btn-ghost { background: transparent; color: #fff; border-color: rgba(#fff, .45); &:hover { background: #fff; color: $navy; border-color: #fff; } }
+
+// kartu info kaca di dasar hero
+.hm-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .9rem; margin: clamp(2.25rem, 5vw, 3.75rem) 0 0; padding: 0; list-style: none; }
+.hm-info-item {
+    display: flex; align-items: center; gap: .9rem; height: 100%; padding: 1rem 1.15rem; border-radius: 1.1rem; color: #fff;
+    background: rgba(#fff, .07); border: 1px solid rgba(#fff, .15);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    transition: transform .3s $hm-ease, background .3s, border-color .3s;
+    > i { flex: none; font-size: 1.55rem; line-height: 1; color: $glow; }
+    small { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: $on-navy-muted; }
+    b { display: block; font-size: .95rem; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+}
+a.hm-info-item:hover { color: #fff; transform: translateY(-3px); background: rgba(#fff, .13); border-color: rgba(#fff, .32); }
 
 // ---------- panel antrian ----------
 .hm-panel {
     position: relative; background: #fff; border: 1px solid $hm-garis; border-radius: 1.75rem; padding: clamp(1rem, 2.4vw, 1.5rem);
-    box-shadow: 0 40px 80px -38px rgba($navy, .55), 0 2px 0 #fff inset;
+    box-shadow: 0 50px 90px -40px rgba(0, 0, 0, .75), 0 0 0 6px rgba(#fff, .08);
 }
 .hm-panel-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
 .hm-panel-date { display: block; font-size: .82rem; color: $hm-teks-redup; }
@@ -128,82 +171,95 @@ $hm-ease: cubic-bezier(.22, 1, .36, 1);
 @media (hover: hover) { .hm-panel:hover .hm-tab.is-active .t-bar { animation-play-state: paused; } }
 .hm-panel-foot { display: flex; align-items: center; gap: .45rem; margin: .8rem 0 0; font-size: .76rem; color: $hm-teks-redup; }
 
-// ---------- statistik ----------
-.hm-stats-wrap { position: relative; z-index: 3; margin-top: calc(-1 * clamp(3.75rem, 6vw, 5rem)); background: linear-gradient(180deg, transparent 50%, #fff 50%); }
-.hm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; background: #fff; border: 1px solid $hm-garis; border-radius: 1.6rem; padding: clamp(1rem, 2.2vw, 1.6rem) clamp(.9rem, 2.5vw, 2rem); box-shadow: 0 30px 60px -36px rgba($navy, .5); }
-.hm-stat { display: flex; align-items: center; gap: .9rem; min-width: 0; padding: .25rem .4rem;
-    div b { display: block; font-size: clamp(1.4rem, 2.4vw, 1.9rem); } div span { display: block; font-size: .8rem; color: $hm-teks-redup; line-height: 1.3; } }
-.hm-stat-ico { width: 3.1rem; height: 3.1rem; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 1.35rem; color: $primary; background: rgba($primary, .12);
-    &.hm-ico-ok { color: $success; background: rgba($success, .12); }
-    &.hm-ico-navy { color: $glow; background: $navy; }
-    &.hm-ico-warn { color: #8A5A00; background: rgba($warning, .24); } }
-
-// ---------- cara kerja ----------
+// ---------- cara kerja: tiket dengan blok navy yang bergeser ----------
 .hm-about-sec { padding-top: clamp(3.5rem, 7vw, 6rem); }
-.hm-about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(1.75rem, 4.5vw, 4rem); align-items: center; > * { min-width: 0; } }
-.hm-about-visual { position: relative; min-height: 24rem; border-radius: 2rem; overflow: hidden; display: grid; place-items: center; padding: 2rem;
-    background: linear-gradient(150deg, #D5EBEF 0%, #F1F8F9 55%, #C9E5EA 100%);
-    &::before { content: ''; position: absolute; width: 26rem; height: 26rem; border-radius: 50%; border: 2px solid rgba($primary, .14); right: -9rem; top: -8rem; }
-    &::after { content: ''; position: absolute; width: 17rem; height: 17rem; border-radius: 50%; background: rgba($primary, .08); left: -5rem; bottom: -6rem; } }
-.hm-ticket { position: relative; z-index: 1; width: min(100%, 19rem); padding: 1.6rem; border-radius: 1.5rem; background: #fff; transform: rotate(-3deg); box-shadow: 0 30px 60px -32px rgba($navy, .7);
-    &::before, &::after { content: ''; position: absolute; top: 57%; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: #E3F1F4; }
-    &::before { left: -.7rem; } &::after { right: -.7rem; }
+.hm-about { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(2rem, 6vw, 5.5rem); align-items: center; > * { min-width: 0; } }
+.hm-about-media { position: relative; width: 100%; max-width: 27rem; margin-inline: auto; padding-bottom: 2.25rem; }
+.hm-about-visual { position: relative; padding: 1.75rem 0 0 1.75rem; }
+.hm-offset { position: absolute; left: 0; top: 0; right: 3rem; bottom: 2.75rem; border-radius: 1.4rem; background: linear-gradient(160deg, $navy-soft, $navy); box-shadow: 0 30px 60px -34px rgba($navy, .8); }
+.hm-ticket { position: relative; z-index: 1; overflow: hidden; border-radius: 1.25rem; background: #fff; box-shadow: 0 40px 70px -34px rgba($navy, .8); }
+.hm-ticket-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .85rem 1.4rem; background: $primary; color: #fff; font-family: $headings-font-family; font-weight: 700; letter-spacing: .01em;
+    small { font-family: $font-family-sans-serif; font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(#fff, .8); } }
+.hm-ticket-body { padding: 1.5rem 1.4rem 1.3rem; text-align: center;
     small { font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: $hm-teks-redup; }
-    strong { display: block; margin: .2rem 0; font-size: 3.6rem; color: $primary; }
+    strong { display: block; margin: .25rem 0 .15rem; font-size: clamp(3.6rem, 9vw, 4.8rem); color: $navy; }
     p { margin: 0; font-weight: 700; } }
-.hm-ticket-row { display: flex; justify-content: space-between; gap: .5rem; margin-top: 1.8rem; padding-top: 1rem; border-top: 2px dashed $hm-garis; font-size: .82rem; color: $hm-teks-redup; b { color: $body-color; } }
+.hm-ticket-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 1.4rem; padding: 1rem 0 1.3rem; border-top: 2px dashed $hm-garis; font-size: .82rem; color: $hm-teks-redup; b { display: block; font-size: .98rem; color: $body-color; } }
+.hm-barcode { flex: none; width: 5.2rem; height: 2.1rem; opacity: .85; background: repeating-linear-gradient(90deg, $dark 0 2px, transparent 2px 4px, $dark 4px 5px, transparent 5px 9px, $dark 9px 12px, transparent 12px 14px); }
 .hm-chip { position: absolute; z-index: 2; display: flex; align-items: center; gap: .6rem; padding: .6rem .9rem; border-radius: 1rem; background: #fff; font-size: .8rem; font-weight: 700; box-shadow: 0 18px 40px -22px rgba($navy, .7); i { color: $primary; font-size: 1.1rem; }
-    &.hm-chip-a { right: 1.1rem; top: 1.4rem; } &.hm-chip-b { left: 1.1rem; bottom: 1.5rem; i { color: $success; } } }
-.hm-feats { display: grid; grid-template-columns: repeat(2, 1fr); gap: .9rem; margin-top: 1.7rem; }
-.hm-feat { display: flex; gap: .85rem; align-items: flex-start; padding: 1rem; border-radius: 1.1rem; border: 1px solid $hm-garis; background: #fff; transition: transform .3s $hm-ease, box-shadow .3s;
-    &:hover { transform: translateY(-3px); box-shadow: 0 18px 36px -26px rgba($primary, .7); }
-    h3 { font-size: .95rem; margin: 0; line-height: 1.3; } p { margin: .15rem 0 0; font-size: .8rem; color: $hm-teks-redup; } }
-.hm-feat-ico { width: 2.7rem; height: 2.7rem; flex: none; border-radius: .85rem; display: grid; place-items: center; font-size: 1.2rem; color: $primary; background: rgba($primary, .12); }
+    // menggantung di tepi tiket supaya tidak menutupi nomor atau teks di dalamnya
+    &.hm-chip-a { right: -1.6rem; bottom: -1.5rem; } &.hm-chip-b { left: -.25rem; top: -.55rem; i { color: $success; } } }
+.hm-orb { position: absolute; left: 50%; bottom: 0; z-index: 3; width: 4rem; height: 4rem; translate: -50% 0; border-radius: 50%; display: grid; place-items: center; background: $navy; color: $glow; font-size: 1.5rem;
+    box-shadow: 0 0 0 4px #fff, 0 0 0 5px rgba($navy, .3), 0 18px 30px -14px rgba($navy, .8); transition: transform .3s $hm-ease, background .2s;
+    &:hover { color: $glow; background: $primary; transform: translateY(3px); } }
+
+.hm-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem 1.5rem; margin: 1.8rem 0 0; padding: 0; list-style: none;
+    li { display: flex; align-items: flex-start; gap: .7rem; font-weight: 600; font-size: .95rem; line-height: 1.4; }
+    i { flex: none; display: grid; place-items: center; width: 1.5rem; height: 1.5rem; margin-top: .05rem; border-radius: 50%; background: $primary; color: #fff; font-size: .8rem; } }
+.hm-about .hm-btn { margin-top: 2rem; }
+
+// ---------- statistik: pita gelap ----------
+.hm-band { position: relative; isolation: isolate; overflow: hidden; padding: clamp(2.25rem, 5vw, 3.5rem) 0; color: #fff;
+    background: radial-gradient(38rem 20rem at 8% 0, rgba($primary, .55), transparent 70%), linear-gradient(120deg, $hm-gelap-1 0%, $navy 100%); }
+.hm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; }
+.hm-stat { display: flex; align-items: center; gap: 1rem; min-width: 0;
+    + .hm-stat { padding-left: 1.5rem; border-left: 1px solid rgba(#fff, .14); }
+    b { display: block; font-size: clamp(2rem, 3.6vw, 3rem); color: #fff; }
+    span { display: block; margin-top: .35rem; font-size: .85rem; color: $on-navy-muted; line-height: 1.3; } }
+.hm-stat-ico { flex: none; font-size: 2.4rem; line-height: 1; color: $glow; }
+
+// ---------- empat langkah: banner ----------
+.hm-banner { position: relative; isolation: isolate; overflow: hidden; border-radius: 2rem; padding: clamp(1.5rem, 4vw, 2.75rem); color: #fff;
+    background: radial-gradient(30rem 18rem at 100% 0, rgba($glow, .28), transparent 70%), linear-gradient(135deg, $navy-soft 0%, $primary 100%);
+    &::before { content: ''; position: absolute; z-index: -1; right: -3rem; top: -3rem; width: 16rem; height: 16rem; opacity: .1; pointer-events: none;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4v40M4 24h40' stroke='white' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+    h2 { margin: 0; color: #fff; text-align: center; text-transform: uppercase; font-size: clamp(1.5rem, 3.2vw, 2.3rem); letter-spacing: -.02em; text-wrap: balance; }
+    > p { max-width: 38rem; margin: .7rem auto 0; text-align: center; color: rgba(#fff, .88); } }
+.hm-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 2.25rem 0 0; padding: 0; list-style: none; }
+.hm-step { position: relative; display: flex; flex-direction: column; gap: .7rem; padding: 1.6rem 1.25rem 1.3rem; border-radius: 1.25rem; background: #fff; color: $body-color; box-shadow: 0 24px 40px -28px rgba(0, 0, 0, .65); transition: transform .3s $hm-ease;
+    &:hover { transform: translateY(-4px); }
+    h3 { margin: 0; font-size: 1.02rem; line-height: 1.3; }
+    p { margin: 0; font-size: .86rem; color: $hm-teks-redup; } }
+.hm-step-no { position: absolute; left: 1.1rem; top: -.75rem; padding: .15rem .65rem; border-radius: 999px; background: $navy; color: $glow; font-family: $headings-font-family; font-weight: 800; font-size: .8rem; letter-spacing: .04em; }
+.hm-feat-ico { width: 3rem; height: 3rem; flex: none; border-radius: .9rem; display: grid; place-items: center; font-size: 1.3rem; color: $primary; background: rgba($primary, .12); }
 
 // ---------- dokter ----------
 .hm-arrows { display: flex; gap: .5rem; }
 .hm-round { width: 2.8rem; height: 2.8rem; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 1px solid $hm-garis; color: $primary; box-shadow: 0 8px 20px -14px rgba($primary, .7); transition: background .2s, transform .2s; &:hover { background: rgba($primary, .1); } &:active { transform: scale(.94); } }
 .hm-dr-track { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: .25rem .15rem 1.25rem; margin: 0 -.15rem; &::-webkit-scrollbar { display: none; } }
-.hm-dr { flex: 0 0 min(78%, 15.5rem); scroll-snap-align: start; padding: 1.4rem 1.1rem; text-align: center; background: #fff; border: 1px solid $hm-garis; border-radius: 1.5rem; transition: transform .3s $hm-ease, box-shadow .3s;
+.hm-dr { position: relative; overflow: hidden; flex: 0 0 min(78%, 15.5rem); scroll-snap-align: start; padding: 1.6rem 1.1rem 1.4rem; text-align: center; background: #fff; border: 1px solid $hm-garis; border-radius: 1.5rem; transition: transform .3s $hm-ease, box-shadow .3s;
+    &::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: $c; }
     &:hover { transform: translateY(-4px); box-shadow: 0 24px 40px -28px rgba($primary, .7); }
     h3 { font-size: .98rem; margin: 0; line-height: 1.3; }
     .hm-badge { margin-top: .8rem; } }
-.hm-dr-poli { margin: .1rem 0 .6rem; font-size: .82rem; color: $hm-teks-redup; }
+.hm-dr-poli { margin: .1rem 0 .6rem; font-size: .82rem; font-weight: 600; color: $c; }
 .hm-dr-jam { display: flex; justify-content: center; align-items: center; gap: .4rem; margin: 0; font-size: .78rem; font-weight: 600; color: #2D4852; i { color: $primary; } }
-.hm-avatar { width: 5.2rem; height: 5.2rem; margin: 0 auto .9rem; border-radius: 50%; display: grid; place-items: center; font-family: $headings-font-family; font-weight: 800; font-size: 1.6rem; color: #fff; box-shadow: 0 0 0 5px #fff, 0 0 0 6px $hm-garis;
-    background: linear-gradient(135deg, $primary, $navy);
-    &[style*="--n: 1"] { background: linear-gradient(135deg, $navy-soft, $hm-gelap-1); }
-    &[style*="--n: 2"] { background: linear-gradient(135deg, $info, #154A7C); }
-    &[style*="--n: 3"] { background: linear-gradient(135deg, $success, #0E5A3C); }
-    &[style*="--n: 4"] { background: linear-gradient(135deg, #2B93A6, $primary); } }
+.hm-avatar { width: 5.2rem; height: 5.2rem; margin: 0 auto .9rem; border-radius: 50%; display: grid; place-items: center; font-family: $headings-font-family; font-weight: 800; font-size: 1.6rem; color: #fff; background: $c; box-shadow: 0 0 0 5px #fff, 0 0 0 6px $hm-garis; }
 
-// ---------- fasilitas ----------
-.hm-fas { position: relative; isolation: isolate; overflow: hidden; color: $on-navy; padding: clamp(2.75rem, 6vw, 4.5rem) 0;
-    background: radial-gradient(34rem 18rem at 100% 0, rgba($glow, .22), transparent 70%), linear-gradient(135deg, $hm-gelap-1 0%, $navy 55%, $hm-gelap-3 100%);
-    h2 { color: #fff; font-size: clamp(1.5rem, 2.8vw, 2.1rem); letter-spacing: -.02em; line-height: 1.2; margin: 0; }
-    p { margin: .8rem 0 0; color: $on-navy-muted; } }
+// ---------- fasilitas: strip keunggulan ----------
+.hm-fas { padding: clamp(2.75rem, 6vw, 4.5rem) 0; background: #fff;
+    h2 { margin: 0; color: $navy; font-size: clamp(1.5rem, 2.8vw, 2.1rem); letter-spacing: -.02em; line-height: 1.2; text-wrap: balance; }
+    p { margin: .8rem 0 0; color: $hm-teks-redup; } }
 .hm-fas-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 2fr); gap: clamp(1.5rem, 4vw, 3rem); align-items: center; > * { min-width: 0; } }
-.hm-fas-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8rem; }
-.hm-ftile { display: flex; flex-direction: column; align-items: center; gap: .8rem; padding: 1.4rem .7rem; text-align: center; font-size: .82rem; font-weight: 700; line-height: 1.3; color: #fff; border-radius: 1.25rem; background: rgba(255, 255, 255, .09); border: 1px solid rgba(255, 255, 255, .16); transition: transform .3s $hm-ease, background .3s;
-    i { font-size: 1.9rem; color: $glow; }
-    &:hover { color: #fff; transform: translateY(-4px); background: rgba(255, 255, 255, .15); } }
+.hm-fas-tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); overflow: hidden; border: 1px solid $hm-garis; border-radius: 1.4rem; background: $light; }
+.hm-ftile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .75rem; padding: 1.5rem .7rem; text-align: center; font-size: .82rem; font-weight: 700; line-height: 1.3; color: $body-color; transition: background .25s;
+    + .hm-ftile { border-left: 1px solid $hm-garis; }
+    i { font-size: 1.8rem; line-height: 1; color: $primary; }
+    &:hover { color: $body-color; background: #fff; } }
 
 // ---------- panduan ----------
 .hm-guides { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; }
-.hm-guide { display: flex; flex-direction: column; overflow: hidden; background: #fff; border: 1px solid $hm-garis; border-radius: 1.4rem; color: $body-color; transition: transform .3s $hm-ease, box-shadow .3s;
-    &:hover { color: $body-color; transform: translateY(-4px); box-shadow: 0 24px 40px -28px rgba($primary, .7); } }
-.hm-guide-top { height: 7.5rem; display: grid; place-items: center; font-size: 2.6rem; color: #fff;
-    &.hm-g1 { background: linear-gradient(135deg, #2B93A6, $primary); }
-    &.hm-g2 { background: linear-gradient(135deg, $navy-soft, $navy); }
-    &.hm-g3 { background: linear-gradient(135deg, $info, #154A7C); }
-    &.hm-g4 { background: linear-gradient(135deg, $success, #0E5A3C); } }
+.hm-guide { display: flex; flex-direction: column; overflow: hidden; background: #fff; border: 1px solid $hm-garis; border-radius: 1.4rem; color: $body-color; transition: transform .3s $hm-ease, box-shadow .3s, border-color .3s;
+    &:hover { color: $body-color; transform: translateY(-4px); border-color: $c; box-shadow: 0 24px 40px -28px $c; } }
+.hm-guide-top { height: 6.75rem; display: grid; place-items: center; background: $c-lembut;
+    i { display: grid; place-items: center; width: 4rem; height: 4rem; border-radius: 50%; background: #fff; color: $c; font-size: 1.7rem; box-shadow: 0 12px 24px -14px $c; } }
 .hm-guide-body { display: flex; flex-direction: column; gap: .45rem; flex: 1; padding: 1.1rem 1.2rem 1.3rem;
     b { font-family: $headings-font-family; font-size: 1rem; line-height: 1.3; }
     > span { font-size: .85rem; color: $hm-teks-redup; }
-    em { margin-top: auto; padding-top: .5rem; font-style: normal; font-size: .84rem; font-weight: 700; color: $primary; } }
+    em { margin-top: auto; padding-top: .5rem; font-style: normal; font-size: .84rem; font-weight: 700; color: $c; } }
 
 // ---------- ajakan ----------
-.hm-cta-band { padding: 0 0 clamp(3rem, 6vw, 5rem); background: linear-gradient(180deg, #EEF6F8 0%, #EEF6F8 100%); }
+.hm-cta-band { padding: 0 0 clamp(3rem, 6vw, 5rem); background: #EEF6F8; }
 .hm-cta { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 1.5rem; align-items: center; padding: clamp(1.5rem, 4vw, 2.75rem); border-radius: 2rem; color: #fff;
     background: radial-gradient(30rem 16rem at 100% 0, rgba($glow, .25), transparent 70%), linear-gradient(130deg, $hm-gelap-3 0%, $navy 100%);
     > * { min-width: 0; }
@@ -219,38 +275,44 @@ $hm-ease: cubic-bezier(.22, 1, .36, 1);
 // ---------- responsif ----------
 @include media-breakpoint-down(xl) {
     .hm-fas-grid { grid-template-columns: minmax(0, 1fr); }
-    .hm-fas-tiles { grid-template-columns: repeat(5, minmax(8.5rem, 1fr)); overflow-x: auto; scrollbar-width: none; padding-bottom: .25rem; &::-webkit-scrollbar { display: none; } }
+    .hm-fas-tiles { grid-template-columns: repeat(5, minmax(8.5rem, 1fr)); overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
     .hm-guides { grid-template-columns: repeat(2, 1fr); }
+    .hm-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 1.6rem; }
 }
 @include media-breakpoint-down(lg) {
     .hm-hero-grid { grid-template-columns: minmax(0, 1fr); }
     .hm-panel { max-width: 36rem; width: 100%; margin-inline: auto; }
     .hm-about { grid-template-columns: minmax(0, 1fr); }
-    .hm-about-visual { min-height: 20rem; }
     .hm-cta { grid-template-columns: minmax(0, 1fr); }
-    .hm-stats { grid-template-columns: repeat(2, 1fr); gap: 1rem .5rem; }
+    .hm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem 1rem; }
+    .hm-stat:nth-child(odd) { padding-left: 0; border-left: 0; }
 }
 @include media-breakpoint-down(lg) {
     .hm-call-solo { justify-content: stretch; .btn { width: 100%; } }
 }
 @include media-breakpoint-down(md) {
     .hm-cta-row .btn { flex: 1 1 100%; }
-    .hm-feats { grid-template-columns: minmax(0, 1fr); }
+    .hm-checks { grid-template-columns: minmax(0, 1fr); }
     .hm-arrows { display: none; }
     .hm-chip { font-size: .72rem; padding: .5rem .7rem; }
+    .hm-chip-a { display: none; } // bertabrakan dengan tombol panah bulat di layar sempit
     .hm-call { flex-direction: column; align-items: stretch; .btn { width: 100%; } }
     .hm-guides { grid-template-columns: minmax(0, 1fr); }
-    .hm-guide { flex-direction: row; .hm-guide-top { width: 6rem; height: auto; font-size: 2rem; } }
-    .hm-stat-ico { width: 2.7rem; height: 2.7rem; font-size: 1.15rem; }
-    .hm-stat { gap: .65rem; }
+    .hm-guide { flex-direction: row; .hm-guide-top { width: 6rem; height: auto; i { width: 3rem; height: 3rem; font-size: 1.3rem; } } }
+    .hm-stat-ico { font-size: 1.9rem; }
+    .hm-stat { gap: .7rem; }
+    .hm-steps { grid-template-columns: minmax(0, 1fr); }
+    .hm-banner { border-radius: 1.5rem; }
+    .hm-info { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hm-info-item { flex-direction: column; align-items: flex-start; gap: .6rem; }
 }
 @include media-breakpoint-down(sm) {
-    .hm-hero::before { width: 13rem; height: 13rem; right: -4rem; }
+    .hm-hero::after { width: 13rem; height: 13rem; right: -4rem; }
     .hm-mini b { font-size: 1.15rem; }
+    .hm-ecg { height: 5rem; }
 }
 @media (max-width: 380px) {
     .hm-stat-ico { display: none; }
-    .hm-stats { padding: .9rem .7rem; }
 }
 @media (prefers-reduced-motion: reduce) {
     .hm-slide { transform: none !important; transition: opacity .25s linear, visibility 0s linear .25s; }

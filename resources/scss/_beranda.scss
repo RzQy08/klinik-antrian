@@ -64,7 +64,7 @@ body { overflow-x: clip; }
 .bn-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: clamp(1.5rem, 3vw, 2.25rem); }
 .bn-head-center { justify-content: center; text-align: center; }
 .bn-eyebrow { display: inline-flex; align-items: center; gap: .5rem; margin-bottom: .7rem; padding: .3rem .8rem; border-radius: 999px; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: $primary; background: rgba($primary, .1); }
-.bn-h2 { font-size: clamp(1.9rem, 3.8vw, 2.8rem); letter-spacing: -.03em; margin: 0; }
+.bn-h2 { font-size: clamp(1.9rem, 3.8vw, 2.8rem); letter-spacing: -.025em; margin: 0; text-transform: uppercase; color: $navy; }
 .bn-sub { margin: .6rem 0 0; color: $body-secondary-color; max-width: 36rem; }
 
 // ---------- hero (selebar layar) ----------
@@ -161,13 +161,16 @@ body { overflow-x: clip; }
 // Jumlah kolom menyesuaikan lebar layar dan jumlah poli. Di ponsel kartu menjadi baris ringkas
 // (nomor di kanan), jadi empat poli hanya setinggi satu layar, bukan berlembar-lembar.
 .bn-poli-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15.5rem), 1fr)); gap: 1rem; }
+// Warna aksen tiap poli datang dari atribut data-w di kartu (lihat $poli-warna di _home.scss).
 .bn-poli {
-    container-type: inline-size;
-    display: flex; flex-direction: column; gap: .9rem; padding: 1.25rem; background: #fff;
+    position: relative; overflow: hidden; container-type: inline-size;
+    display: flex; flex-direction: column; gap: .9rem; padding: 1.4rem 1.25rem 1.25rem; background: #fff;
     border: 1px solid $border-color; border-radius: 1.4rem; box-shadow: 0 14px 30px -22px rgba($navy, .45);
     transition: transform .2s, box-shadow .2s, border-color .2s;
-    &:hover { transform: translateY(-4px); box-shadow: 0 24px 42px -24px rgba($navy, .55); border-color: rgba($primary, .4); }
-    &.is-aktif { border-color: rgba($primary, .55); box-shadow: 0 0 0 3px rgba($primary, .12), 0 14px 30px -22px rgba($navy, .45); }
+    &::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--c, #{$primary}); }
+    .kode { background: var(--c, #{$navy}); color: #fff; }
+    &:hover { transform: translateY(-4px); box-shadow: 0 24px 42px -24px rgba($navy, .55); border-color: var(--c, #{$primary}); }
+    &.is-aktif { border-color: var(--c, #{$primary}); box-shadow: 0 0 0 3px #{unquote('color-mix(in srgb, var(--c, #{$primary}) 16%, transparent)')}, 0 14px 30px -22px rgba($navy, .45); }
 }
 .bn-poli-head { display: flex; align-items: center; gap: .8rem; min-width: 0; h3 { margin: 0; font-size: 1.05rem; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
 .bn-roll { position: relative; height: clamp(3.4rem, 22cqw, 4.4rem); overflow: hidden; display: flex; align-items: center; }

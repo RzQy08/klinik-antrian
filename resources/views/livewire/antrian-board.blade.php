@@ -1,84 +1,147 @@
-<div wire:poll.2s.visible class="tv-shell">
+@php
+    // Warna tiap poli dipilih dari huruf kode poli, jadi selalu konsisten
+    $warna = fn ($kode) => 'pa-c'.(ord(strtoupper(substr((string) $kode, 0, 1))) % 6);
+    $jumlahPoli = $baris->count();
+@endphp
+<div wire:poll.2s.visible="segarkan" class="pa-shell pa-board {{ $jeda ? 'is-jeda' : '' }}">
 
-    <header class="tv-header">
+    <header class="pa-top">
         @include('partials.brand', ['terang' => true])
-        <div class="tv-clock">
-            <span class="jam numeral">{{ now()->format('H:i') }}</span>
-            <span class="tgl">{{ now()->locale('id')->translatedFormat('l, j F Y') }}</span>
+        <div class="pa-tools">
+            <button type="button" class="pa-fs" aria-label="Layar penuh" title="Layar penuh"
+                    onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()">
+                <i class="bi bi-fullscreen" aria-hidden="true"></i>
+            </button>
+            <div class="pa-clock">
+                <span class="pa-jam numeral">{{ now()->format('H:i') }}</span>
+                <span class="pa-tgl">{{ now()->locale('id')->translatedFormat('l, j F Y') }}</span>
+            </div>
         </div>
     </header>
 
-    <div class="tv-grid">
+    <div class="pa-main">
 
-        {{-- Panggilan terbaru dari poli mana pun --}}
-        <section class="tv-card tv-hero">
-            <p class="tv-label mb-0">
-                <span class="tv-dot"></span>
-                Panggilan terbaru
-                @if ($terbaru && $terbaru->jumlah_panggil > 1)
-                    <span class="badge text-bg-warning">Panggilan ke-{{ $terbaru->jumlah_panggil }}</span>
-                @endif
-            </p>
+        {{-- Sorotan poli: berputar otomatis, melompat saat ada panggilan baru --}}
+        <section class="pa-hero" aria-label="Sorotan poli">
+            <div class="pa-stage">
+                @forelse ($baris as $b)
+                    @php
+                        $aktif = $b->poli->id === $aktifId;
+                        $s = $b->sekarang;
+                    @endphp
+                    <article wire:key="slide-{{ $b->poli->id }}"
+                             class="pa-slide {{ $warna($b->poli->kode_poli) }} {{ $aktif ? 'is-active' : '' }}"
+                             @unless ($aktif) aria-hidden="true" @endunless>
 
-            @if ($terbaru)
-                <div>
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        <span class="kode kode-lg">{{ $poliTerbaru?->kode_poli }}</span>
-                        <h1 class="tv-poli-name">{{ $poliTerbaru?->nama_poli }}</h1>
-                    </div>
+                        <p class="pa-label">
+                            <span class="pa-live" aria-hidden="true"></span>
+                            @if ($s)
+                                {{ $s->status === 'dilayani' ? 'Sedang dilayani' : 'Sedang dipanggil' }}
+                            @else
+                                Belum ada panggilan
+                            @endif
+                            @if ($s && $s->jumlah_panggil > 1)
+                                <span class="pa-badge">Panggilan ke-{{ $s->jumlah_panggil }}</span>
+                            @endif
+                            @if ($aktif && $panggilanBaru)
+                                <span class="pa-badge pa-badge-baru">Panggilan baru</span>
+                            @endif
+                        </p>
 
-                    <div wire:key="terbaru-{{ $terbaru->id }}-{{ $terbaru->jumlah_panggil }}" class="tv-nomor numeral nomor-baru">{{ $terbaru->nomor_antrian }}</div>
+                        <div class="pa-slide-mid">
+                            <div class="pa-hero-poli">
+                                <span class="pa-kode">{{ $b->poli->kode_poli }}</span>
+                                <h2 class="pa-hero-nama">{{ $b->poli->nama_poli }}</h2>
+                            </div>
+                            @if ($s)
+                                <div wire:key="no-{{ $s->id }}-{{ $s->jumlah_panggil }}" class="pa-no numeral">{{ $s->nomor_antrian }}</div>
+                            @else
+                                <div class="pa-no numeral is-kosong">&mdash;</div>
+                            @endif
+                        </div>
 
-                    @if ($terbaru->dokter)
-                        <div class="tv-dokter mt-2"><i class="bi bi-person-badge-fill"></i> {{ $terbaru->dokter->nama }}</div>
-                    @endif
-                    <p class="tv-instruksi">Silakan menuju {{ $poliTerbaru?->nama_poli }}</p>
-                </div>
-            @else
-                <div>
-                    <div class="tv-nomor numeral" style="color: rgba(255,255,255,.18)">-</div>
-                    <p class="tv-dokter text-on-navy-muted">Belum ada pasien yang dipanggil</p>
-                </div>
-            @endif
+                        <div class="pa-banner">
+                            @if ($s)
+                                <span>
+                                    @if ($s->status === 'dilayani')
+                                        <i class="bi bi-heart-pulse" aria-hidden="true"></i>Sedang dilayani
+                                    @else
+                                        <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>Silakan menuju {{ $b->poli->nama_poli }}
+                                    @endif
+                                </span>
+                                @if ($s->dokter)
+                                    <span class="pa-sub"><i class="bi bi-person-badge" aria-hidden="true"></i>{{ $s->dokter->nama }}</span>
+                                @endif
+                            @else
+                                <span class="pa-sub">Belum ada pasien yang dipanggil</span>
+                            @endif
+                        </div>
 
-            <div>
-                <p class="tv-label mb-0">Panggilan sebelumnya</p>
-                <ul class="tv-recent">
-                    @forelse ($sebelumnya as $s)
-                        <li>
-                            <span class="numeral">{{ $s->nomor_antrian }}</span>
-                            <small>{{ $s->waktu_dipanggil?->format('H:i') }}</small>
-                        </li>
-                    @empty
-                        <li><small>Belum ada.</small></li>
-                    @endforelse
-                </ul>
+                        <div class="pa-foot">
+                            <div class="pa-next">
+                                <span class="pa-foot-l">Berikutnya</span>
+                                @forelse ($b->berikut as $nomor)
+                                    <span class="pa-nochip numeral">{{ $nomor }}</span>
+                                @empty
+                                    <span class="pa-nochip is-kosong">Tidak ada yang menunggu</span>
+                                @endforelse
+                            </div>
+                            <div class="pa-stats">
+                                <span><b>{{ $b->menunggu }}</b> menunggu</span>
+                            </div>
+                        </div>
+                    </article>
+                @empty
+                    <div class="pa-empty">Belum ada poli aktif.</div>
+                @endforelse
             </div>
+
+            @if ($jumlahPoli > 0)
+                <nav class="pa-dots" aria-label="Pilih poli">
+                    @foreach ($baris as $b)
+                        @php $aktif = $b->poli->id === $aktifId; @endphp
+                        <button type="button" wire:key="dot-{{ $b->poli->id }}" wire:click="pilih({{ $b->poli->id }})"
+                                class="pa-dot {{ $warna($b->poli->kode_poli) }} {{ $aktif ? 'is-active' : '' }}"
+                                aria-label="Tampilkan {{ $b->poli->nama_poli }}" @if ($aktif) aria-current="true" @endif>
+                            <span class="k">{{ $b->poli->kode_poli }}</span>
+                            @if ($aktif && $jumlahPoli > 1)
+                                <i wire:key="fill-{{ $sampai }}" class="fill" style="--dur: {{ $durasiAktif }}s" aria-hidden="true"></i>
+                            @endif
+                        </button>
+                    @endforeach
+
+                    @if ($jumlahPoli > 1)
+                        <button type="button" class="pa-jeda" wire:click="toggleJeda" aria-pressed="{{ $jeda ? 'true' : 'false' }}"
+                                aria-label="{{ $jeda ? 'Lanjutkan pergantian poli otomatis' : 'Jeda pergantian poli otomatis' }}">
+                            <i class="bi {{ $jeda ? 'bi-play-fill' : 'bi-pause-fill' }}" aria-hidden="true"></i>
+                        </button>
+                    @endif
+                </nav>
+            @endif
         </section>
 
         {{-- Semua poli --}}
-        <aside class="tv-card tv-side">
-            <h2 class="tv-side-title">Semua poli</h2>
+        <aside class="pa-side" aria-label="Status semua poli">
+            <h2 class="pa-side-title">Semua poli</h2>
 
-            <div class="tv-poli-list">
+            <div class="pa-rows">
                 @forelse ($baris as $b)
-                    @php
-                        $aktif = $terbaru && $terbaru->poli_id === $b->poli->id;
-                        $info = $b->menunggu.' menunggu';
-                        if ($b->berikut->isNotEmpty()) {
-                            $info .= ', berikutnya '.$b->berikut->implode(', ');
-                        }
-                    @endphp
-                    <div class="tv-poli-row {{ $aktif ? 'is-active' : '' }}">
-                        <span class="kode">{{ $b->poli->kode_poli }}</span>
-                        <div class="min-w-0">
-                            <div class="nama text-truncate">{{ $b->poli->nama_poli }}</div>
-                            <div class="info">{{ $info }}</div>
-                        </div>
-                        <div class="no numeral {{ $b->sekarang ? '' : 'kosong' }}">{{ $b->sekarang?->nomor_antrian ?? '—' }}</div>
-                    </div>
+                    @php $aktif = $b->poli->id === $aktifId; @endphp
+                    <button type="button" wire:key="row-{{ $b->poli->id }}" wire:click="pilih({{ $b->poli->id }})"
+                            class="pa-row {{ $warna($b->poli->kode_poli) }} {{ $aktif ? 'is-active' : '' }}"
+                            aria-label="Tampilkan {{ $b->poli->nama_poli }}">
+                        <span class="pa-kode">{{ $b->poli->kode_poli }}</span>
+                        <span>
+                            <span class="pa-row-nama d-block">{{ $b->poli->nama_poli }}</span>
+                            <span class="pa-row-info d-block">
+                                <b>{{ $b->menunggu }}</b> menunggu @if ($b->berikut->isNotEmpty()), berikutnya {{ $b->berikut->take(3)->implode(', ') }}@endif
+                            </span>
+                        </span>
+                        <span wire:key="rn-{{ $b->poli->id }}-{{ $b->sekarang?->id }}-{{ $b->sekarang?->jumlah_panggil }}"
+                              class="pa-row-no numeral {{ $b->sekarang ? 'pa-baru' : 'is-kosong' }}">{{ $b->sekarang?->nomor_antrian ?? '—' }}</span>
+                    </button>
                 @empty
-                    <p class="tv-side-title">Belum ada poli aktif.</p>
+                    <p class="pa-side-title">Belum ada poli aktif.</p>
                 @endforelse
             </div>
         </aside>

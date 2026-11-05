@@ -1,6 +1,7 @@
 <div wire:poll.3s.visible="segarkan" class="bn-poli-grid">
     @forelse ($baris as $r)
-        <article wire:key="poli-{{ $r['id'] }}" class="bn-poli {{ $r['status'] ? 'is-aktif' : '' }}">
+        {{-- data-w: warna pembeda poli, urutannya sama dengan daftar poli di beranda (kode poli) --}}
+        <article wire:key="poli-{{ $r['id'] }}" data-w="{{ $loop->index % 6 }}" class="bn-poli {{ $r['status'] ? 'is-aktif' : '' }}">
             <header class="bn-poli-head">
                 <span class="kode">{{ $r['kode'] }}</span>
                 <h3>{{ $r['nama'] }}</h3>

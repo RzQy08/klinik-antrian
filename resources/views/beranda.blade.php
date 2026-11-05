@@ -44,10 +44,36 @@
 
         $telepon = config('rumahsakit.telepon');
         $whatsapp = config('rumahsakit.whatsapp');
+        $alamat = config('rumahsakit.alamat');
+        $email = config('rumahsakit.email');
+
+        // Warna pembeda tiap poli (data-w, 0 sampai 5). Urutan poli sama dengan kartu Livewire: kode poli.
+        $indeksPoli = $polis->pluck('nama_poli')->values()->flip();
+
+        // Kartu info kaca di dasar hero. Yang datanya kosong di konfigurasi tidak ditampilkan.
+        $jamLayanan = config('rumahsakit.jam_layanan') ?: (\App\Services\JamOperasional::aktif()
+            ? 'Layanan sampai pukul '.\App\Services\JamOperasional::tampil((string) config('operasional.layanan_selesai'))
+            : null);
+        $nomorWa = $whatsapp ? preg_replace('/^0/', '62', preg_replace('/\D/', '', $whatsapp)) : null;
+
+        $info = array_values(array_filter([
+            ['ticket-perforated', 'Antrian online', 'Tanpa buat akun', route('antrian.create')],
+            $jamLayanan ? ['clock', 'Jam layanan', $jamLayanan, null] : null,
+            $telepon
+                ? ['telephone', 'Telepon', $telepon, 'tel:'.preg_replace('/[^\d+]/', '', $telepon)]
+                : ($whatsapp ? ['whatsapp', 'WhatsApp', $whatsapp, 'https://wa.me/'.$nomorWa] : null),
+            $alamat
+                ? ['geo-alt', 'Alamat', $alamat, config('rumahsakit.maps')]
+                : ($email ? ['envelope', 'Email', $email, 'mailto:'.$email] : null),
+        ]));
     @endphp
 
-    {{-- ============ HERO ============ --}}
+    {{-- ============ HERO (menyelip di bawah navbar pil) ============ --}}
     <section class="hm-hero" id="beranda">
+        <svg class="hm-ecg" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path d="M0 84H430L452 84 466 58 482 108 500 14 518 96 532 84 560 84H930L950 84 962 66 976 100 988 84H1440"/>
+        </svg>
+
         <div class="container-xxl position-relative">
             <div class="hm-hero-grid">
                 <div class="hm-hero-copy">
@@ -105,52 +131,97 @@
                     <noscript><p class="hm-stage-note">Aktifkan JavaScript untuk melihat nomor yang sedang dipanggil, atau buka <a href="{{ route('antrian.layar') }}">papan antrian</a>.</p></noscript>
                 </aside>
             </div>
-        </div>
-    </section>
 
-    {{-- ============ STATISTIK (menimpa tepi bawah hero) ============ --}}
-    <section class="hm-stats-wrap" aria-label="Ringkasan hari ini">
-        <div class="container-xxl">
-            <div class="hm-stats">
-                <div class="hm-stat"><span class="hm-stat-ico"><i class="bi bi-people" aria-hidden="true"></i></span><div><b class="numeral" data-stat="menunggu">{{ $statistik['menunggu'] }}</b><span>Pasien menunggu</span></div></div>
-                <div class="hm-stat"><span class="hm-stat-ico hm-ico-ok"><i class="bi bi-check2-circle" aria-hidden="true"></i></span><div><b class="numeral" data-stat="selesai">{{ $statistik['selesai'] }}</b><span>Sudah dilayani</span></div></div>
-                <div class="hm-stat"><span class="hm-stat-ico hm-ico-navy"><i class="bi bi-hospital" aria-hidden="true"></i></span><div><b class="numeral" data-stat="poli">{{ $statistik['poli'] }}</b><span>Poli buka</span></div></div>
-                <div class="hm-stat"><span class="hm-stat-ico hm-ico-warn"><i class="bi bi-person-badge" aria-hidden="true"></i></span><div><b class="numeral" data-stat="dokter">{{ $statistik['dokter'] }}</b><span>Dokter aktif</span></div></div>
-            </div>
+            <ul class="hm-info" aria-label="Informasi layanan">
+                @foreach ($info as [$ikon, $label, $isi, $url])
+                    <li>
+                        @if ($url)
+                            <a class="hm-info-item" href="{{ $url }}" @if (str_starts_with($url, 'http')) target="_blank" rel="noopener" @endif>
+                                <i class="bi bi-{{ $ikon }}" aria-hidden="true"></i><span><small>{{ $label }}</small><b>{{ $isi }}</b></span>
+                            </a>
+                        @else
+                            <div class="hm-info-item">
+                                <i class="bi bi-{{ $ikon }}" aria-hidden="true"></i><span><small>{{ $label }}</small><b>{{ $isi }}</b></span>
+                            </div>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
         </div>
     </section>
 
     {{-- ============ CARA KERJA ============ --}}
     <section id="cara-kerja" class="hm-section hm-about-sec">
         <div class="container-xxl hm-about">
-            <div class="hm-about-visual" aria-hidden="true">
-                <div class="hm-chip hm-chip-a"><i class="bi bi-bell-fill"></i>2 nomor lagi giliran Anda</div>
-                <div class="hm-ticket">
-                    <small>Nomor antrian Anda</small>
-                    <strong class="numeral">A014</strong>
-                    <p>Poli Umum</p>
-                    <div class="hm-ticket-row"><span>Perkiraan dipanggil</span><b>&plusmn; 25 menit</b></div>
+            <div class="hm-about-media">
+                <div class="hm-about-visual" aria-hidden="true">
+                    <span class="hm-offset"></span>
+                    <div class="hm-chip hm-chip-a"><i class="bi bi-bell-fill"></i>2 nomor lagi giliran Anda</div>
+                    <div class="hm-ticket">
+                        <div class="hm-ticket-head"><span>{{ config('rumahsakit.nama', 'RS Bersama') }}</span><small>Tiket antrian</small></div>
+                        <div class="hm-ticket-body">
+                            <small>Nomor antrian Anda</small>
+                            <strong class="numeral">A014</strong>
+                            <p>Poli Umum</p>
+                        </div>
+                        <div class="hm-ticket-foot">
+                            <div><span>Perkiraan dipanggil</span><b>&plusmn; 25 menit</b></div>
+                            <span class="hm-barcode"></span>
+                        </div>
+                    </div>
+                    <div class="hm-chip hm-chip-b"><i class="bi bi-whatsapp"></i>Kabar masuk ke WhatsApp</div>
                 </div>
-                <div class="hm-chip hm-chip-b"><i class="bi bi-whatsapp"></i>Kabar masuk ke WhatsApp</div>
+                <a href="#langkah" class="hm-orb" aria-label="Lihat empat langkah mengambil nomor"><i class="bi bi-arrow-down" aria-hidden="true"></i></a>
             </div>
 
             <div>
                 <span class="hm-eyebrow hm-eyebrow-soft">Alur</span>
-                <h2 class="hm-h2">Cara kerjanya</h2>
-                <p class="hm-sub">Dari rumah sampai masuk ruang periksa, tanpa berdiri lama di loket. Nomor dihitung dengan teori antrian dari data pelayanan 14 hari terakhir, bukan sekadar tebakan.</p>
+                <h2 class="hm-h2">Dari rumah sampai ruang periksa, tanpa berdiri lama</h2>
+                <p class="hm-sub">Nomor dihitung dengan teori antrian dari data pelayanan 14 hari terakhir, bukan sekadar tebakan. Anda tahu kapan harus berangkat dan kapan giliran Anda hampir tiba.</p>
 
-                <div class="hm-feats">
-                    <div class="hm-feat"><span class="hm-feat-ico"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span><div><h3>1. Ambil nomor</h3><p>Pilih poli, isi NIK dan nama. Tiket langsung keluar.</p></div></div>
-                    <div class="hm-feat"><span class="hm-feat-ico"><i class="bi bi-phone" aria-hidden="true"></i></span><div><h3>2. Pantau giliran</h3><p>Tiket di HP ikut berubah sendiri sesuai antrian.</p></div></div>
-                    <div class="hm-feat"><span class="hm-feat-ico"><i class="bi bi-whatsapp" aria-hidden="true"></i></span><div><h3>3. Dikabari WhatsApp</h3><p>Pesan masuk begitu nomor Anda dipanggil.</p></div></div>
-                    <div class="hm-feat"><span class="hm-feat-ico"><i class="bi bi-door-open" aria-hidden="true"></i></span><div><h3>4. Datang saat dipanggil</h3><p>Nomor muncul di layar ruang tunggu dan di tiket Anda.</p></div></div>
-                </div>
+                <ul class="hm-checks">
+                    <li><i class="bi bi-check-lg" aria-hidden="true"></i>Perkiraan waktu tunggu dari data 14 hari terakhir</li>
+                    <li><i class="bi bi-check-lg" aria-hidden="true"></i>Tiket di HP ikut berubah sendiri sesuai antrian</li>
+                    <li><i class="bi bi-check-lg" aria-hidden="true"></i>Nomor tampil di layar ruang tunggu</li>
+                    <li><i class="bi bi-check-lg" aria-hidden="true"></i>Petugas siap membantu bila Anda kesulitan</li>
+                </ul>
+
+                <a href="{{ route('antrian.create') }}" class="btn btn-lg hm-btn hm-btn-primary">Ambil nomor sekarang<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
+            </div>
+        </div>
+    </section>
+
+    {{-- ============ STATISTIK ============ --}}
+    <section class="hm-band" aria-label="Ringkasan hari ini">
+        <div class="container-xxl">
+            <div class="hm-stats">
+                <div class="hm-stat"><i class="bi bi-people hm-stat-ico" aria-hidden="true"></i><div><b class="numeral" data-stat="menunggu">{{ $statistik['menunggu'] }}</b><span>Pasien menunggu</span></div></div>
+                <div class="hm-stat"><i class="bi bi-check2-circle hm-stat-ico" aria-hidden="true"></i><div><b class="numeral" data-stat="selesai">{{ $statistik['selesai'] }}</b><span>Sudah dilayani</span></div></div>
+                <div class="hm-stat"><i class="bi bi-hospital hm-stat-ico" aria-hidden="true"></i><div><b class="numeral" data-stat="poli">{{ $statistik['poli'] }}</b><span>Poli buka</span></div></div>
+                <div class="hm-stat"><i class="bi bi-person-badge hm-stat-ico" aria-hidden="true"></i><div><b class="numeral" data-stat="dokter">{{ $statistik['dokter'] }}</b><span>Dokter aktif</span></div></div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ============ EMPAT LANGKAH ============ --}}
+    <section id="langkah" class="hm-section hm-soft">
+        <div class="container-xxl">
+            <div class="hm-banner">
+                <h2>Empat langkah, tanpa antre di loket</h2>
+                <p>Cukup ponsel dan beberapa menit. Setelah itu Anda bisa menunggu di rumah.</p>
+
+                <ol class="hm-steps">
+                    <li class="hm-step"><span class="hm-step-no">01</span><span class="hm-feat-ico"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span><h3>Ambil nomor</h3><p>Pilih poli, isi NIK dan nama. Tiket langsung keluar.</p></li>
+                    <li class="hm-step"><span class="hm-step-no">02</span><span class="hm-feat-ico"><i class="bi bi-phone" aria-hidden="true"></i></span><h3>Pantau giliran</h3><p>Tiket di HP ikut berubah sendiri sesuai antrian.</p></li>
+                    <li class="hm-step"><span class="hm-step-no">03</span><span class="hm-feat-ico"><i class="bi bi-whatsapp" aria-hidden="true"></i></span><h3>Dikabari WhatsApp</h3><p>Pesan masuk begitu nomor Anda dipanggil.</p></li>
+                    <li class="hm-step"><span class="hm-step-no">04</span><span class="hm-feat-ico"><i class="bi bi-door-open" aria-hidden="true"></i></span><h3>Datang saat dipanggil</h3><p>Nomor muncul di layar ruang tunggu dan di tiket Anda.</p></li>
+                </ol>
             </div>
         </div>
     </section>
 
     {{-- ============ ANTRIAN TIAP POLI ============ --}}
-    <section id="antrian" class="bn-band bn-band-stripes" style="scroll-margin-top: 4.5rem">
+    <section id="antrian" class="bn-band bn-band-stripes">
         <div class="container-xxl">
             <div class="bn-head">
                 <div>
@@ -207,8 +278,8 @@
                 <div class="hm-dr-track" data-dr-track tabindex="0" aria-label="Daftar dokter praktik hari ini">
                     @foreach ($dokterHariIni as $d)
                         @php [$kelas, $teks] = $praktikLabel[$d['praktik']] ?? $praktikLabel['libur']; @endphp
-                        <article class="hm-dr">
-                            <span class="hm-avatar" style="--n: {{ $loop->index % 5 }}" aria-hidden="true">{{ $d['inisial'] }}</span>
+                        <article class="hm-dr" data-w="{{ ($indeksPoli->get($d['poli'], 0)) % 6 }}">
+                            <span class="hm-avatar" aria-hidden="true">{{ $d['inisial'] }}</span>
                             <h3>{{ $d['nama'] }}</h3>
                             <p class="hm-dr-poli">{{ $d['poli'] }}</p>
                             @if ($d['jam'])<p class="hm-dr-jam"><i class="bi bi-clock" aria-hidden="true"></i>{{ $d['jam'] }}</p>@endif
@@ -252,20 +323,20 @@
             </div>
 
             <div class="hm-guides">
-                <a class="hm-guide" href="{{ route('antrian.create') }}">
-                    <span class="hm-guide-top hm-g1"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span>
+                <a class="hm-guide" data-w="0" href="{{ route('antrian.create') }}">
+                    <span class="hm-guide-top"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span>
                     <span class="hm-guide-body"><b>Ambil nomor antrian</b><span>Pilih poli, isi NIK dan nama, tiket langsung jadi.</span><em>Mulai sekarang <i class="bi bi-arrow-right"></i></em></span>
                 </a>
-                <a class="hm-guide" href="{{ route('antrian.layar') }}">
-                    <span class="hm-guide-top hm-g2"><i class="bi bi-tv" aria-hidden="true"></i></span>
+                <a class="hm-guide" data-w="1" href="{{ route('antrian.layar') }}">
+                    <span class="hm-guide-top"><i class="bi bi-tv" aria-hidden="true"></i></span>
                     <span class="hm-guide-body"><b>Membaca papan antrian</b><span>Nomor yang tampil besar adalah nomor yang sedang dipanggil.</span><em>Lihat papan <i class="bi bi-arrow-right"></i></em></span>
                 </a>
-                <a class="hm-guide" href="#antrian">
-                    <span class="hm-guide-top hm-g3"><i class="bi bi-list-ol" aria-hidden="true"></i></span>
+                <a class="hm-guide" data-w="2" href="#antrian">
+                    <span class="hm-guide-top"><i class="bi bi-list-ol" aria-hidden="true"></i></span>
                     <span class="hm-guide-body"><b>Pantau antrian poli</b><span>Lihat nomor dan jumlah yang menunggu tanpa datang ke klinik.</span><em>Lihat antrian <i class="bi bi-arrow-right"></i></em></span>
                 </a>
-                <a class="hm-guide" href="#cara-kerja">
-                    <span class="hm-guide-top hm-g4"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+                <a class="hm-guide" data-w="3" href="#cara-kerja">
+                    <span class="hm-guide-top"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
                     <span class="hm-guide-body"><b>Perkiraan waktu tunggu</b><span>Dihitung dari data pelayanan 14 hari terakhir dan muncul di tiket.</span><em>Cara kerjanya <i class="bi bi-arrow-right"></i></em></span>
                 </a>
             </div>

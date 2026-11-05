@@ -42,10 +42,8 @@ html { scrollbar-gutter: stable; }
 .nv-brand { display: inline-flex; align-items: center; flex-shrink: 0; text-decoration: none; border-radius: .8rem; }
 .nv-brand .brand-name { font-size: 1.2rem; color: var(--nv-strong); transition: color $nv-t $ease-soft; }
 .nv-brand .brand-sub { display: none; color: var(--nv-fg); transition: color $nv-t $ease-soft; }
-@include media-breakpoint-up(sm) { .nv-brand .brand-sub { display: block; } }
-// navbar staf lebih padat: sub-judul hanya di layar sangat lebar
-.nv-staff .brand-sub { display: none; }
-@include media-breakpoint-up(xxl) { .nv-staff .brand-sub { display: block; } }
+// pil memuat tautan, telepon, dan tombol: sub-judul hanya di layar sangat lebar
+@include media-breakpoint-up(xxl) { .nv-brand .brand-sub { display: block; } }
 
 // ---------- lewati ke konten ----------
 .nv-skip {
@@ -56,62 +54,58 @@ html { scrollbar-gutter: stable; }
 
 // ---------- pita status paling atas (publik) ----------
 .nv-strip {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .2rem 1.5rem;
-    padding: .45rem 1rem; background: $navy; color: $on-navy; font-size: .85rem; font-weight: 500; text-align: center;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .1rem 1.5rem;
+    padding: .38rem 1rem; background: $navy-deep; color: $on-navy; font-size: .8rem; font-weight: 500; text-align: center;
 }
 .nv-strip span { display: inline-flex; align-items: center; gap: .5rem; }
 .nv-dot { width: .5rem; height: .5rem; border-radius: 50%; background: $glow; flex-shrink: 0; }
 .nv-dot.off { background: #F59A8F; }
 
-// ---------- bilah navigasi ----------
+// ---------- bilah navigasi: pil putih yang melayang ----------
+// Pembungkus (.nv-wrap) tetap menempel di atas dan tidak menangkap klik; yang tampil adalah
+// pil kaca putih (.nv). Beranda menyelipkan hero ke bawahnya lewat margin negatif --nv-h.
+:root { --nv-h: 4.9rem; }
+@include media-breakpoint-up(lg) { :root { --nv-h: 5.25rem; } }
+
 .nv-wrap {
-    --nv-fg: #{$on-navy-muted};
-    --nv-strong: #fff;
-    --nv-hover-bg: #{rgba(#fff, .09)};
-    --nv-on-bg: #{rgba(#fff, .14)};
-    --nv-on-fg: #fff;
-    --nv-line: #{rgba(#fff, .26)};
-    --nv-btn-bg: transparent;
-    --nv-burger-bg: #{rgba(#fff, .12)};
-    --nv-burger-hover: #{rgba(#fff, .2)};
-    --nv-av-bg: #{rgba(#fff, .16)};
-    --nv-av-fg: #fff;
-    --nv-focus: #{$glow};
+    --nv-fg: #{$body-secondary-color};
+    --nv-strong: #{$dark};
+    --nv-hover-bg: #{rgba($dark, .06)};
+    --nv-on-bg: #{rgba($primary, .1)};
+    --nv-on-fg: #{$primary};
+    --nv-line: #{$border-color};
+    --nv-btn-bg: #fff;
+    --nv-burger-bg: #{rgba($dark, .06)};
+    --nv-burger-hover: #{rgba($dark, .1)};
+    --nv-av-bg: #{rgba($primary, .12)};
+    --nv-av-fg: #{$primary};
+    --nv-focus: #{rgba($primary, .6)};
 
-    position: sticky; top: 0; z-index: 1030; isolation: isolate; background: $navy;
-
-    // lapisan putih: hanya opacity yang beranimasi
-    &::before {
-        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-        background: #fff; opacity: 0; border-bottom: 1px solid $border-color;
-        transition: opacity $nv-t $ease-soft;
-    }
-
-    &.is-scrolled {
-        --nv-fg: #{$body-secondary-color};
-        --nv-strong: #{$dark};
-        --nv-hover-bg: #{rgba($dark, .06)};
-        --nv-on-bg: #{rgba($primary, .1)};
-        --nv-on-fg: #{$primary};
-        --nv-line: #{$border-color};
-        --nv-btn-bg: #fff;
-        --nv-burger-bg: #{rgba($dark, .06)};
-        --nv-burger-hover: #{rgba($dark, .1)};
-        --nv-av-bg: #{rgba($primary, .12)};
-        --nv-av-fg: #{$primary};
-        --nv-focus: #{rgba($primary, .6)};
-        &::before { opacity: 1; }
-    }
+    position: sticky; top: 0; z-index: 1030; height: var(--nv-h);
+    padding: .75rem clamp(.6rem, 2vw, 2rem) 0; pointer-events: none;
 
     // dipakai sekali saat halaman dimuat, supaya tidak ada animasi awal
     &.no-t, &.no-t * { transition: none !important; }
 }
 
 .nv {
-    display: flex; align-items: center; gap: .75rem; max-width: 82.5rem; margin: 0 auto;
-    padding: .6rem .75rem; min-height: 4.1rem;
+    pointer-events: auto; display: flex; align-items: center; gap: .75rem; max-width: 82.5rem; margin: 0 auto;
+    min-height: calc(var(--nv-h) - .75rem); padding: .4rem .5rem .4rem 1rem;
+    border: 1px solid rgba(#fff, .7); border-radius: 1.15rem; background: rgba(#fff, .92);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow: 0 18px 40px -24px rgba($navy, .6);
+    transition: box-shadow $nv-t $ease-soft, background-color $nv-t $ease-soft, border-color $nv-t $ease-soft;
 }
-.bn-pub .nv { padding-inline: clamp(1.25rem, 5vw, 3.5rem); }
+.nv-wrap.is-scrolled .nv { background: rgba(#fff, .97); border-color: $border-color; box-shadow: 0 22px 44px -22px rgba($navy, .55); }
+@media (min-width: 1700px) { .bn-pub .nv { max-width: 92rem; } }
+
+// tautan jangkar (#antrian, #dokter, dst.) berhenti tepat di bawah pil, bukan tertutup olehnya
+html { scroll-padding-top: calc(var(--nv-h) + .5rem); }
+// label peran redundan dengan menu akun; baru muat di layar sangat lebar
+@media (max-width: 1649px) { .nv-role { display: none; } }
+
+// halaman publik selain beranda: isi mulai tepat di bawah pil
+.bn-pub > main.container-xxl { padding-top: 1.5rem; }
 
 // ---------- tautan ----------
 .nv-links {
@@ -143,10 +137,17 @@ html { scrollbar-gutter: stable; }
 }
 .nv-btn-cta {
     color: #fff; background: $primary;
-    &:hover { color: #fff; background: darken($primary, 6%); }
+    &:hover { color: #fff; background: $navy; }
 }
-// di atas latar navy, tombol utama memakai warna terang supaya kontras
-.nv-wrap:not(.is-scrolled) .nv-btn-cta { background: $glow; color: $navy; &:hover { background: darken($glow, 8%); color: $navy; } }
+// telepon di pil (hanya bila nomornya diisi di konfigurasi)
+.nv-tel {
+    display: none; align-items: center; gap: .5rem; padding: 0 .35rem; color: var(--nv-strong);
+    font-size: .92rem; font-weight: 700; white-space: nowrap;
+    .bi { color: $primary; }
+    &:hover { color: $primary; }
+}
+// nomor telepon baru muat di layar yang sangat lebar; di bawah itu nomor ada di kartu info hero
+@media (min-width: 1650px) { .nv-tel { display: inline-flex; } }
 
 // ---------- hamburger ----------
 .nv-burger {

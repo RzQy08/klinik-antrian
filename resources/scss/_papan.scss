@@ -1,10 +1,8 @@
 // =====================================================================
 // Papan antrian untuk TV dan semua perangkat (kelas berawalan pa-)
 //
-// - Latar teal gelap redup, teks putih kebiruan: nyaman di ruang terang maupun redup.
-// - Panggilan terbaru ada di panel teal terang dengan angka putih raksasa,
-//   jadi langsung jadi pusat perhatian dari jarak jauh.
-// - Tiap poli punya warna sendiri, supaya pasien cukup mengenali warnanya.
+// - Layar landscape dikunci setinggi layar (tanpa gulir); HP dan tablet tegak boleh gulir.
+// - Panel besar menyorot satu poli bergantian (cross-fade), warna cahaya mengikuti poli.
 // - Semua ukuran memakai em dari satu ukuran dasar yang mengikuti lebar dan
 //   tinggi layar, dan angka besar mengikuti lebar panelnya (container query).
 // =====================================================================
@@ -25,6 +23,7 @@ $pa-aksen: (#5DD6C0, #F4C85E, #FF9F8A, #BBAAFF, #7FC6FF, #B7E56E);
     .pa-c#{$i} {
         --a: #{nth($pa-aksen, $i + 1)};
         --a-lembut: #{rgba(nth($pa-aksen, $i + 1), .18)};
+        --a-kuat: #{rgba(nth($pa-aksen, $i + 1), .34)};
     }
 }
 
@@ -50,13 +49,22 @@ $pa-aksen: (#5DD6C0, #F4C85E, #FF9F8A, #BBAAFF, #7FC6FF, #B7E56E);
 .pa-top .brand-mark { width: 2.5em; height: 2.5em; border-radius: .75em; }
 .pa-top .brand-name { font-size: 1.35em; color: $pa-teks; }
 .pa-top .brand-sub { font-size: .88em; color: $pa-muted; }
+.pa-tools { display: flex; align-items: center; gap: 1em; }
 .pa-clock { flex-shrink: 0; text-align: right; line-height: 1.1; }
 .pa-jam { display: block; font-size: 2.3em; color: $pa-teks; }
 .pa-tgl { display: block; margin-top: .2em; font-size: .9em; color: $pa-muted; }
+.pa-fs {
+    display: inline-grid; place-items: center; flex-shrink: 0; width: 2.4em; height: 2.4em; padding: 0; border: 0;
+    border-radius: .7em; background: rgba(255, 255, 255, .08); color: $pa-muted; font-size: 1em; cursor: pointer;
+    transition: background-color .2s, color .2s;
+    &:hover { background: rgba(255, 255, 255, .16); color: #fff; }
+    &:focus-visible { outline: 3px solid $pa-mint; outline-offset: 2px; }
+}
 
 @media (max-width: 479px) {
     .pa-top .brand-sub { display: none; }
     .pa-tgl { font-size: .8em; }
+    .pa-fs { display: none; }
 }
 
 // ---------- susunan utama ----------
@@ -92,8 +100,9 @@ $pa-aksen: (#5DD6C0, #F4C85E, #FF9F8A, #BBAAFF, #7FC6FF, #B7E56E);
     margin: 0; padding: .4em 1em; border-radius: 999px; background: rgba(0, 0, 0, .25);
     font-size: 1em; font-weight: 700; color: #E6F7F9;
 }
-.pa-live { width: .6em; height: .6em; border-radius: 50%; background: $pa-mint; }
+.pa-live { width: .6em; height: .6em; border-radius: 50%; background: $pa-mint; animation: pa-denyut 2s infinite; }
 .pa-badge { padding: .1em .7em; border-radius: 999px; background: $pa-amber; color: #3B2A00; font-size: .85em; font-weight: 800; }
+.pa-badge-baru { background: $pa-mint; color: #06323A; animation: pa-kedip 1.4s ease-in-out infinite; }
 
 .pa-hero-poli { display: flex; align-items: center; gap: .7em; min-width: 0; }
 .pa-kode {
@@ -101,7 +110,7 @@ $pa-aksen: (#5DD6C0, #F4C85E, #FF9F8A, #BBAAFF, #7FC6FF, #B7E56E);
     border-radius: .6em; background: var(--a-lembut, rgba($pa-mint, .18)); color: var(--a, $pa-mint);
     font-family: $headings-font-family; font-weight: 800; font-size: 1.4em; line-height: 1;
 }
-.pa-hero .pa-kode { background: $pa-hero-teks; color: #0A4F63; }
+.pa-hero .pa-kode { background: var(--a, $pa-hero-teks); color: #062A33; }
 .pa-hero-nama { margin: 0; font-size: 1.7em; font-weight: 700; line-height: 1.12; color: $pa-hero-teks; overflow-wrap: anywhere; }
 
 .pa-no {
@@ -112,17 +121,73 @@ $pa-aksen: (#5DD6C0, #F4C85E, #FF9F8A, #BBAAFF, #7FC6FF, #B7E56E);
 }
 // Angka mengikuti lebar panelnya dan dibatasi tinggi layar supaya tidak terpotong
 @supports (font-size: 1cqi) {
-    .pa-no { font-size: clamp(4.5rem, min(31cqi, 40vh), 120rem); }
+    .pa-no { font-size: clamp(4.5rem, min(31cqi, 34vh), 120rem); }
 }
 
 .pa-banner {
     display: flex; flex-wrap: wrap; align-items: center; gap: .3em 1.2em; padding: .75em 1.1em;
     border-radius: .9em; background: rgba(0, 0, 0, .26); font-size: 1.25em; font-weight: 700; line-height: 1.25;
 }
-.pa-banner .bi { margin-right: .45em; color: $pa-mint; }
+.pa-banner .bi { margin-right: .45em; color: var(--a, $pa-mint); }
 .pa-banner .pa-sub { color: #D3EEF2; font-weight: 600; }
 
-// panggilan sebelumnya
+// ---------- sorotan berputar ----------
+.pa-stage { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; }
+.pa-slide {
+    grid-area: 1 / 1; position: relative; isolation: isolate;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 1em; min-width: 0; min-height: 0;
+    opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(.9em) scale(.985);
+    transition: opacity .7s ease, transform .9s cubic-bezier(.22, 1, .36, 1), visibility 0s linear .9s;
+    // cahaya lembut berwarna poli di sudut kanan atas
+    &::before {
+        content: ''; position: absolute; inset: -1.4em; z-index: -1; pointer-events: none;
+        background: radial-gradient(60% 55% at 92% 0%, var(--a-kuat), transparent 70%);
+    }
+    &.is-active {
+        opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition-delay: 0s, 0s, 0s;
+        .pa-no { animation: pa-masuk .6s cubic-bezier(.2, .8, .2, 1) both; }
+    }
+}
+.pa-slide-mid { display: flex; flex-direction: column; justify-content: center; min-height: 0; }
+.pa-empty { grid-area: 1 / 1; display: grid; place-items: center; text-align: center; font-size: 1.3em; font-weight: 600; color: #D3EEF2; }
+
+.pa-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5em 1.2em; }
+.pa-next { display: flex; flex-wrap: wrap; align-items: center; gap: .5em; min-width: 0; }
+.pa-foot-l { font-size: .95em; font-weight: 600; color: #CFEAEF; }
+.pa-nochip { padding: .15em .7em; border-radius: .7em; background: rgba(0, 0, 0, .24); font-size: 1.4em; color: $pa-hero-teks; }
+.pa-nochip.is-kosong { font-family: inherit; font-size: .95em; font-weight: 600; letter-spacing: 0; color: #CFEAEF; }
+.pa-stats {
+    display: flex; gap: 1em; font-size: .95em; color: #CFEAEF;
+    b { margin-right: .15em; font-family: $headings-font-family; font-size: 1.5em; color: #fff; font-variant-numeric: tabular-nums; }
+}
+
+// titik pilihan poli + progres putaran
+.pa-dots { display: flex; flex-wrap: wrap; align-items: center; gap: .5em; padding-top: .2em; }
+.pa-dot {
+    position: relative; overflow: hidden; display: inline-grid; place-items: center; min-width: 2.2em; height: 2.2em; padding: 0 .55em;
+    border: 0; border-radius: 999px; background: rgba(0, 0, 0, .26); color: #CFEAEF; cursor: pointer;
+    font-family: $headings-font-family; font-weight: 800; font-size: .95em; line-height: 1;
+    transition: background-color .4s, color .4s, min-width .5s cubic-bezier(.22, 1, .36, 1);
+    &:hover { background: rgba(0, 0, 0, .4); }
+    &.is-active { min-width: 4.6em; background: rgba(255, 255, 255, .16); color: #fff; }
+    &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    .k { position: relative; z-index: 1; }
+    .fill {
+        position: absolute; inset: 0; background: var(--a, $pa-mint); opacity: .5;
+        transform: scaleX(0); transform-origin: left; animation: pa-isi var(--dur, 8s) linear forwards;
+    }
+}
+.pa-board.is-jeda .pa-dot .fill { animation-play-state: paused; }
+.pa-jeda {
+    display: inline-grid; place-items: center; margin-left: auto; width: 2.2em; height: 2.2em; padding: 0; border: 0;
+    border-radius: 50%; background: rgba(0, 0, 0, .26); color: #CFEAEF; font-size: 1em; cursor: pointer;
+    transition: background-color .2s, color .2s;
+    &:hover { background: rgba(0, 0, 0, .4); color: #fff; }
+    &[aria-pressed='true'] { background: $pa-amber; color: #3B2A00; }
+    &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+}
+
+// panggilan sebelumnya (dipakai layar satu poli)
 .pa-prev-label { margin: 0 0 .45em; font-size: .95em; font-weight: 600; color: #CFEAEF; }
 .pa-chips { display: flex; flex-wrap: wrap; gap: .5em; margin: 0; padding: 0; list-style: none; }
 .pa-chips li { display: flex; align-items: baseline; gap: .5em; padding: .3em .8em; border-radius: .7em; background: rgba(0, 0, 0, .24); }
@@ -148,14 +213,19 @@ $pa-aksen: (#5DD6C0, #F4C85E, #FF9F8A, #BBAAFF, #7FC6FF, #B7E56E);
     .pa-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 900px) and (min-height: 560px) and (orientation: landscape) {
-    .pa-rows { flex: 1; min-height: 0; grid-auto-rows: minmax(3.6em, 1fr); overflow: hidden; }
+    .pa-rows { flex: 1; min-height: 0; grid-auto-rows: minmax(3.2em, 1fr); overflow-y: auto; scrollbar-width: none; }
+    .pa-rows::-webkit-scrollbar { display: none; }
 }
 
 .pa-row {
+    width: 100%; margin: 0; font: inherit; color: inherit; text-align: left; cursor: pointer;
     display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .8em;
-    padding: .6em .8em .6em .9em; border-left: .35em solid var(--a, $pa-mint); border-radius: .4em 1em 1em .4em;
+    padding: .6em .8em .6em .9em; border: 0; border-left: .35em solid var(--a, $pa-mint); border-radius: .4em 1em 1em .4em;
     background: rgba(255, 255, 255, .05);
-    &.is-active { background: var(--a-lembut); box-shadow: 0 0 0 2px var(--a); }
+    transition: background-color .5s ease, box-shadow .5s ease, transform .5s cubic-bezier(.22, 1, .36, 1);
+    &:hover { background: rgba(255, 255, 255, .09); }
+    &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    &.is-active { background: var(--a-lembut); box-shadow: 0 0 0 2px var(--a); transform: translateX(.25em); }
 }
 .pa-row .pa-kode { font-size: 1.15em; }
 .pa-row-nama { font-size: 1.15em; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
@@ -189,7 +259,14 @@ $pa-aksen: (#5DD6C0, #F4C85E, #FF9F8A, #BBAAFF, #7FC6FF, #B7E56E);
     .pa-jam { font-size: 1.8em; }
 }
 
-// ---------- gerak: satu animasi saat nomor berganti ----------
+// ---------- gerak ----------
 .pa-baru { animation: pa-masuk .5s cubic-bezier(.2, .8, .2, 1) both; }
 @keyframes pa-masuk { from { opacity: 0; transform: translateY(.12em) scale(.96); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .pa-baru { animation: none; } }
+@keyframes pa-isi { to { transform: scaleX(1); } }
+@keyframes pa-kedip { 50% { opacity: .55; } }
+@keyframes pa-denyut { 0% { box-shadow: 0 0 0 0 rgba($pa-mint, .6); } 70% { box-shadow: 0 0 0 .5em rgba($pa-mint, 0); } 100% { box-shadow: 0 0 0 0 rgba($pa-mint, 0); } }
+@media (prefers-reduced-motion: reduce) {
+    .pa-baru, .pa-live, .pa-badge-baru, .pa-slide.is-active .pa-no { animation: none; }
+    .pa-slide { transform: none; transition: opacity .25s linear, visibility 0s linear .25s; }
+    .pa-row, .pa-dot { transition: none; }
+}

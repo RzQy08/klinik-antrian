@@ -13,8 +13,11 @@
         ['Beranda', route('beranda'), request()->routeIs('beranda'), 'house-door'],
         ['Ambil antrian', route('antrian.create'), request()->routeIs('antrian.create'), 'ticket-perforated'],
         ['Antrian hari ini', route('beranda').'#antrian', false, 'list-ol'],
+        ['Jadwal dokter', route('beranda').'#dokter', false, 'person-badge'],
         ['Papan antrian', route('antrian.layar'), request()->routeIs('antrian.layar'), 'tv'],
     ];
+
+    $telepon = config('rumahsakit.telepon');
 
     $ctaBar = ! request()->routeIs('antrian.create');
     $nama = config('rumahsakit.nama', 'RS Bersama');
@@ -51,6 +54,9 @@
         </ul>
 
         <div class="nv-actions">
+            @if ($telepon)
+                <a href="tel:{{ preg_replace('/[^\d+]/', '', $telepon) }}" class="nv-tel"><i class="bi bi-telephone" aria-hidden="true"></i>{{ $telepon }}</a>
+            @endif
             @auth
                 <a href="{{ route('dashboard') }}" class="nv-btn nv-btn-cta"><i class="bi bi-speedometer2" aria-hidden="true"></i>Buka dashboard</a>
             @else
