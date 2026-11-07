@@ -1,62 +1,70 @@
-<div wire:poll.2s.visible class="tv-shell">
+@php
+    $berikut = $berikut ?? collect();
+@endphp
+<div wire:poll.2s.keep-alive class="ly ly-c{{ ($poli->id ?? 0) % 6 }}" data-t="{{ now()->timestamp }}">
 
-    <header class="tv-header">
+    <header class="ly-top">
         @include('partials.brand', ['terang' => true])
-        <div class="tv-clock">
-            <span class="jam numeral">{{ now()->format('H:i') }}</span>
-            <span class="tgl">{{ now()->locale('id')->translatedFormat('l, j F Y') }}</span>
+        <div class="ly-tools" wire:ignore>
+            <span class="ly-live"><span class="ly-dot"></span><span class="on">Langsung</span><span class="off">Menyambung ulang</span></span>
+            <button type="button" class="ly-fs" data-fs aria-label="Layar penuh" title="Layar penuh (tombol F)"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i><i class="bi bi-fullscreen-exit" aria-hidden="true"></i></button>
+        </div>
+        <div class="ly-clock">
+            <span class="ly-jam numeral">{{ now()->format('H:i') }}</span>
+            <span class="ly-tgl">{{ now()->locale('id')->translatedFormat('l, j F Y') }}</span>
         </div>
     </header>
 
-    <div class="tv-grid">
+    <div class="ly-main" data-n="1">
 
-        <section class="tv-card tv-hero">
-            <p class="tv-label mb-0">
-                <span class="tv-dot"></span>
-                Sedang dipanggil
+        <section class="ly-now" aria-live="polite">
+            <p class="ly-label"><span class="ly-dot"></span>Sedang dipanggil
                 @if ($sedangDipanggil && $sedangDipanggil->jumlah_panggil > 1)
-                    <span class="badge text-bg-warning">Panggilan ke-{{ $sedangDipanggil->jumlah_panggil }}</span>
+                    <span class="ly-badge">Panggilan ke-{{ $sedangDipanggil->jumlah_panggil }}</span>
                 @endif
             </p>
 
-            <div>
-                <div class="d-flex align-items-center gap-3 mb-2">
-                    <span class="kode kode-lg">{{ $poli->kode_poli }}</span>
-                    <h1 class="tv-poli-name">{{ $poli->nama_poli }}</h1>
+            @if ($sedangDipanggil)
+                <div wire:key="panggil-{{ $sedangDipanggil->id }}-{{ $sedangDipanggil->jumlah_panggil }}">
+                    <div class="ly-who">
+                        <span class="ly-kode">{{ $poli->kode_poli }}</span>
+                        <h1 class="ly-poli-nama">{{ $poli->nama_poli }}</h1>
+                    </div>
+                    <div class="ly-no numeral" aria-label="Nomor {{ $sedangDipanggil->nomor_antrian }}">
+                        @foreach (str_split((string) $sedangDipanggil->nomor_antrian) as $i => $c)<span class="ly-ch" style="--i:{{ $i }}" aria-hidden="true">{{ $c }}</span>@endforeach
+                        <i class="ly-ring" aria-hidden="true"></i>
+                    </div>
                 </div>
-
-                @if ($sedangDipanggil)
-                    <div wire:key="nomor-{{ $sedangDipanggil->id }}-{{ $sedangDipanggil->jumlah_panggil }}" class="tv-nomor numeral nomor-baru">{{ $sedangDipanggil->nomor_antrian }}</div>
+                <p class="ly-ket">
+                    <span class="is-cta"><i class="bi bi-arrow-right-circle-fill"></i>Silakan menuju {{ $poli->nama_poli }}</span>
                     @if ($sedangDipanggil->dokter)
-                        <div class="tv-dokter mt-2"><i class="bi bi-person-badge-fill"></i> {{ $sedangDipanggil->dokter->nama }}</div>
+                        <span><i class="bi bi-person-badge-fill"></i>{{ $sedangDipanggil->dokter->nama }}</span>
                     @endif
-                    <p class="tv-instruksi">Silakan menuju {{ $poli->nama_poli }}</p>
-                @else
-                    <div class="tv-nomor numeral" style="color: rgba(255,255,255,.18)">-</div>
-                    <p class="tv-dokter text-on-navy-muted">Belum ada pasien yang dipanggil</p>
-                @endif
-            </div>
-
-            <div></div>
+                </p>
+            @else
+                <div>
+                    <div class="ly-who"><span class="ly-kode">{{ $poli->kode_poli }}</span><h1 class="ly-poli-nama">{{ $poli->nama_poli }}</h1></div>
+                    <div class="ly-no numeral is-kosong" aria-hidden="true">···</div>
+                </div>
+                <p class="ly-ket"><span class="is-muted">Belum ada pasien yang dipanggil</span></p>
+            @endif
         </section>
 
-        <aside class="tv-card tv-side">
-            <h2 class="tv-side-title">Sudah dipanggil</h2>
-            <ul class="tv-hist">
-                @forelse ($riwayatDipanggil as $riwayat)
-                    <li>
-                        <span class="numeral">{{ $riwayat->nomor_antrian }}</span>
-                        <small>{{ $riwayat->waktu_dipanggil?->format('H:i') }}</small>
-                    </li>
+        <aside class="ly-side" aria-label="Antrian berikutnya">
+            <div class="ly-side-head">
+                <h2 class="ly-side-title">Berikutnya</h2>
+                <span class="ly-side-sub">bersiap ya</span>
+            </div>
+            <ul class="ly-nextlist">
+                @forelse ($berikut as $i => $no)
+                    <li style="--k:{{ $i }}"><span class="numeral">{{ $no }}</span><small>{{ $i === 0 ? 'Selanjutnya' : 'Menyusul' }}</small></li>
                 @empty
-                    <li><small>Belum ada.</small></li>
+                    <li class="is-empty">Tidak ada antrian yang menunggu</li>
                 @endforelse
             </ul>
-
-            <div class="tv-wait">
-                <span class="tv-side-title">Masih menunggu</span>
-                <span class="numeral jml">{{ $jumlahMenunggu }}</span>
-                <span class="tv-side-title">pasien</span>
+            <div class="ly-wait">
+                <span>Masih menunggu<small>pasien di poli ini</small></span>
+                <span class="numeral">{{ $jumlahMenunggu }}</span>
             </div>
         </aside>
     </div>

@@ -36,6 +36,9 @@ class AntrianDisplay extends Component
             ->limit(5)
             ->get();
 
+        // lima nomor berikutnya yang menunggu
+        $berikut = Antrian::untukPoli($poli->id)->hariIni()->menunggu()->orderBy('id')->limit(5)->pluck('nomor_antrian');
+
         $jumlahMenunggu = Antrian::untukPoli($poli->id)->hariIni()->menunggu()->count();
 
         return view('livewire.antrian-display', [
@@ -43,6 +46,7 @@ class AntrianDisplay extends Component
             'sedangDipanggil' => $sedangDipanggil,
             'riwayatDipanggil' => $riwayatDipanggil,
             'jumlahMenunggu' => $jumlahMenunggu,
+            'berikut' => $berikut,
         ]);
     }
 }

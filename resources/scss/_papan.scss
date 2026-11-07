@@ -1,272 +1,189 @@
 // =====================================================================
-// Papan antrian untuk TV dan semua perangkat (kelas berawalan pa-)
+// Layar antrian untuk TV ruang tunggu dan semua perangkat (kelas ly-)
 //
-// - Layar landscape dikunci setinggi layar (tanpa gulir); HP dan tablet tegak boleh gulir.
-// - Panel besar menyorot satu poli bergantian (cross-fade), warna cahaya mengikuti poli.
-// - Semua ukuran memakai em dari satu ukuran dasar yang mengikuti lebar dan
-//   tinggi layar, dan angka besar mengikuti lebar panelnya (container query).
+// Satu kartu terang sebagai pusat perhatian (nomor yang sedang dipanggil), ditemani
+// kartu-kartu horizontal gelap per poli. Semua jarak memakai kelipatan 8 (0,5em, 1em,
+// 1,5em, 2em) dan satu ukuran dasar mengikuti lebar dan tinggi layar. Jumlah poli
+// menentukan kepadatan daftar: 1 kolom lega, 2 kolom, sampai 3 kolom ringkas.
 // =====================================================================
 
-$pa-bg-atas: #0F2A33;
-$pa-bg-bawah: #0A1B21;
-$pa-kartu: #13323C;
-$pa-garis: rgba(255, 255, 255, .1);
-$pa-teks: #EDF5F7;
-$pa-muted: #B3CCD3;
-$pa-mint: #8BE8D5;
-$pa-amber: #F4C85E;
-$pa-hero-teks: #F8FDFE;
+$ly-bg-1: #06202A;
+$ly-bg-2: #08303D;
+$ly-kartu: rgba(255, 255, 255, .055);
+$ly-garis: rgba(255, 255, 255, .1);
+$ly-teks: #EAF6F8;
+$ly-muted: #9FC3CC;
+$ly-glow: #7CF0DC;
+$ly-ink: #073B4C;
+$ly-ease: cubic-bezier(.22, 1, .36, 1);
 
-// Warna aksen per poli (dipilih dari huruf kode poli)
-$pa-aksen: (#5DD6C0, #F4C85E, #FF9F8A, #BBAAFF, #7FC6FF, #B7E56E);
-@for $i from 0 to length($pa-aksen) {
-    .pa-c#{$i} {
-        --a: #{nth($pa-aksen, $i + 1)};
-        --a-lembut: #{rgba(nth($pa-aksen, $i + 1), .18)};
-        --a-kuat: #{rgba(nth($pa-aksen, $i + 1), .34)};
-    }
+$ly-aksen: (#5DD6C0, #F4C85E, #FF9F8A, #B9A8FF, #7FC6FF, #B7E56E);
+@for $i from 0 to length($ly-aksen) {
+    .ly-c#{$i} { --a: #{nth($ly-aksen, $i + 1)}; --a-soft: #{rgba(nth($ly-aksen, $i + 1), .16)}; }
 }
 
-.pa-body {
-    --bs-body-color: #{$pa-teks};
-    --bs-heading-color: #{$pa-teks};
-    margin: 0; min-height: 100vh; min-height: 100dvh; color: $pa-teks;
-    background: linear-gradient(180deg, $pa-bg-atas 0%, $pa-bg-bawah 100%) fixed;
-    -webkit-font-smoothing: antialiased;
-}
+@property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 
-// Ukuran dasar: 16px di HP, sekitar 23px di TV 1080p, sampai 38px di 4K
-.pa-shell {
+.pa-body { --bs-body-color: #{$ly-teks}; margin: 0; min-height: 100vh; min-height: 100dvh; color: $ly-teks; background: $ly-bg-1; -webkit-font-smoothing: antialiased; }
+html.is-fs.is-idle .pa-body { cursor: none; }
+
+// ukuran dasar: 16px di HP, sekitar 23px di TV 1080p, sampai 38px di 4K
+.ly {
     font-size: clamp(1rem, .7vw + .9vh, 2.4rem);
-    display: flex; flex-direction: column; gap: 1em; min-height: 100dvh;
-    padding: 1em 1em calc(1em + env(safe-area-inset-bottom));
-    padding-top: calc(1em + env(safe-area-inset-top));
-    line-height: 1.35;
+    position: relative; isolation: isolate; display: flex; flex-direction: column; gap: 1.5em; min-height: 100dvh; line-height: 1.35;
+    padding: 1.5em; padding-top: calc(1.5em + env(safe-area-inset-top)); padding-bottom: calc(1.5em + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, $ly-bg-2, $ly-bg-1); overflow-x: clip;
+    // cahaya aurora yang bergeser sangat pelan
+    &::after {
+        content: ''; position: fixed; z-index: -1; inset: -25%; pointer-events: none; will-change: transform;
+        background: radial-gradient(34em 26em at 18% 14%, rgba($ly-glow, .16), transparent 70%), radial-gradient(40em 30em at 86% 88%, rgba(#1AA3BF, .28), transparent 68%), radial-gradient(26em 20em at 70% 20%, rgba(#8E7CFF, .1), transparent 70%);
+        animation: ly-drift 32s ease-in-out infinite alternate;
+    }
+    &::before { // kisi titik halus
+        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
+        background-image: radial-gradient(rgba(#fff, .09) 1px, transparent 1.4px); background-size: 2em 2em;
+        -webkit-mask-image: linear-gradient(180deg, #000, transparent 70%); mask-image: linear-gradient(180deg, #000, transparent 70%);
+    }
 }
 
 // ---------- kepala ----------
-.pa-top { display: flex; align-items: center; justify-content: space-between; gap: .6em 1.2em; }
-.pa-top .brand-mark { width: 2.5em; height: 2.5em; border-radius: .75em; }
-.pa-top .brand-name { font-size: 1.35em; color: $pa-teks; }
-.pa-top .brand-sub { font-size: .88em; color: $pa-muted; }
-.pa-tools { display: flex; align-items: center; gap: 1em; }
-.pa-clock { flex-shrink: 0; text-align: right; line-height: 1.1; }
-.pa-jam { display: block; font-size: 2.3em; color: $pa-teks; }
-.pa-tgl { display: block; margin-top: .2em; font-size: .9em; color: $pa-muted; }
-.pa-fs {
-    display: inline-grid; place-items: center; flex-shrink: 0; width: 2.4em; height: 2.4em; padding: 0; border: 0;
-    border-radius: .7em; background: rgba(255, 255, 255, .08); color: $pa-muted; font-size: 1em; cursor: pointer;
-    transition: background-color .2s, color .2s;
-    &:hover { background: rgba(255, 255, 255, .16); color: #fff; }
-    &:focus-visible { outline: 3px solid $pa-mint; outline-offset: 2px; }
+.ly-top { display: flex; align-items: center; gap: 1em 1.5em; animation: ly-turun .8s $ly-ease both; }
+.ly-top .brand-mark { width: 2.5em; height: 2.5em; border-radius: .75em; }
+.ly-top .brand-name { font-size: 1.25em; color: $ly-teks; }
+.ly-top .brand-sub { font-size: .8em; color: $ly-muted; }
+.ly-tools { display: flex; align-items: center; gap: .5em; margin-left: auto; transition: opacity .6s; }
+html.is-fs.is-idle .ly-tools { opacity: 0; }
+.ly-live { display: inline-flex; align-items: center; gap: .5em; height: 2.5em; padding: 0 1em; font-size: .8em; font-weight: 600; color: $ly-muted; background: $ly-kartu; border: 1px solid $ly-garis; border-radius: 999px; .off { display: none; } }
+html[data-conn="off"] .ly-live { color: #FFD7A0; border-color: rgba(#F4C85E, .4); .on { display: none; } .off { display: inline; } .ly-dot { background: #F4C85E; } }
+.ly-dot { position: relative; width: .5em; height: .5em; border-radius: 50%; background: $ly-glow; flex: none; &::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: ly-ping 2s ease-out infinite; } }
+.ly-fs {
+    display: grid; place-items: center; width: 2.5em; height: 2.5em; padding: 0; font-size: .95em; color: $ly-teks; background: $ly-kartu; border: 1px solid $ly-garis; border-radius: 50%; transition: background .25s, transform .3s $ly-ease, border-color .25s;
+    &:hover { background: rgba(#fff, .14); border-color: rgba(#fff, .3); transform: scale(1.08); } &:focus-visible { outline: 2px solid $ly-glow; outline-offset: 2px; }
+    .bi-fullscreen-exit { display: none; }
 }
+html.is-fs .ly-fs { .bi-arrows-fullscreen { display: none; } .bi-fullscreen-exit { display: block; } }
+html.no-fs .ly-fs { display: none; }
+.ly-clock { flex: none; text-align: right; line-height: 1.1; }
+.ly-jam { display: block; font-size: 2.5em; color: $ly-teks; letter-spacing: -.02em; }
+.ly-tgl { display: block; margin-top: .25em; font-size: .85em; color: $ly-muted; }
 
-@media (max-width: 479px) {
-    .pa-top .brand-sub { display: none; }
-    .pa-tgl { font-size: .8em; }
-    .pa-fs { display: none; }
-}
-
-// ---------- susunan utama ----------
-.pa-main { display: grid; gap: 1em; grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; }
-
-// Layar lebar (TV, laptop, tablet mendatar): dua kolom
-@media (min-width: 640px) and (orientation: landscape) {
-    .pa-main { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
-}
-@media (min-aspect-ratio: 21/10) and (orientation: landscape) {
-    .pa-main { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); }
-}
-// Layar penuh tanpa gulir hanya bila tingginya cukup (TV dan monitor)
+// ---------- susunan ----------
+.ly-main { display: grid; gap: 1.5em; flex: 1; min-height: 0; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) and (orientation: landscape) { .ly-main { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); } }
+@media (min-aspect-ratio: 21/10) and (orientation: landscape) { .ly-main { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); } }
 @media (min-width: 900px) and (min-height: 560px) and (orientation: landscape) {
-    .pa-shell { height: 100dvh; overflow: hidden; }
+    .ly { height: 100dvh; overflow: hidden; }
+    .ly-main[data-n="3"] { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+    .ly-main[data-n="4"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
 }
 
-// ---------- panel panggilan utama ----------
-.pa-hero {
-    container-type: inline-size;
-    position: relative; isolation: isolate; overflow: hidden;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 1em; min-width: 0; min-height: 0;
-    padding: 1.4em 1.5em; color: $pa-hero-teks; border-radius: 1.4em;
-    background: linear-gradient(140deg, #0F7A90 0%, #0A5A6F 55%, #083E50 100%);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
-    &::before {
-        content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cpath d='M28 21v14M21 28h14' stroke='white' stroke-opacity='.06' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+// ---------- kartu utama (terang) ----------
+.ly-now {
+    container-type: inline-size; position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5em; min-width: 0; min-height: 0;
+    padding: 2em; color: $ly-ink; border-radius: 2em; animation: ly-naik 1s $ly-ease both;
+    background: radial-gradient(30em 20em at 100% 0, rgba($ly-glow, .55), transparent 65%), linear-gradient(160deg, #FFFFFF, #D9F2F5);
+    box-shadow: 0 2.5em 5em -2em rgba(0, 0, 0, .6), inset 0 0 0 1px rgba(#fff, .6);
+    &::before { // kilau lembut yang menyapu kartu
+        content: ''; position: absolute; z-index: -1; top: -20%; bottom: -20%; left: -40%; width: 30%; pointer-events: none; opacity: .55;
+        background: linear-gradient(100deg, transparent, rgba(#fff, .9), transparent); transform: skewX(-18deg); animation: ly-kilau 9s ease-in-out 2s infinite;
     }
+    &::after { content: ''; position: absolute; z-index: -1; right: -3em; bottom: -4em; width: 18em; height: 18em; opacity: .07; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4v40M4 24h40' stroke='%23073B4C' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
 }
-.pa-label {
-    display: inline-flex; align-items: center; flex-wrap: wrap; gap: .5em .8em; align-self: flex-start;
-    margin: 0; padding: .4em 1em; border-radius: 999px; background: rgba(0, 0, 0, .25);
-    font-size: 1em; font-weight: 700; color: #E6F7F9;
-}
-.pa-live { width: .6em; height: .6em; border-radius: 50%; background: $pa-mint; animation: pa-denyut 2s infinite; }
-.pa-badge { padding: .1em .7em; border-radius: 999px; background: $pa-amber; color: #3B2A00; font-size: .85em; font-weight: 800; }
-.pa-badge-baru { background: $pa-mint; color: #06323A; animation: pa-kedip 1.4s ease-in-out infinite; }
+.ly-label { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .5em 1em; align-self: flex-start; margin: 0; padding: .5em 1em; font-size: .9em; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: $ly-ink; background: rgba($ly-ink, .07); border-radius: 999px; .ly-dot { background: #0B9E8D; } }
+.ly-badge { padding: .1em .75em; font-size: .85em; letter-spacing: 0; text-transform: none; color: #4A3300; background: #F4C85E; border-radius: 999px; }
 
-.pa-hero-poli { display: flex; align-items: center; gap: .7em; min-width: 0; }
-.pa-kode {
-    display: inline-grid; place-items: center; flex-shrink: 0; min-width: 2.1em; height: 2.1em; padding: 0 .4em;
-    border-radius: .6em; background: var(--a-lembut, rgba($pa-mint, .18)); color: var(--a, $pa-mint);
-    font-family: $headings-font-family; font-weight: 800; font-size: 1.4em; line-height: 1;
-}
-.pa-hero .pa-kode { background: var(--a, $pa-hero-teks); color: #062A33; }
-.pa-hero-nama { margin: 0; font-size: 1.7em; font-weight: 700; line-height: 1.12; color: $pa-hero-teks; overflow-wrap: anywhere; }
+.ly-who { display: flex; align-items: center; gap: 1em; min-width: 0; animation: ly-geser .9s $ly-ease both; }
+.ly-kode { display: inline-grid; place-items: center; flex: none; min-width: 2.5em; height: 2.5em; padding: 0 .5em; font-family: $headings-font-family; font-weight: 800; font-size: 1.25em; line-height: 1; border-radius: .75em; color: $ly-glow; background: $ly-ink; }
+.ly-poli-nama { margin: 0; font-size: 1.75em; font-weight: 700; line-height: 1.1; letter-spacing: -.01em; color: $ly-ink; overflow-wrap: anywhere; }
 
-.pa-no {
-    margin: .02em 0 0; color: $pa-hero-teks; font-weight: 800; line-height: .92; letter-spacing: -.02em;
-    text-shadow: 0 .03em .06em rgba(0, 0, 0, .25);
-    font-size: clamp(4.5rem, 24vw, 14rem);
-    &.is-kosong { color: rgba($pa-hero-teks, .4); text-shadow: none; }
-}
-// Angka mengikuti lebar panelnya dan dibatasi tinggi layar supaya tidak terpotong
-@supports (font-size: 1cqi) {
-    .pa-no { font-size: clamp(4.5rem, min(31cqi, 34vh), 120rem); }
-}
+// nomor besar: tiap karakter muncul bergantian
+.ly-no { position: relative; display: inline-flex; margin: .1em 0 0; font-weight: 800; line-height: .95; letter-spacing: -.04em; color: $ly-ink; font-size: clamp(4.5rem, 24vw, 14rem); font-variant-numeric: tabular-nums; perspective: 40em; &.is-kosong { color: rgba($ly-ink, .18); } }
+@supports (font-size: 1cqi) { .ly-no { font-size: clamp(4.5rem, min(31cqi, 40vh), 120rem); } }
+.ly-ch { display: inline-block; transform-origin: 50% 100%; animation: ly-huruf 1s $ly-ease both; animation-delay: calc(var(--i, 0) * 70ms + 120ms); }
+.ly-ring { position: absolute; inset: 0 -.05em; border: .02em solid rgba($ly-ink, .35); border-radius: .22em; pointer-events: none; opacity: 0; animation: ly-cincin 1.8s $ly-ease .35s both; }
 
-.pa-banner {
-    display: flex; flex-wrap: wrap; align-items: center; gap: .3em 1.2em; padding: .75em 1.1em;
-    border-radius: .9em; background: rgba(0, 0, 0, .26); font-size: 1.25em; font-weight: 700; line-height: 1.25;
-}
-.pa-banner .bi { margin-right: .45em; color: var(--a, $pa-mint); }
-.pa-banner .pa-sub { color: #D3EEF2; font-weight: 600; }
+.ly-ket { display: flex; flex-wrap: wrap; align-items: center; gap: .5em 1em; margin: 0; font-size: 1.15em; font-weight: 600; }
+.ly-ket > span { display: inline-flex; align-items: center; gap: .5em; padding: .5em 1em; background: rgba($ly-ink, .07); border-radius: 999px; i { color: #0B8196; } }
+.ly-ket .is-cta { color: #fff; background: $ly-ink; i { color: $ly-glow; } }
+.ly-ket .is-muted { background: transparent; padding-left: 0; color: rgba($ly-ink, .6); }
 
-// ---------- sorotan berputar ----------
-.pa-stage { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; }
-.pa-slide {
-    grid-area: 1 / 1; position: relative; isolation: isolate;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 1em; min-width: 0; min-height: 0;
-    opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(.9em) scale(.985);
-    transition: opacity .7s ease, transform .9s cubic-bezier(.22, 1, .36, 1), visibility 0s linear .9s;
-    // cahaya lembut berwarna poli di sudut kanan atas
-    &::before {
-        content: ''; position: absolute; inset: -1.4em; z-index: -1; pointer-events: none;
-        background: radial-gradient(60% 55% at 92% 0%, var(--a-kuat), transparent 70%);
-    }
-    &.is-active {
-        opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition-delay: 0s, 0s, 0s;
-        .pa-no { animation: pa-masuk .6s cubic-bezier(.2, .8, .2, 1) both; }
-    }
-}
-.pa-slide-mid { display: flex; flex-direction: column; justify-content: center; min-height: 0; }
-.pa-empty { grid-area: 1 / 1; display: grid; place-items: center; text-align: center; font-size: 1.3em; font-weight: 600; color: #D3EEF2; }
-
-.pa-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5em 1.2em; }
-.pa-next { display: flex; flex-wrap: wrap; align-items: center; gap: .5em; min-width: 0; }
-.pa-foot-l { font-size: .95em; font-weight: 600; color: #CFEAEF; }
-.pa-nochip { padding: .15em .7em; border-radius: .7em; background: rgba(0, 0, 0, .24); font-size: 1.4em; color: $pa-hero-teks; }
-.pa-nochip.is-kosong { font-family: inherit; font-size: .95em; font-weight: 600; letter-spacing: 0; color: #CFEAEF; }
-.pa-stats {
-    display: flex; gap: 1em; font-size: .95em; color: #CFEAEF;
-    b { margin-right: .15em; font-family: $headings-font-family; font-size: 1.5em; color: #fff; font-variant-numeric: tabular-nums; }
-}
-
-// titik pilihan poli + progres putaran
-.pa-dots { display: flex; flex-wrap: wrap; align-items: center; gap: .5em; padding-top: .2em; }
-.pa-dot {
-    position: relative; overflow: hidden; display: inline-grid; place-items: center; min-width: 2.2em; height: 2.2em; padding: 0 .55em;
-    border: 0; border-radius: 999px; background: rgba(0, 0, 0, .26); color: #CFEAEF; cursor: pointer;
-    font-family: $headings-font-family; font-weight: 800; font-size: .95em; line-height: 1;
-    transition: background-color .4s, color .4s, min-width .5s cubic-bezier(.22, 1, .36, 1);
-    &:hover { background: rgba(0, 0, 0, .4); }
-    &.is-active { min-width: 4.6em; background: rgba(255, 255, 255, .16); color: #fff; }
-    &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-    .k { position: relative; z-index: 1; }
-    .fill {
-        position: absolute; inset: 0; background: var(--a, $pa-mint); opacity: .5;
-        transform: scaleX(0); transform-origin: left; animation: pa-isi var(--dur, 8s) linear forwards;
-    }
-}
-.pa-board.is-jeda .pa-dot .fill { animation-play-state: paused; }
-.pa-jeda {
-    display: inline-grid; place-items: center; margin-left: auto; width: 2.2em; height: 2.2em; padding: 0; border: 0;
-    border-radius: 50%; background: rgba(0, 0, 0, .26); color: #CFEAEF; font-size: 1em; cursor: pointer;
-    transition: background-color .2s, color .2s;
-    &:hover { background: rgba(0, 0, 0, .4); color: #fff; }
-    &[aria-pressed='true'] { background: $pa-amber; color: #3B2A00; }
-    &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-}
-
-// panggilan sebelumnya (dipakai layar satu poli)
-.pa-prev-label { margin: 0 0 .45em; font-size: .95em; font-weight: 600; color: #CFEAEF; }
-.pa-chips { display: flex; flex-wrap: wrap; gap: .5em; margin: 0; padding: 0; list-style: none; }
-.pa-chips li { display: flex; align-items: baseline; gap: .5em; padding: .3em .8em; border-radius: .7em; background: rgba(0, 0, 0, .24); }
-.pa-chips .numeral { font-size: 1.5em; color: $pa-hero-teks; }
-.pa-chips small { font-size: .85em; color: #CFEAEF; }
-@media (max-width: 639px) {
-    // di HP satu baris yang bisa digeser, bukan menumpuk panjang
-    .pa-chips { flex-wrap: nowrap; overflow-x: auto; margin-inline: -1.5em; padding-inline: 1.5em; scrollbar-width: none; }
-    .pa-chips::-webkit-scrollbar { display: none; }
-    .pa-chips li { flex-shrink: 0; }
-}
+.ly-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1em; padding-top: 1.5em; border-top: 1px dashed rgba($ly-ink, .2); }
+.ly-stat { display: flex; align-items: baseline; gap: .75em; min-width: 0; .numeral { font-size: 2.5em; line-height: 1; color: $ly-ink; } span:last-child { font-size: .85em; font-weight: 600; line-height: 1.25; color: rgba($ly-ink, .65); } }
 
 // ---------- kolom samping ----------
-.pa-side {
-    display: flex; flex-direction: column; gap: .8em; min-width: 0; min-height: 0;
-    padding: 1.1em 1.2em; background: $pa-kartu; border: 1px solid $pa-garis; border-radius: 1.4em;
-}
-.pa-side-title { margin: 0; font-size: 1.05em; font-weight: 700; color: $pa-muted; }
+.ly-side { display: flex; flex-direction: column; gap: 1em; min-width: 0; min-height: 0; animation: ly-naik 1s $ly-ease .12s both; }
+.ly-side-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1em; padding-inline: .5em; }
+.ly-side-title { margin: 0; font-size: 1.15em; font-weight: 700; color: $ly-teks; }
+.ly-side-sub { font-size: .8em; color: $ly-muted; }
 
-.pa-rows { display: grid; gap: .6em; grid-template-columns: minmax(0, 1fr); grid-auto-rows: minmax(3.6em, auto); }
-// Tablet tegak dan TV tegak: baris poli dua kolom
-@media (min-width: 640px) and (orientation: portrait) {
-    .pa-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
+.ly-list { display: grid; gap: 1em; grid-template-columns: minmax(0, 1fr); grid-auto-rows: minmax(5em, auto); margin: 0; padding: 0; list-style: none; }
+@media (min-width: 640px) and (orientation: portrait) { .ly-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ly-list[data-n="4"] { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 900px) and (min-height: 560px) and (orientation: landscape) {
-    .pa-rows { flex: 1; min-height: 0; grid-auto-rows: minmax(3.2em, 1fr); overflow-y: auto; scrollbar-width: none; }
-    .pa-rows::-webkit-scrollbar { display: none; }
+    .ly-list { flex: 1; min-height: 0; grid-auto-rows: minmax(0, 1fr); overflow: hidden auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+    .ly-list[data-n="2"] { gap: .75em; font-size: .92em; }
+    .ly-list[data-n="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75em; font-size: .82em; }
+    .ly-list[data-n="4"] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5em; font-size: .68em; }
 }
 
-.pa-row {
-    width: 100%; margin: 0; font: inherit; color: inherit; text-align: left; cursor: pointer;
-    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .8em;
-    padding: .6em .8em .6em .9em; border: 0; border-left: .35em solid var(--a, $pa-mint); border-radius: .4em 1em 1em .4em;
-    background: rgba(255, 255, 255, .05);
-    transition: background-color .5s ease, box-shadow .5s ease, transform .5s cubic-bezier(.22, 1, .36, 1);
-    &:hover { background: rgba(255, 255, 255, .09); }
-    &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-    &.is-active { background: var(--a-lembut); box-shadow: 0 0 0 2px var(--a); transform: translateX(.25em); }
+// kartu horizontal: ubin kode, teks bertingkat, nomor di kanan
+.ly-card {
+    position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1em; min-width: 0; padding: 1em 1.5em 1em 1em;
+    background: $ly-kartu; border: 1px solid $ly-garis; border-radius: 1.5em; transition: background .4s, border-color .4s, transform .7s $ly-ease, box-shadow .7s;
+    animation: ly-naik .9s $ly-ease both; animation-delay: calc(var(--k, 0) * 60ms + 250ms);
+    &.is-active { background: var(--a-soft); border-color: transparent; box-shadow: 0 1.5em 3em -1.5em var(--a); transform: translateX(-.5em); }
+    // cincin cahaya yang berputar di kartu aktif
+    &.is-active::before {
+        content: ''; position: absolute; inset: -1px; padding: 2px; border-radius: inherit; pointer-events: none; animation: ly-putar 5s linear infinite;
+        background: conic-gradient(from var(--ang), rgba(#fff, .06) 0 40%, var(--a) 78%, #fff 90%, rgba(#fff, .06) 100%);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    }
 }
-.pa-row .pa-kode { font-size: 1.15em; }
-.pa-row-nama { font-size: 1.15em; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
-.pa-row-info { margin-top: .15em; font-size: .92em; color: $pa-muted; }
-.pa-row-info b { color: $pa-teks; }
-.pa-row-no {
-    min-width: 3.1ch; padding: .05em .4em; border-radius: .5em; background: rgba(0, 0, 0, .22);
-    text-align: center; font-size: 2em; color: $pa-teks;
+.ly-card .ly-kode { min-width: 3em; height: 3em; font-size: 1.15em; color: var(--a); background: var(--a-soft); box-shadow: inset 0 0 0 1px rgba(#fff, .06); border-radius: 1em; transition: background .4s, color .4s; }
+.ly-card.is-active .ly-kode { color: $ly-ink; background: var(--a); }
+.ly-card-body { min-width: 0; display: grid; gap: .25em; }
+.ly-card-nama { font-size: 1.15em; font-weight: 700; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ly-card-info { display: flex; flex-wrap: wrap; align-items: center; gap: .25em .5em; font-size: .8em; color: $ly-muted; b { color: $ly-teks; } }
+.ly-next { display: inline-flex; padding: .05em .6em; font-weight: 700; font-size: .95em; color: $ly-teks; background: rgba(#fff, .08); border-radius: 999px; font-variant-numeric: tabular-nums; }
+.ly-card-no { text-align: right; line-height: 1; }
+.ly-card-no small { display: block; margin-bottom: .25em; font-size: .65em; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: $ly-muted; }
+.ly-card-no .numeral { display: inline-block; font-size: 2.25em; color: $ly-teks; font-variant-numeric: tabular-nums; animation: ly-gulung .9s $ly-ease both; }
+.ly-card.is-active .ly-card-no .numeral { color: var(--a); }
+.ly-card-no .is-kosong { font-size: 1.75em; color: rgba($ly-muted, .5); animation: none; }
+.ly-kosong { padding: 2em; text-align: center; color: $ly-muted; border: 1px dashed $ly-garis; border-radius: 1.5em; }
+
+// makin banyak poli, makin ringkas isi kartunya
+.ly-list[data-n="2"] .ly-next:nth-of-type(n+3) { display: none; }
+.ly-list[data-n="3"], .ly-list[data-n="4"] {
+    .ly-card { gap: .75em; padding: .75em 1em .75em .75em; }
+    .ly-card-info > :not(:first-child) { display: none; }
+    .ly-card-no small { display: none; }
 }
-.pa-row.is-active .pa-row-no { color: var(--a); }
-.pa-row-no.is-kosong { font-size: 1.6em; color: rgba($pa-muted, .55); }
+.ly-list[data-n="4"] .ly-card { border-radius: 1.25em; .ly-kode { min-width: 2.5em; height: 2.5em; } .ly-card-info { display: none; } .ly-card-nama { font-size: 1em; } }
 
 // ---------- layar satu poli ----------
-.pa-hist { flex: 1; min-height: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
-.pa-hist li { display: flex; align-items: baseline; justify-content: space-between; gap: 1em; padding: .6em 0; border-top: 1px solid $pa-garis; }
-.pa-hist li:first-child { border-top: 0; }
-.pa-hist .numeral { font-size: 2.1em; color: $pa-muted; }
-.pa-hist li:first-child .numeral { color: $pa-teks; }
-.pa-hist small { font-size: .95em; color: $pa-muted; }
-.pa-wait {
-    display: flex; flex-wrap: wrap; align-items: baseline; gap: .2em .8em; padding: .8em 1em;
-    border-radius: 1em; background: var(--a-lembut, rgba($pa-mint, .14)); color: $pa-teks; font-weight: 600;
-}
-.pa-wait .numeral { font-size: 3.2em; color: var(--a, $pa-mint); }
+.ly-nextlist { flex: 1; min-height: 0; margin: 0; padding: 0; list-style: none; display: grid; gap: .5em; align-content: start; }
+.ly-nextlist li { display: flex; align-items: center; justify-content: space-between; gap: 1em; padding: .75em 1.5em; background: $ly-kartu; border: 1px solid $ly-garis; border-radius: 1.25em; animation: ly-naik .9s $ly-ease both; animation-delay: calc(var(--k, 0) * 70ms + 250ms); }
+.ly-nextlist .numeral { font-size: 2.25em; line-height: 1; color: $ly-teks; font-variant-numeric: tabular-nums; }
+.ly-nextlist li:first-child { background: var(--a-soft); border-color: var(--a); .numeral { color: var(--a); } }
+.ly-nextlist small { font-size: .8em; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: $ly-muted; }
+.ly-nextlist .is-empty { justify-content: center; color: $ly-muted; font-size: .9em; }
+.ly-wait { display: flex; align-items: center; justify-content: space-between; gap: 1em; padding: 1em 1.5em; color: $ly-ink; background: $ly-glow; border-radius: 1.5em; font-weight: 700; .numeral { font-size: 3.5em; line-height: 1; } small { display: block; font-size: .8em; font-weight: 600; opacity: .75; } }
 
 // ---------- HP mendatar yang pendek ----------
-@media (max-height: 559px) and (orientation: landscape) {
-    .pa-shell { padding-block: .7em; gap: .7em; }
-    .pa-hero { padding: 1em 1.2em; gap: .6em; }
-    .pa-banner { font-size: 1.05em; padding: .5em .9em; }
-    .pa-jam { font-size: 1.8em; }
-}
+@media (max-height: 559px) and (orientation: landscape) { .ly { padding-block: 1em; gap: 1em; } .ly-now { padding: 1.5em; gap: 1em; } .ly-jam { font-size: 1.9em; } .ly-live { display: none; } .ly-stats { display: none; } }
+@media (max-width: 479px) { .ly { padding: 1em; } .ly-live, .ly-top .brand-sub { display: none; } .ly-now { padding: 1.5em; border-radius: 1.5em; } .ly-jam { font-size: 1.9em; } }
 
 // ---------- gerak ----------
-.pa-baru { animation: pa-masuk .5s cubic-bezier(.2, .8, .2, 1) both; }
-@keyframes pa-masuk { from { opacity: 0; transform: translateY(.12em) scale(.96); } to { opacity: 1; transform: none; } }
-@keyframes pa-isi { to { transform: scaleX(1); } }
-@keyframes pa-kedip { 50% { opacity: .55; } }
-@keyframes pa-denyut { 0% { box-shadow: 0 0 0 0 rgba($pa-mint, .6); } 70% { box-shadow: 0 0 0 .5em rgba($pa-mint, 0); } 100% { box-shadow: 0 0 0 0 rgba($pa-mint, 0); } }
+@keyframes ly-naik { from { opacity: 0; transform: translateY(1.5em); } to { opacity: 1; transform: none; } }
+@keyframes ly-turun { from { opacity: 0; transform: translateY(-1em); } to { opacity: 1; transform: none; } }
+@keyframes ly-geser { from { opacity: 0; transform: translateX(-1.5em); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes ly-huruf { 0% { opacity: 0; transform: translateY(.38em) rotateX(-70deg) scale(.94); filter: blur(.12em); } 60% { opacity: 1; } 100% { opacity: 1; transform: none; filter: none; } }
+@keyframes ly-gulung { from { opacity: 0; transform: translateY(.5em); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes ly-cincin { 0% { opacity: .9; transform: scale(.96); } 100% { opacity: 0; transform: scale(1.18, 1.3); } }
+@keyframes ly-kilau { 0%, 62% { left: -40%; } 100% { left: 130%; } }
+@keyframes ly-putar { to { --ang: 360deg; } }
+@keyframes ly-ping { 0% { transform: scale(1); opacity: .7; } 80%, 100% { transform: scale(3.2); opacity: 0; } }
+@keyframes ly-drift { from { transform: translate3d(-2%, -1%, 0) scale(1); } to { transform: translate3d(3%, 2%, 0) scale(1.08); } }
 @media (prefers-reduced-motion: reduce) {
-    .pa-baru, .pa-live, .pa-badge-baru, .pa-slide.is-active .pa-no { animation: none; }
-    .pa-slide { transform: none; transition: opacity .25s linear, visibility 0s linear .25s; }
-    .pa-row, .pa-dot { transition: none; }
+    .ly *, .ly *::before, .ly *::after, .ly::after { animation: none !important; transition: none !important; }
 }

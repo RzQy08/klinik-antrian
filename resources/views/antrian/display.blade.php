@@ -9,5 +9,6 @@
     <livewire:antrian-display :poli-id="$poli->id" />
 
     @livewireScripts
+    @include('antrian._layar-js')
 </body>
 </html>

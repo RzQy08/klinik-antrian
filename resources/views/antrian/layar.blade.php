@@ -9,5 +9,6 @@
     <livewire:antrian-board />
 
     @livewireScripts
+    @include('antrian._layar-js')
 </body>
 </html>

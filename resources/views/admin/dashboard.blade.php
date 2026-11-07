@@ -17,64 +17,53 @@
         ];
     @endphp
 
-    <x-slot name="header">
-        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
-            <div>
-                <p class="ad-date mb-1"><i class="bi bi-calendar3 me-2"></i>{{ now()->locale('id')->translatedFormat('l, j F Y') }}</p>
-                <h1 class="h2 mb-1">Selamat {{ $sapaan }}, {{ $namaDepan }}</h1>
-                <p class="text-body-secondary mb-0">Ini kondisi klinik hari ini. Semua fitur ada di widget di bawah.</p>
-            </div>
-
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                @if (\App\Services\JamOperasional::aktif())
-                    @if (\App\Services\JamOperasional::pendaftaranDibuka())
-                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis">Pendaftaran dibuka</span>
-                    @else
-                        <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Pendaftaran ditutup</span>
-                    @endif
-                    @if (\App\Services\JamOperasional::layananBerjalan())
-                        <span class="badge rounded-pill bg-info-subtle text-info-emphasis">Layanan sampai {{ \App\Services\JamOperasional::tampil(config('operasional.layanan_selesai')) }}</span>
-                    @else
-                        <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Layanan selesai</span>
-                    @endif
-                @else
-                    <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">Jam operasional bebas</span>
-                @endif
-            </div>
-        </div>
-    </x-slot>
-
     @include('partials.flash')
 
-    {{-- ============ KPI ============ --}}
-    <section class="ad-kpis" aria-label="Ringkasan hari ini">
-        <div class="ad-kpi">
-            <span class="ad-ico ad-ico-primary"><i class="bi bi-people"></i></span>
-            <div><div class="numeral">{{ $hariIni['menunggu'] }}</div><div class="ad-kpi-label">Menunggu</div></div>
-        </div>
-        <div class="ad-kpi">
-            <span class="ad-ico ad-ico-warning"><i class="bi bi-megaphone"></i></span>
-            <div><div class="numeral">{{ $hariIni['ditangani'] }}</div><div class="ad-kpi-label">Sedang ditangani</div></div>
-        </div>
-        <div class="ad-kpi">
-            <span class="ad-ico ad-ico-success"><i class="bi bi-check2-circle"></i></span>
-            <div><div class="numeral">{{ $hariIni['selesai'] }}</div><div class="ad-kpi-label">Selesai</div></div>
-        </div>
-        <div class="ad-kpi">
-            <span class="ad-ico ad-ico-danger"><i class="bi bi-person-x"></i></span>
-            <div><div class="numeral">{{ $hariIni['tidak_hadir'] }}</div><div class="ad-kpi-label">Tidak hadir</div></div>
-        </div>
-        <div class="ad-kpi ad-kpi-dark">
-            <span class="ad-ico ad-ico-navy"><i class="bi bi-hourglass-split"></i></span>
-            <div>
-                <div class="numeral">{{ $rataTungguMenit ?? '-' }}@if ($rataTungguMenit !== null)<small> mnt</small>@endif</div>
-                <div class="ad-kpi-label">Rata-rata tunggu</div>
-            </div>
-        </div>
-    </section>
-
-    {{-- ============ WIDGET ============ --}}
     <div class="ad-grid">
+
+        {{-- Sapaan + ringkasan hari ini --}}
+        <section class="ad-hero" aria-label="Ringkasan hari ini">
+            <div class="ad-hero-top">
+                <div>
+                    <p class="ad-eyebrow"><i class="bi bi-calendar3"></i>{{ now()->locale('id')->translatedFormat('l, j F Y') }}</p>
+                    <h1>Selamat {{ $sapaan }}, {{ $namaDepan }}</h1>
+                    <p class="ad-lead">Ini kondisi klinik hari ini, dari antrian yang menunggu sampai pasien yang sudah selesai.</p>
+                </div>
+                <div class="ad-chips">
+                    @if (\App\Services\JamOperasional::aktif())
+                        @if (\App\Services\JamOperasional::pendaftaranDibuka())
+                            <span class="ad-chip is-ok"><i class="bi bi-door-open"></i>Pendaftaran dibuka</span>
+                        @else
+                            <span class="ad-chip is-off"><i class="bi bi-door-closed"></i>Pendaftaran ditutup</span>
+                        @endif
+                        @if (\App\Services\JamOperasional::layananBerjalan())
+                            <span class="ad-chip"><i class="bi bi-clock"></i>Layanan sampai {{ \App\Services\JamOperasional::tampil(config('operasional.layanan_selesai')) }}</span>
+                        @else
+                            <span class="ad-chip is-off"><i class="bi bi-moon"></i>Layanan selesai</span>
+                        @endif
+                    @else
+                        <span class="ad-chip"><i class="bi bi-infinity"></i>Jam operasional bebas</span>
+                    @endif
+                </div>
+            </div>
+
+            <div class="ad-kpis">
+                <div class="ad-kpi"><span class="ad-kpi-ico"><i class="bi bi-people"></i></span><div class="numeral">{{ $hariIni['menunggu'] }}</div><div class="ad-kpi-label">Menunggu</div></div>
+                <div class="ad-kpi"><span class="ad-kpi-ico"><i class="bi bi-megaphone"></i></span><div class="numeral">{{ $hariIni['ditangani'] }}</div><div class="ad-kpi-label">Ditangani</div></div>
+                <div class="ad-kpi"><span class="ad-kpi-ico"><i class="bi bi-check2-circle"></i></span><div class="numeral">{{ $hariIni['selesai'] }}</div><div class="ad-kpi-label">Selesai</div></div>
+                <div class="ad-kpi"><span class="ad-kpi-ico"><i class="bi bi-person-x"></i></span><div class="numeral">{{ $hariIni['tidak_hadir'] }}</div><div class="ad-kpi-label">Tidak hadir</div></div>
+                <div class="ad-kpi is-lead"><span class="ad-kpi-ico"><i class="bi bi-hourglass-split"></i></span><div class="numeral">{{ $rataTungguMenit ?? '-' }}@if ($rataTungguMenit !== null)<small> mnt</small>@endif</div><div class="ad-kpi-label">Rata-rata tunggu</div></div>
+            </div>
+
+            <div class="ad-days" aria-label="Pasien selesai 7 hari terakhir">
+                <span class="ad-days-t">7 hari terakhir</span>
+                @foreach ($tren as $hari)
+                    <span class="ad-day {{ $hari['hari_ini'] ? 'is-today' : '' }} {{ $hari['jumlah'] > 0 ? 'has' : '' }}" title="{{ $hari['tanggal'] }}: {{ $hari['jumlah'] }} pasien selesai">
+                        <b>{{ $hari['label'] }}</b><i>{{ $hari['jumlah'] }}</i>
+                    </span>
+                @endforeach
+            </div>
+        </section>
 
         {{-- Akses cepat --}}
         <section class="ad-card ad-area-quick">

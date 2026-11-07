@@ -34,17 +34,18 @@
 // ---------- grid widget ----------
 .ad-grid {
     display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "quick" "poli" "attn" "tren" "akt";
+    grid-template-areas: "hero" "attn" "poli" "tren" "quick" "akt";
 }
-@include media-breakpoint-up(lg) {
+@include media-breakpoint-up(xl) {
     .ad-grid {
         gap: 1.25rem; grid-template-columns: repeat(12, minmax(0, 1fr));
         grid-template-areas:
-            "poli poli poli poli poli poli poli poli quick quick quick quick"
-            "tren tren tren tren tren tren tren tren attn attn attn attn"
-            "akt akt akt akt akt akt akt akt akt akt akt akt";
+            "hero hero hero hero hero hero hero hero attn attn attn attn"
+            "poli poli poli poli poli poli poli poli tren tren tren tren"
+            "quick quick quick quick quick quick quick akt akt akt akt akt";
     }
 }
+.ad-hero { grid-area: hero; }
 .ad-area-quick { grid-area: quick; }
 .ad-area-poli { grid-area: poli; }
 .ad-area-attn { grid-area: attn; }
@@ -122,6 +123,67 @@
     display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed $border-color; font-size: .88rem; color: $body-secondary-color;
     b { color: $navy; font-family: $headings-font-family; font-size: 1.1rem; }
 }
+
+// ---------- tampilan dashboard (menimpa gaya dasar di atas) ----------
+.ad-card { position: relative; padding: 1.35rem; border: 0; border-radius: 1.6rem; box-shadow: 0 1px 0 rgba($navy, .03), 0 22px 40px -30px rgba($navy, .5); animation: sh-masuk .6s $sh-ease both; }
+.ad-grid > :nth-child(2) { animation-delay: .06s; } .ad-grid > :nth-child(3) { animation-delay: .12s; }
+.ad-grid > :nth-child(4) { animation-delay: .18s; } .ad-grid > :nth-child(5) { animation-delay: .24s; } .ad-grid > :nth-child(6) { animation-delay: .3s; }
+.ad-card-head h2 { font-size: 1.1rem; }
+
+.ad-hero {
+    position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; gap: 1.5rem; padding: clamp(1.25rem, 2.4vw, 1.9rem); color: $on-navy; border-radius: 1.6rem;
+    background: radial-gradient(26rem 16rem at 100% 0, rgba($glow, .22), transparent 70%), linear-gradient(135deg, $navy-soft, $navy 55%, $navy-deep);
+    box-shadow: 0 34px 56px -34px rgba($navy-deep, .85); animation: sh-masuk .6s $sh-ease both;
+    &::after { content: ''; position: absolute; z-index: -1; right: -2rem; bottom: -3rem; width: 15rem; height: 15rem; opacity: .07; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4v40M4 24h40' stroke='white' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+    h1 { margin: .35rem 0 .4rem; font-size: clamp(1.6rem, 3.2vw, 2.4rem); letter-spacing: -.03em; line-height: 1.08; color: #fff; text-wrap: balance; }
+}
+.ad-hero-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.ad-eyebrow { display: inline-flex; align-items: center; gap: .5rem; margin: 0; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: $glow; }
+.ad-lead { max-width: 30rem; margin: 0; color: $on-navy-muted; text-wrap: pretty; }
+.ad-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+.ad-chip { display: inline-flex; align-items: center; gap: .45rem; padding: .4rem .8rem; font-size: .8rem; font-weight: 700; color: $on-navy; background: rgba(#fff, .1); border: 1px solid rgba(#fff, .14); border-radius: 999px; &.is-ok { color: $navy; background: $glow; border-color: transparent; } &.is-off { color: #FFD7D2; background: rgba($danger, .28); border-color: rgba($danger, .4); } }
+
+.ad-hero .ad-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin: 0; }
+@include media-breakpoint-up(md) { .ad-hero .ad-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.ad-hero .ad-kpi {
+    display: block; padding: .95rem 1rem; color: #fff; background: rgba(#fff, .08); border: 1px solid rgba(#fff, .1); border-radius: 1.2rem; box-shadow: none; transition: transform .25s $sh-ease, background .2s;
+    &:hover { transform: translateY(-3px); background: rgba(#fff, .13); }
+    .numeral { font-size: clamp(1.9rem, 3.2vw, 2.5rem); line-height: 1; color: #fff; small { font-size: .85rem; color: $on-navy-muted; } }
+    .ad-kpi-label { margin-top: .35rem; color: $on-navy-muted; }
+    &.is-lead { background: $glow; border-color: transparent; .numeral, small { color: $navy; } .ad-kpi-label { color: $navy-soft; } .ad-kpi-ico { background: rgba($navy, .12); color: $navy; } }
+    &:last-child { grid-column: 1 / -1; }
+}
+@include media-breakpoint-up(md) { .ad-hero .ad-kpi:last-child { grid-column: auto; } }
+.ad-kpi-ico { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; margin-bottom: .7rem; font-size: 1.05rem; color: $glow; background: rgba(#fff, .1); border-radius: .75rem; }
+
+// status poli jadi kartu berbar progres
+.ad-poli { grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: .8rem; }
+.ad-poli > li {
+    flex-wrap: wrap; align-items: flex-start; gap: .75rem .9rem; padding: 1rem; background: $sh-bg; border: 1px solid transparent; border-radius: 1.2rem; transition: transform .25s $sh-ease, background .2s, box-shadow .25s;
+    &:first-child { padding-top: 1rem; }
+    &:hover { transform: translateY(-3px); background: #fff; border-color: $border-color; box-shadow: 0 18px 30px -22px rgba($navy, .55); }
+    &.ad-empty { grid-column: 1 / -1; background: transparent; }
+}
+.ad-poli-body { flex: 1 1 8rem; }
+.ad-poli-act { width: 100%; > :first-child { flex: 1; } .btn { border-radius: 999px; } }
+.ad-poli .bar { height: .45rem; overflow: hidden; background: rgba($navy, .1); border-radius: 999px; span { display: block; height: 100%; border-radius: inherit; transition: width .9s $sh-ease; } }
+
+.ad-days { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: auto; padding-top: .5rem; }
+.ad-days-t { flex-basis: 100%; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: $on-navy-muted; }
+@include media-breakpoint-up(sm) { .ad-days-t { flex-basis: auto; margin-right: .5rem; } }
+.ad-day {
+    display: inline-flex; flex-direction: column; align-items: center; gap: .1rem; min-width: 3.1rem; padding: .4rem .55rem; border-radius: 999px; color: $on-navy-muted; background: rgba(#fff, .07); border: 1px dashed rgba(#fff, .2);
+    b { font-size: .68rem; font-weight: 700; text-transform: capitalize; } i { font-style: normal; font-family: $headings-font-family; font-weight: 800; font-size: 1rem; line-height: 1; }
+    &.has { color: #fff; background: rgba(#fff, .14); border: 1px solid rgba(#fff, .18); }
+    &.is-today { color: $navy; background: $glow; border-color: transparent; }
+}
+.ad-area-tren .ad-chart { flex: 1; height: auto; min-height: 13rem; }
+.ad-tile { background: $sh-bg; border-radius: 1.1rem; }
+.ad-note { border-left: 0; border-radius: 1.1rem; }
+.ad-bar-fill { max-width: 2.4rem; border-radius: 999px; }
+.ad-feed > li:hover .ad-feed-no { color: $primary; }
+
+@media (prefers-reduced-motion: reduce) { .ad-card, .ad-hero { animation: none; } }
 
 // =====================================================================
 // Kelola poli interaktif (kelas berawalan ap-)
@@ -227,7 +289,7 @@
 .ap-toast-success > .bi:first-child { color: $glow; }
 .ap-toast-error { background: #7A1F1A; > .bi:first-child { color: #FFB4AE; } }
 @keyframes ap-toast-masuk { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
-@include media-breakpoint-down(md) { .ap-toast { bottom: calc(5rem + env(safe-area-inset-bottom, 0px)); } }
+@include media-breakpoint-down(lg) { .ap-toast { bottom: calc(6.8rem + env(safe-area-inset-bottom, 0px)); } }
 
 // jendela konfirmasi
 .ap-modal { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: 1rem; }
@@ -291,7 +353,7 @@
 .dk-gap { padding: 0 .2rem; color: $body-secondary-color; }
 
 // tabel menjadi kartu di layar sempit
-@include media-breakpoint-down(lg) {
+@include media-breakpoint-down(xl) {
     .dk-table, .dk-table tbody { display: block; }
     .dk-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     .dk-table tr { display: grid; grid-template-columns: 1fr 1fr; gap: .15rem 1rem; padding: 1rem; border-bottom: 1px solid $border-color; }
@@ -304,7 +366,7 @@
     .dk-act { grid-column: 1 / -1; padding-top: .6rem !important; text-align: left; }
     .dk-act-in { display: flex; width: 100%; > a { flex: 1; justify-content: center; } }
 }
-@include media-breakpoint-up(lg) { .dk-act-text { display: none; } }
+@include media-breakpoint-up(xl) { .dk-act-text { display: none; } }
 @media (min-width: 1400px) { .dk-act-text { display: inline; } }
 
 // ---------- editor jadwal ----------
@@ -340,7 +402,7 @@
     background: rgba(#fff, .92); border: 1px solid $border-color; border-radius: 1.2rem; box-shadow: 0 24px 48px -20px rgba($navy, .55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 .aj-savebar-text { font-size: .85rem; color: $body-secondary-color; }
-@include media-breakpoint-down(md) { .aj-savebar { bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)); .d-flex { width: 100%; > * { flex: 1; } } } }
+@include media-breakpoint-down(lg) { .aj-savebar { bottom: calc(6.6rem + env(safe-area-inset-bottom, 0px)); .d-flex { width: 100%; > * { flex: 1; } } } }
 
 // ---------- form tambah dan ubah dokter ----------
 .df-layout { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }

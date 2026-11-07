@@ -1,0 +1,158 @@
+// =====================================================================
+// Shell dashboard staf (kelas berawalan sh-)
+//
+// Dipakai layouts/app.blade.php untuk admin, petugas, dan dokter:
+//   - sidebar gradien yang melayang, bisa diciutkan jadi rail ikon di layar lebar
+//   - di bawah lg sidebar menjadi drawer geser, ditemani dock bawah
+//   - topbar lengket dengan judul halaman, tombol bulat, dan pil pengguna
+// Navbar publik (nv-*) ada di _nav.scss dan tidak berhubungan dengan berkas ini.
+// =====================================================================
+
+
+:root { --sh-w: 16.5rem; }
+@include media-breakpoint-up(lg) { html.sh-rail { --sh-w: 5.4rem; } }
+
+@keyframes sh-masuk { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.sh-body { background: $sh-bg; }
+@include media-breakpoint-down(lg) {
+    html.sh-open { overflow: hidden; }
+    .sh-body { padding-bottom: calc(5.8rem + env(safe-area-inset-bottom, 0px)); }
+}
+
+// ---------- sidebar ----------
+.sh-side {
+    position: fixed; z-index: 1060; top: $sh-gap; bottom: $sh-gap; left: $sh-gap; width: var(--sh-w);
+    display: flex; flex-direction: column; gap: 1rem; padding: .85rem .8rem .9rem; isolation: isolate; overflow: hidden;
+    color: $on-navy; border-radius: 1.6rem;
+    background:
+        radial-gradient(17rem 13rem at 0% 0%, rgba($glow, .17), transparent 70%),
+        linear-gradient(188deg, #0E6A80 0%, $navy 46%, $navy-deep 100%);
+    box-shadow: 0 34px 64px -32px rgba($navy-deep, .8);
+    transition: width $sh-dur $sh-ease, transform $sh-dur $sh-ease, visibility 0s linear 0s;
+
+    // tanda tambah samar di dasar
+    &::before {
+        content: ''; position: absolute; z-index: -1; left: -2.5rem; bottom: -2.5rem; width: 14rem; height: 14rem; opacity: .07; pointer-events: none;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4v40M4 24h40' stroke='white' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+}
+
+.sh-brand {
+    display: flex; align-items: center; gap: .7rem; min-height: 3.6rem; padding: .55rem .75rem; overflow: hidden;
+    background: #fff; border-radius: 1.15rem; color: $navy; box-shadow: 0 14px 26px -18px rgba(0, 0, 0, .6);
+    .lh-1 { max-width: 12rem; overflow: hidden; white-space: nowrap; transition: max-width $sh-dur $sh-ease, opacity .25s; }
+    &:hover { color: $navy; }
+}
+.sh-nav { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: .15rem; margin: 0 -.25rem; padding: 0 .25rem; overflow-y: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+.sh-label { height: 2.1rem; padding: 1.05rem .95rem 0; font-size: .66rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; white-space: nowrap; overflow: hidden; color: rgba($on-navy-muted, .8); transition: opacity .25s; }
+.sh-link {
+    position: relative; display: flex; align-items: center; gap: .85rem; flex: none; height: 2.9rem; padding: 0 .95rem; border: 0; border-radius: 999px; background: transparent;
+    color: rgba($on-navy, .86); font-size: .93rem; font-weight: 600; white-space: nowrap; transition: background .2s, color .2s, padding $sh-dur $sh-ease, gap $sh-dur $sh-ease, box-shadow .2s;
+    > i { flex: none; width: 1.4rem; font-size: 1.2rem; text-align: center; transition: color .2s; }
+    .t { max-width: 11rem; overflow: hidden; text-overflow: ellipsis; transition: max-width $sh-dur $sh-ease, opacity .25s; }
+    &:hover { color: #fff; background: rgba(#fff, .09); }
+    &:focus-visible { outline: 2px solid $glow; outline-offset: 2px; }
+    &.is-on { color: $navy; background: #E9F7F9; box-shadow: 0 14px 24px -14px rgba(0, 0, 0, .55); > i { color: $primary; } }
+}
+
+.sh-foot { display: grid; gap: .6rem; margin-top: auto; }
+.sh-collapse { display: none; }
+.sh-user {
+    display: flex; align-items: center; gap: .7rem; padding: .6rem .65rem; border-radius: 1.2rem; overflow: hidden;
+    background: rgba(#fff, .08); border: 1px solid rgba(#fff, .1);
+    form { margin: 0; }
+}
+.sh-av { display: inline-grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: 50%; font-family: $headings-font-family; font-weight: 800; font-size: 1rem; color: $navy; background: $glow; }
+.sh-user-t { flex: 1; min-width: 0; line-height: 1.25; transition: opacity .25s; b { display: block; font-size: .88rem; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } small { font-size: .74rem; color: $on-navy-muted; } }
+.sh-logout { display: grid; place-items: center; flex: none; width: 2.2rem; height: 2.2rem; padding: 0; font-size: 1.05rem; color: $on-navy; background: rgba(#fff, .1); border: 0; border-radius: .75rem; transition: background .2s, color .2s; &:hover { background: $danger; color: #fff; } &:focus-visible { outline: 2px solid $glow; outline-offset: 2px; } }
+
+// ---------- ciutkan jadi rail (hanya layar lebar) ----------
+@include media-breakpoint-up(lg) {
+    .sh-collapse { display: flex; }
+    .sh-collapse > i { transition: transform $sh-dur $sh-ease; }
+    html.sh-rail {
+        .sh-brand { padding-inline: .7rem; gap: 0; .lh-1 { max-width: 0; opacity: 0; } }
+        .sh-label { opacity: 0; }
+        .sh-link { gap: 0; padding-inline: 1.2rem; .t { max-width: 0; opacity: 0; } }
+        .sh-collapse > i { transform: rotate(180deg); }
+        .sh-user { flex-direction: column; padding: .55rem .4rem; gap: .5rem; }
+        .sh-user-t { display: none; }
+    }
+}
+
+// ---------- drawer di bawah lg ----------
+.sh-scrim { display: none; }
+@include media-breakpoint-down(lg) {
+    .sh-side { --sh-w: min(19rem, 86vw); top: .6rem; bottom: .6rem; left: .6rem; transform: translateX(calc(-100% - 1.5rem)); visibility: hidden; transition: transform $sh-dur $sh-ease, visibility 0s linear $sh-dur; }
+    html.sh-open .sh-side { transform: none; visibility: visible; transition-delay: 0s; }
+    .sh-scrim {
+        display: block; position: fixed; inset: 0; z-index: 1055; border: 0; background: rgba($navy-deep, .5); opacity: 0; pointer-events: none;
+        -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); transition: opacity $sh-dur $sh-ease;
+    }
+    html.sh-open .sh-scrim { opacity: 1; pointer-events: auto; }
+}
+
+// ---------- area utama ----------
+.sh-main { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; min-width: 0; margin-left: calc(var(--sh-w) + #{$sh-gap * 2}); transition: margin-left $sh-dur $sh-ease; }
+@include media-breakpoint-down(lg) { .sh-main { margin-left: 0; } }
+
+.sh-top {
+    position: sticky; top: 0; z-index: 1030; display: flex; align-items: center; gap: .75rem; padding: .85rem clamp(1rem, 2.4vw, 2rem) .65rem;
+    transition: background .25s, box-shadow .25s;
+    &.is-scrolled { background: rgba($sh-bg, .84); box-shadow: 0 1px 0 rgba($navy, .07); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); }
+}
+.sh-burger { display: grid; place-items: center; flex: none; width: 2.75rem; height: 2.75rem; padding: 0; font-size: 1.3rem; color: $navy; background: #fff; border: 0; border-radius: 1rem; box-shadow: $sh-card-shadow; transition: transform .2s; &:active { transform: scale(.94); } &:focus-visible { outline: 2px solid $primary; outline-offset: 2px; } }
+@include media-breakpoint-up(lg) { .sh-burger { display: none; } }
+
+.sh-crumb { min-width: 0; line-height: 1.2; small { display: block; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: $primary; } strong { display: block; font-family: $headings-font-family; font-size: clamp(1.05rem, 2vw, 1.3rem); letter-spacing: -.02em; color: $navy; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
+.sh-top-act { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
+.sh-date { display: none; align-items: center; gap: .5rem; margin-right: .5rem; font-size: .85rem; font-weight: 600; color: $body-secondary-color; i { color: $primary; } }
+@include media-breakpoint-up(md) { .sh-date { display: inline-flex; } }
+
+.sh-ibtn { display: grid; place-items: center; flex: none; width: 2.75rem; height: 2.75rem; font-size: 1.1rem; color: #fff; background: $navy; border-radius: 50%; box-shadow: 0 12px 22px -12px rgba($navy, .8); transition: background .2s, transform .25s $sh-ease; &:hover { color: #fff; background: $primary; transform: translateY(-2px); } &:focus-visible { outline: 2px solid $primary; outline-offset: 2px; } }
+.sh-pill {
+    display: inline-flex; align-items: center; gap: .6rem; height: 2.75rem; padding: 0 .85rem 0 .3rem; color: $dark; background: #fff; border: 0; border-radius: 999px; box-shadow: $sh-card-shadow; transition: box-shadow .2s;
+    .sh-av { width: 2.15rem; height: 2.15rem; font-size: .9rem; color: #fff; background: $primary; }
+    .nama { max-width: 9rem; font-size: .88rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    > .bi { font-size: .75rem; color: $body-secondary-color; transition: transform .2s; }
+    &[aria-expanded="true"] > .bi { transform: rotate(180deg); }
+    &:focus-visible { outline: 2px solid $primary; outline-offset: 2px; }
+}
+@include media-breakpoint-down(sm) { .sh-pill { padding-right: .3rem; .nama, > .bi { display: none; } } .sh-ibtn-hide { display: none; } }
+.sh-menu {
+    min-width: 15.5rem; padding: .5rem; margin-top: .5rem !important; border: 1px solid $border-color; border-radius: 1.2rem; box-shadow: 0 30px 60px -24px rgba($navy, .5);
+    .sh-menu-head { display: flex; align-items: center; gap: .7rem; padding: .55rem .6rem .75rem; margin-bottom: .35rem; border-bottom: 1px solid $border-color; .sh-av { color: #fff; background: $primary; } b { display: block; font-size: .9rem; line-height: 1.2; } small { font-size: .76rem; color: $body-secondary-color; } }
+    .dropdown-item { display: flex; align-items: center; gap: .7rem; padding: .55rem .7rem; font-weight: 600; font-size: .9rem; border-radius: .75rem; i { width: 1.2rem; color: $body-secondary-color; } &:hover i { color: $primary; } &.text-danger i { color: $danger; } }
+}
+
+// ---------- isi halaman ----------
+.sh-content { flex: 1; padding: .35rem clamp(1rem, 2.4vw, 2rem) 2rem; animation: sh-masuk .55s $sh-ease both; }
+.sh-head {
+    margin: .25rem 0 1.5rem;
+    h1, .h2 { margin: .45rem 0 .3rem; font-size: clamp(1.7rem, 3.2vw, 2.3rem); letter-spacing: -.025em; line-height: 1.1; color: $navy; text-wrap: balance; }
+    p { max-width: 46rem; text-wrap: pretty; }
+    a.small { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .8rem .3rem .65rem; font-size: .8rem; font-weight: 700; color: $primary; background: #fff; border: 1px solid $border-color; border-radius: 999px; transition: border-color .2s, transform .2s; &:hover { border-color: $primary; transform: translateX(-2px); } .bi { margin: 0 !important; } }
+}
+.sh-foot-note { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1.5rem; margin-top: 2.5rem; padding-top: 1.1rem; border-top: 1px solid rgba($navy, .1); font-size: .8rem; color: $body-secondary-color; nav { display: flex; gap: 1.25rem; } a { color: inherit; font-weight: 600; &:hover { color: $primary; } } }
+
+// ---------- dock bawah (HP dan tablet) ----------
+.sh-dock {
+    position: fixed; z-index: 1050; left: .75rem; right: .75rem; bottom: calc(.75rem + env(safe-area-inset-bottom, 0px)); display: flex; gap: .25rem; max-width: 34rem; margin-inline: auto; padding: .4rem;
+    background: linear-gradient(180deg, $navy, $navy-deep); border-radius: 1.6rem; box-shadow: 0 26px 44px -18px rgba(0, 0, 0, .65);
+    a, button {
+        display: flex; flex: 1; flex-direction: column; align-items: center; gap: .2rem; min-width: 0; padding: .5rem .2rem .45rem; font-size: .68rem; font-weight: 700; line-height: 1.1; white-space: nowrap;
+        color: $on-navy-muted; background: transparent; border: 0; border-radius: 1.15rem; transition: background .2s, color .2s, transform .15s;
+        i { font-size: 1.25rem; line-height: 1; }
+        &:active { transform: scale(.94); }
+        &:hover { color: #fff; }
+        &.is-on { color: $navy; background: #E9F7F9; }
+        &:focus-visible { outline: 2px solid $glow; outline-offset: 1px; }
+    }
+}
+@include media-breakpoint-up(lg) { .sh-dock { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .sh-side, .sh-main, .sh-scrim, .sh-link, .sh-link .t, .sh-brand .lh-1 { transition: none; }
+    .sh-content { animation: none; }
+}

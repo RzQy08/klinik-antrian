@@ -96,3 +96,10 @@ $dropdown-border-radius: $border-radius;
 $dropdown-border-color:  $border-color;
 $dropdown-box-shadow:    0 12px 32px rgba(15, 42, 51, .14);
 $offcanvas-box-shadow:   0 12px 32px rgba(15, 42, 51, .18);
+
+// shell dashboard staf
+$sh-gap: .85rem;
+$sh-bg: #E7EFF2;
+$sh-ease: cubic-bezier(.22, 1, .36, 1);
+$sh-dur: .4s;
+$sh-card-shadow: 0 1px 0 rgba($navy, .03), 0 18px 34px -26px rgba($navy, .45);
