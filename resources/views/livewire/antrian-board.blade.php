@@ -1,13 +1,13 @@
 @php
     // nilai bawaan supaya tampilan tetap aman walau ada data yang belum terkirim dari komponen
-    $terbaru = $terbaru ?? null;
-    $poliTerbaru = $poliTerbaru ?? null;
     $baris = $baris ?? collect();
+    $aktif = $aktif ?? null;
     $jumlahPoli = $baris->count();
+    $poliMelayani = $baris->filter(fn ($b) => $b->sekarang)->count();
     // kepadatan daftar: 1 = lega, 2 = rapat, 3 = dua kolom, 4 = tiga kolom ringkas
     $tier = $jumlahPoli <= 5 ? 1 : ($jumlahPoli <= 8 ? 2 : ($jumlahPoli <= 16 ? 3 : 4));
 @endphp
-<div wire:poll.2s.keep-alive class="ly" data-t="{{ now()->timestamp }}">
+<div wire:poll.2s.keep-alive="segarkan" class="ly {{ $jeda ? 'is-jeda' : '' }}" data-t="{{ now()->timestamp }}">
 
     <header class="ly-top">
         @include('partials.brand', ['terang' => true])
@@ -23,39 +23,61 @@
 
     <div class="ly-main" data-n="{{ $tier }}">
 
-        {{-- Panggilan terbaru dari poli mana pun --}}
+        {{-- Poli yang sedang disorot: berputar otomatis, melompat saat ada panggilan baru --}}
         <section class="ly-now" aria-live="polite">
-            <p class="ly-label"><span class="ly-dot"></span>Sedang dipanggil
-                @if ($terbaru && $terbaru->jumlah_panggil > 1)
-                    <span class="ly-badge">Panggilan ke-{{ $terbaru->jumlah_panggil }}</span>
+            <p class="ly-label"><span class="ly-dot"></span>
+                @if ($aktif && $aktif->sekarang && $aktif->sekarang->status === 'dilayani')
+                    Sedang dilayani
+                @elseif ($aktif && ! $aktif->sekarang)
+                    Belum ada panggilan
+                @else
+                    Sedang dipanggil
+                @endif
+                @if ($aktif && $aktif->sekarang && $aktif->sekarang->jumlah_panggil > 1)
+                    <span class="ly-badge">Panggilan ke-{{ $aktif->sekarang->jumlah_panggil }}</span>
+                @endif
+                @if ($aktif && $panggilanBaru)
+                    <span class="ly-badge ly-badge-baru">Panggilan baru</span>
                 @endif
             </p>
 
-            @if ($terbaru)
-                <div wire:key="panggil-{{ $terbaru->id }}-{{ $terbaru->jumlah_panggil }}">
+            @if ($aktif)
+                <div wire:key="sorot-{{ $aktif->poli->id }}-{{ $aktif->sekarang?->id ?? 'kosong' }}-{{ $aktif->sekarang?->jumlah_panggil ?? 0 }}">
                     <div class="ly-who">
-                        <span class="ly-kode">{{ $poliTerbaru?->kode_poli }}</span>
-                        <h1 class="ly-poli-nama">{{ $poliTerbaru?->nama_poli }}</h1>
+                        <span class="ly-kode">{{ $aktif->poli->kode_poli }}</span>
+                        <h1 class="ly-poli-nama">{{ $aktif->poli->nama_poli }}</h1>
                     </div>
-                    <div class="ly-no numeral" aria-label="Nomor {{ $terbaru->nomor_antrian }}">
-                        @foreach (str_split((string) $terbaru->nomor_antrian) as $i => $c)<span class="ly-ch" style="--i:{{ $i }}" aria-hidden="true">{{ $c }}</span>@endforeach
-                        <i class="ly-ring" aria-hidden="true"></i>
-                    </div>
+                    @if ($aktif->sekarang)
+                        <div class="ly-no numeral" aria-label="Nomor {{ $aktif->sekarang->nomor_antrian }}">
+                            @foreach (str_split((string) $aktif->sekarang->nomor_antrian) as $i => $c)<span class="ly-ch" style="--i:{{ $i }}" aria-hidden="true">{{ $c }}</span>@endforeach
+                            <i class="ly-ring" aria-hidden="true"></i>
+                        </div>
+                    @else
+                        <div class="ly-no numeral is-kosong" aria-hidden="true">···</div>
+                    @endif
                 </div>
                 <p class="ly-ket">
-                    <span class="is-cta"><i class="bi bi-arrow-right-circle-fill"></i>Silakan menuju {{ $poliTerbaru?->nama_poli }}</span>
-                    @if ($terbaru->dokter)
-                        <span><i class="bi bi-person-badge-fill"></i>{{ $terbaru->dokter->nama }}</span>
+                    @if ($aktif->sekarang)
+                        @if ($aktif->sekarang->status === 'dilayani')
+                            <span class="is-cta"><i class="bi bi-heart-pulse"></i>Sedang dilayani</span>
+                        @else
+                            <span class="is-cta"><i class="bi bi-arrow-right-circle-fill"></i>Silakan menuju {{ $aktif->poli->nama_poli }}</span>
+                        @endif
+                        @if ($aktif->sekarang->dokter)
+                            <span><i class="bi bi-person-badge-fill"></i>{{ $aktif->sekarang->dokter->nama }}</span>
+                        @endif
+                    @else
+                        <span class="is-muted">Belum ada pasien yang dipanggil</span>
                     @endif
                 </p>
             @else
                 <div><div class="ly-no numeral is-kosong" aria-hidden="true">···</div></div>
-                <p class="ly-ket"><span class="is-muted">Belum ada pasien yang dipanggil</span></p>
+                <p class="ly-ket"><span class="is-muted">Belum ada poli aktif</span></p>
             @endif
 
             <div class="ly-stats">
                 <div class="ly-stat"><span class="numeral">{{ $baris->sum('menunggu') }}</span><span>pasien<br>menunggu</span></div>
-                <div class="ly-stat"><span class="numeral">{{ $baris->filter(fn ($b) => $b->sekarang)->count() }}<small style="font-size:.5em;opacity:.55">/{{ $jumlahPoli }}</small></span><span>poli sedang<br>melayani</span></div>
+                <div class="ly-stat"><span class="numeral">{{ $poliMelayani }}<small style="font-size:.5em;opacity:.55">/{{ $jumlahPoli }}</small></span><span>poli sedang<br>melayani</span></div>
             </div>
         </section>
 
@@ -63,12 +85,27 @@
         <aside class="ly-side" aria-label="Semua poli">
             <div class="ly-side-head">
                 <h2 class="ly-side-title">Semua poli</h2>
-                <span class="ly-side-sub">{{ $jumlahPoli }} poli aktif</span>
+                <div class="ly-side-tools">
+                    <span class="ly-side-sub">{{ $jumlahPoli }} poli aktif</span>
+                    @if ($jumlahPoli > 1)
+                        <button type="button" class="ly-jeda" wire:click="toggleJeda" aria-pressed="{{ $jeda ? 'true' : 'false' }}"
+                                aria-label="{{ $jeda ? 'Lanjutkan pergantian poli otomatis' : 'Jeda pergantian poli otomatis' }}"
+                                title="{{ $jeda ? 'Lanjutkan pergantian otomatis' : 'Jeda pergantian otomatis' }}">
+                            <i class="bi {{ $jeda ? 'bi-play-fill' : 'bi-pause-fill' }}" aria-hidden="true"></i>
+                        </button>
+                    @endif
+                </div>
             </div>
             <ul class="ly-list" data-n="{{ $tier }}">
                 @forelse ($baris as $i => $b)
-                    @php $aktif = $terbaru && $terbaru->poli_id === $b->poli->id; @endphp
-                    <li class="ly-card ly-c{{ $i % 6 }} {{ $aktif ? 'is-active' : '' }}" style="--k:{{ min($i, 12) }}" wire:key="poli-{{ $b->poli->id }}">
+                    @php $sorot = $aktif && $aktif->poli->id === $b->poli->id; @endphp
+                    <li class="ly-card ly-c{{ $i % 6 }} {{ $sorot ? 'is-active' : '' }}" style="--k:{{ min($i, 12) }}"
+                        wire:key="poli-{{ $b->poli->id }}"
+                        wire:click="pilih({{ $b->poli->id }})"
+                        wire:keydown.enter="pilih({{ $b->poli->id }})"
+                        role="button" tabindex="0"
+                        @if ($sorot) aria-current="true" @endif
+                        aria-label="Tampilkan {{ $b->poli->nama_poli }}">
                         <span class="ly-kode">{{ $b->poli->kode_poli }}</span>
                         <div class="ly-card-body">
                             <div class="ly-card-nama">{{ $b->poli->nama_poli }}</div>

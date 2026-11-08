@@ -34,6 +34,21 @@
         new MutationObserver(function () { last = Date.now(); sambung(true); }).observe(root, { attributes: true, attributeFilter: ['data-t'] });
     }
     pantau();
+    // Livewire biasanya memunculkan confirm() "halaman kedaluwarsa" (419) atau modal error yang menghentikan layar.
+    // Di TV tidak ada yang menekan tombolnya, jadi kita tangani sendiri: 419 langsung muat ulang, error lain dicoba lagi.
+    function pasangPencegat() {
+        try {
+            Livewire.interceptRequest(function (r) {
+                r.onError(function (e) {
+                    e.preventDefault(); sambung(false);
+                    if (e.response && e.response.status === 419) setTimeout(function () { location.reload(); }, 800);
+                });
+                r.onFailure(function () { sambung(false); });
+            });
+        } catch (err) {}
+    }
+    if (window.Livewire) pasangPencegat(); else document.addEventListener('livewire:init', pasangPencegat);
+
     function segarkan() { try { window.Livewire && Livewire.all().forEach(function (c) { c.$refresh(); }); } catch (e) {} }
 
     // bila pembaruan terhenti (sesi habis, jaringan putus, tab dibekukan), coba segarkan lalu muat ulang halaman
