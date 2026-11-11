@@ -107,6 +107,15 @@ class AdminDashboardController extends Controller
     {
         $daftar = [];
 
+        // Kesalahan konfigurasi yang membuka data pasien selalu paling atas
+        foreach (app(\App\Services\PemeriksaKeamanan::class)->untukDashboard() as $k) {
+            $daftar[] = [
+                'tone' => $k['level'] === 'bahaya' ? 'danger' : 'warning', 'ikon' => 'shield-exclamation',
+                'judul' => $k['judul'], 'teks' => $k['teks'],
+                'url' => null, 'aksi' => null,
+            ];
+        }
+
         $poliTanpaDokter = Poli::where('aktif', true)
             ->whereDoesntHave('dokters', fn ($q) => $q->where('aktif', true))
             ->pluck('nama_poli');

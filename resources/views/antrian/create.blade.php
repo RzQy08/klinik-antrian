@@ -1,104 +1,182 @@
-@php
-    // Jumlah pasien menunggu per poli hari ini (satu query)
-    $menungguPerPoli = \App\Models\Antrian::hariIni()->menunggu()
-        ->selectRaw('poli_id, COUNT(*) as jumlah')->groupBy('poli_id')->pluck('jumlah', 'poli_id');
+<x-public-layout :full="true" :fit="true" title="Ambil antrian">
+    @php
+        $jamAktif = \App\Services\JamOperasional::aktif();
+        $tutupHari = $jamAktif ? \App\Services\JamOperasional::alasanTutup() : null;
+        $jamDaftar = $jamAktif && ! $tutupHari
+            ? \App\Services\JamOperasional::tampil(\App\Services\JamOperasional::jam('pendaftaran_buka')).' - '.\App\Services\JamOperasional::tampil(\App\Services\JamOperasional::jam('pendaftaran_tutup'))
+            : null;
+        $pesanError = session('error');
+        $errNik = $errors->first('nik');
+        $errLain = collect($errors->all())->reject(fn ($e) => $e === $errNik)->values();
 
-    $jamAktif = \App\Services\JamOperasional::aktif();
-    $statusTeks = ! $jamAktif
-        ? 'Antrian online aktif'
-        : ($pendaftaranDibuka
-            ? 'Dibuka sampai pukul '.\App\Services\JamOperasional::tampil(config('operasional.pendaftaran_tutup'))
-            : 'Pendaftaran ditutup');
-@endphp
-<x-public-layout title="Ambil nomor antrian">
-    <div class="ab-page" data-buka="{{ $pendaftaranDibuka ? 1 : 0 }}">
-        <form method="POST" action="{{ route('antrian.store') }}" id="formAmbil" class="ab-card">
-            @csrf
+        // [judul, ikon]
+        $langkah = [['Pilih poli', 'hospital'], ['Data diri', 'person-vcard'], ['Periksa', 'check2-all']];
+    @endphp
 
-            <fieldset class="ab-body" @disabled(! $pendaftaranDibuka)>
-                <div class="ab-top">
-                    <span class="ab-state {{ $pendaftaranDibuka ? '' : 'is-off' }}"><i aria-hidden="true"></i>{{ $statusTeks }}</span>
-                    <a href="{{ route('beranda') }}" class="ab-close" aria-label="Tutup dan kembali ke beranda"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
-                </div>
+    <div class="am-stage" id="amStage">
+        <header class="am-top">
+            <h1>Ambil nomor antrian</h1>
+            <p>Selesai dalam 3 langkah</p>
+        </header>
 
-                <h1 class="ab-title">Ambil nomor antrian</h1>
-
-                @include('partials.errors')
-                @if (session('error'))
-                    <div class="alert alert-danger py-2" role="alert">{{ session('error') }}</div>
+        {{-- Pemberitahuan: ditutup, NIK ditolak, isian belum lengkap --}}
+        @if (! $pendaftaranDibuka || ($pesanError && $pesanError !== $pesanTutup) || $errNik || $errLain->isNotEmpty() || session('success'))
+            <div class="am-alerts" id="amAlerts">
+                @unless ($pendaftaranDibuka)
+                    <div class="am-alert am-alert-warn" role="alert"><i class="bi bi-clock-history" aria-hidden="true"></i><div><b>Pendaftaran ditutup</b><span>{{ $pesanTutup }}</span></div></div>
+                @endunless
+                @if ($pesanError && $pesanError !== $pesanTutup)
+                    <div class="am-alert am-alert-stop" role="alert"><i class="bi bi-person-lock" aria-hidden="true"></i><div><b>Nomor belum bisa dibuat</b><span>{{ $pesanError }}</span></div></div>
                 @endif
+                @if ($errNik)
+                    <div class="am-alert am-alert-stop" role="alert"><i class="bi bi-person-lock" aria-hidden="true"></i><div><b>Periksa NIK</b><span>{{ $errNik }}</span></div></div>
+                @endif
+                @if ($errLain->isNotEmpty())
+                    <div class="am-alert am-alert-stop" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><div><b>Data belum lengkap</b><span>{{ $errLain->implode(' ') }}</span></div></div>
+                @endif
+                @if (session('success'))
+                    <div class="am-alert am-alert-ok" role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i><div><b>{{ session('success') }}</b></div></div>
+                @endif
+            </div>
+        @endif
 
-                {{-- Poli --}}
-                <div class="ab-chips @error('poli_id') is-invalid @enderror" role="radiogroup" aria-label="Poli tujuan">
-                    @foreach ($polis as $poli)
-                        <div class="ab-chip-wrap">
-                            <input type="radio" class="ab-chip-input" name="poli_id" id="poli-{{ $poli->id }}" value="{{ $poli->id }}"
-                                   data-nama="{{ $poli->nama_poli }}" data-menunggu="{{ (int) ($menungguPerPoli[$poli->id] ?? 0) }}"
-                                   required @checked(old('poli_id') == $poli->id)>
-                            <label class="ab-chip" for="poli-{{ $poli->id }}">
-                                <span class="ab-chip-k"><b>{{ $poli->kode_poli }}</b><i class="bi bi-check-lg" aria-hidden="true"></i></span>
-                                {{ $poli->nama_poli }}
-                            </label>
-                        </div>
+        <div class="am-console">
+            {{-- Rel kiri: langkah, tiket mini, jam --}}
+            <aside class="am-rail" aria-label="Langkah">
+                <ol class="am-steps" id="amSteps">
+                    @foreach ($langkah as $i => [$nama, $ikon])
+                        <li class="am-step {{ $i === 0 ? 'is-active' : '' }}">
+                            <button type="button" class="am-step-btn">
+                                <span class="am-step-ico"><i class="bi bi-{{ $ikon }}" aria-hidden="true"></i><i class="bi bi-check-lg am-ck" aria-hidden="true"></i></span>
+                                <span class="am-step-txt"><b>{{ $nama }}</b><small id="amHint{{ $i + 1 }}"></small></span>
+                            </button>
+                        </li>
                     @endforeach
-                    @if ($polis->isEmpty())
-                        <p class="ab-empty">Belum ada poli aktif. Hubungi petugas loket.</p>
-                    @endif
+                </ol>
+
+                <article class="am-mini" aria-label="Pratinjau tiket">
+                    <div class="am-mini-top">
+                        <span class="am-mini-poli" id="tkPoli">Belum dipilih</span>
+                        <span class="numeral am-mini-no"><span id="tkKode">?</span><span class="am-mini-dots" id="tkDots">&bull;&bull;&bull;</span></span>
+                    </div>
+                    <div class="am-mini-foot"><span>Di depan Anda</span><b id="tkDepan">-</b></div>
+                </article>
+
+                <div class="am-jam {{ $pendaftaranDibuka ? '' : 'is-off' }}">
+                    <span class="am-dot"></span>
+                    <span class="am-jam-t">
+                        @if ($jamDaftar)
+                            <b class="numeral">{{ $jamDaftar }}</b><small>jam daftar hari ini</small>
+                        @elseif ($tutupHari)
+                            <b>Tutup</b><small>{{ $tutupHari }}</small>
+                        @else
+                            <b>Buka</b><small>tanpa batas jam</small>
+                        @endif
+                    </span>
+                </div>
+            </aside>
+
+            {{-- Kartu form --}}
+            <form method="POST" action="{{ route('antrian.store') }}" class="am-card" id="formAmbil" novalidate>
+                @csrf
+
+                <div class="am-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33" id="amProg">
+                    <span class="am-prog-bar"><i id="amBar"></i></span>
+                    <em id="amPct">33%</em>
                 </div>
 
-                {{-- Data pasien --}}
-                <div class="ab-grid">
-                    <label class="ab-field @if (old('nik')) is-float @endif @error('nik') is-invalid @enderror">
-                        <span class="ab-lab">NIK*</span>
-                        <input id="nik" name="nik" type="text" inputmode="numeric" maxlength="16" pattern="[0-9]{16}" autocomplete="off" required
-                               value="{{ old('nik') }}" placeholder="16 digit angka">
-                        <span class="ab-count" id="abCount" aria-live="polite">0/16</span>
-                    </label>
+                <fieldset class="am-body" @disabled(! $pendaftaranDibuka)>
+                    {{-- Langkah 1 --}}
+                    <section class="am-panel is-active" aria-labelledby="amT1">
+                        <h2 class="am-panel-title" id="amT1">Pilih poli</h2>
 
-                    <label class="ab-field @if (old('nama')) is-float @endif @error('nama') is-invalid @enderror">
-                        <span class="ab-lab">Nama lengkap*</span>
-                        <input id="nama" name="nama" type="text" autocomplete="name" maxlength="255" required value="{{ old('nama') }}" placeholder="Sesuai KTP">
-                    </label>
-
-                    <label class="ab-field @if (old('no_hp')) is-float @endif @error('no_hp') is-invalid @enderror">
-                        <span class="ab-lab">No. WhatsApp</span>
-                        <input id="no_hp" name="no_hp" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" value="{{ old('no_hp') }}" placeholder="081234567890">
-                    </label>
-
-                    <label class="ab-field is-float @error('tanggal_lahir') is-invalid @enderror">
-                        <span class="ab-lab">Tanggal lahir</span>
-                        <input id="tanggal_lahir" name="tanggal_lahir" type="date" max="{{ now()->toDateString() }}" value="{{ old('tanggal_lahir') }}">
-                    </label>
-
-                    <div class="ab-field ab-seg-field is-float ab-full @error('jenis_kelamin') is-invalid @enderror" role="radiogroup" aria-labelledby="abJkLab">
-                        <span class="ab-lab" id="abJkLab">Jenis kelamin</span>
-                        <div class="ab-seg">
-                            @foreach (['L' => 'Laki-laki', 'P' => 'Perempuan'] as $nilai => $teks)
-                                <label class="ab-opt">
-                                    <input type="radio" name="jenis_kelamin" value="{{ $nilai }}" @checked(old('jenis_kelamin') === $nilai)>
-                                    <span>{{ $teks }}</span>
-                                </label>
+                        <div class="am-poli-grid @error('poli_id') is-invalid @enderror" role="radiogroup" aria-label="Poli tujuan">
+                            @foreach ($polis as $poli)
+                                @php $menunggu = (int) ($poli->menunggu_count ?? 0); @endphp
+                                <div class="am-poli-wrap">
+                                    <input type="radio" class="am-poli-input" name="poli_id" id="poli-{{ $poli->id }}" value="{{ $poli->id }}"
+                                           data-kode="{{ $poli->kode_poli }}" data-nama="{{ $poli->nama_poli }}" data-menunggu="{{ $menunggu }}"
+                                           required @checked(old('poli_id') == $poli->id)>
+                                    <label class="am-poli" for="poli-{{ $poli->id }}">
+                                        <span class="kode">{{ $poli->kode_poli }}</span>
+                                        <span class="am-poli-name">{{ $poli->nama_poli }}</span>
+                                        <span class="am-poli-q {{ $menunggu > 10 ? 'is-busy' : '' }}" title="{{ $menunggu }} menunggu"><i class="bi bi-people" aria-hidden="true"></i>{{ $menunggu }}</span>
+                                        <i class="bi bi-check-circle-fill am-poli-check" aria-hidden="true"></i>
+                                    </label>
+                                </div>
                             @endforeach
                         </div>
-                    </div>
-                </div>
-            </fieldset>
+                        @error('poli_id')<div class="am-err">{{ $message }}</div>@enderror
+                        <div class="am-err" id="amPoliErr" role="alert" hidden>Pilih salah satu poli.</div>
+                        @if ($polis->isEmpty())
+                            <p class="am-empty">Belum ada poli aktif. Hubungi petugas loket.</p>
+                        @endif
+                    </section>
 
-            <footer class="ab-foot">
-                <div class="ab-foot-info">
-                    @if ($pendaftaranDibuka)
-                        <div class="ab-foot-main" id="abFootMain" aria-live="polite">Pilih poli untuk mulai</div>
-                        <div class="ab-foot-sub">Isi WhatsApp bila ingin dikabari saat nomor dipanggil.</div>
-                    @else
-                        <div class="ab-foot-main">Pendaftaran ditutup</div>
-                        <div class="ab-foot-sub">{{ $pesanTutup }}</div>
-                    @endif
+                    {{-- Langkah 2 --}}
+                    <section class="am-panel" aria-labelledby="amT2">
+                        <h2 class="am-panel-title" id="amT2">Data diri</h2>
+
+                        <div class="am-fields">
+                            <div class="am-f">
+                                <label for="nik">NIK</label>
+                                <div class="am-nik-wrap">
+                                    <input id="nik" name="nik" type="text" inputmode="numeric" maxlength="16" pattern="[0-9]{16}" autocomplete="off" required
+                                           class="am-in am-nik @error('nik') is-invalid @enderror" value="{{ old('nik') }}" placeholder="16 digit">
+                                    <span class="am-count" id="amCount" aria-live="polite">0/16</span>
+                                </div>
+                                <span class="am-meter" aria-hidden="true"><i id="amMeter"></i></span>
+                            </div>
+
+                            <div class="am-f">
+                                <label for="nama">Nama lengkap</label>
+                                <input id="nama" name="nama" type="text" autocomplete="name" required maxlength="255" class="am-in @error('nama') is-invalid @enderror" value="{{ old('nama') }}">
+                            </div>
+
+                            <div class="am-f">
+                                <label for="no_hp">WhatsApp <span class="am-opt">opsional</span></label>
+                                <div class="am-hp">
+                                    <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                                    <input id="no_hp" name="no_hp" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" class="am-in @error('no_hp') is-invalid @enderror" value="{{ old('no_hp') }}" placeholder="08xxxxxxxxxx">
+                                </div>
+                            </div>
+
+                            <div class="am-f">
+                                <label for="tanggal_lahir">Tanggal lahir <span class="am-opt">opsional</span></label>
+                                <input id="tanggal_lahir" name="tanggal_lahir" type="date" max="{{ now()->toDateString() }}" class="am-in @error('tanggal_lahir') is-invalid @enderror" value="{{ old('tanggal_lahir') }}">
+                            </div>
+
+                            <div class="am-f am-f-jk">
+                                <span class="am-lbl">Jenis kelamin <span class="am-opt">opsional</span></span>
+                                <div class="am-seg">
+                                    @foreach (['L' => 'Laki-laki', 'P' => 'Perempuan'] as $nilai => $teks)
+                                        <input type="radio" name="jenis_kelamin" id="jk-{{ $nilai }}" value="{{ $nilai }}" autocomplete="off" @checked(old('jenis_kelamin') === $nilai)>
+                                        <label for="jk-{{ $nilai }}">{{ $teks }}</label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {{-- Langkah 3 --}}
+                    <section class="am-panel" aria-labelledby="amT3">
+                        <h2 class="am-panel-title" id="amT3">Periksa data</h2>
+                        <dl class="am-review">
+                            <div><dt><i class="bi bi-hospital" aria-hidden="true"></i>Poli</dt><dd id="rvPoli">-</dd></div>
+                            <div><dt><i class="bi bi-person-vcard" aria-hidden="true"></i>NIK</dt><dd id="rvNik" class="numeral">-</dd></div>
+                            <div><dt><i class="bi bi-person" aria-hidden="true"></i>Nama</dt><dd id="rvNama">-</dd></div>
+                            <div><dt><i class="bi bi-whatsapp" aria-hidden="true"></i>WhatsApp</dt><dd id="rvHp">-</dd></div>
+                        </dl>
+                    </section>
+                </fieldset>
+
+                <div class="am-actions">
+                    <button type="button" class="am-round" id="amBack" aria-label="Kembali" disabled><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                    <button type="button" class="am-main" id="amNext">Lanjut<i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+                    <button type="submit" class="am-main am-main-go" id="amSubmit" hidden @disabled(! $pendaftaranDibuka)><i class="bi bi-ticket-perforated" aria-hidden="true"></i>Ambil nomor</button>
                 </div>
-                <button type="submit" id="abSubmit" class="ab-submit" @disabled(! $pendaftaranDibuka)>
-                    <span>Ambil nomor</span><i class="bi bi-arrow-right" aria-hidden="true"></i>
-                </button>
-            </footer>
-        </form>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -106,84 +184,124 @@
         var form = document.getElementById('formAmbil');
         if (!form) return;
 
-        var $$ = function (s) { return Array.prototype.slice.call(form.querySelectorAll(s)); };
-        var nik = document.getElementById('nik'), nama = document.getElementById('nama');
-        var submit = document.getElementById('abSubmit'), main = document.getElementById('abFootMain');
-        var buka = form.closest('.ab-page').dataset.buka === '1';
-        var poli = function () { return form.querySelector('input[name=poli_id]:checked'); };
+        var $ = function (s, c) { return (c || document).querySelector(s); };
+        var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+        var panels = $$('.am-panel', form), steps = $$('.am-step'), stepsEl = $('#amSteps');
+        var back = $('#amBack'), next = $('#amNext'), submit = $('#amSubmit');
+        var nik = $('#nik'), nama = $('#nama'), hp = $('#no_hp'), poliErr = $('#amPoliErr');
+        var cur = 1;
 
-        function melayang(el) {
-            var f = el.closest('.ab-field');
-            if (f && el.type !== 'date') f.classList.toggle('is-float', el.value !== '');
-        }
+        var txt = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+        var poli = function () { return $('input[name=poli_id]:checked', form); };
 
         function sync() {
-            var p = poli(), n = nik.value.length, c = document.getElementById('abCount');
-            c.textContent = n + '/16';
-            c.classList.toggle('is-ok', n === 16);
-
-            if (main) {
-                if (!p) {
-                    main.textContent = 'Pilih poli untuk mulai';
-                } else {
-                    var m = parseInt(p.dataset.menunggu, 10) || 0;
-                    main.textContent = p.dataset.nama + ' \u00b7 ' + (m === 0 ? 'belum ada antrian' : m + ' orang menunggu');
-                }
+            var p = poli(), k = $('#tkKode'), kode = p ? p.dataset.kode : '?';
+            txt('tkPoli', p ? p.dataset.nama : 'Belum dipilih');
+            if (k.textContent !== kode) {
+                k.textContent = kode;
+                k.classList.remove('am-pop'); void k.offsetWidth; k.classList.add('am-pop');
             }
+            $('#tkDots').classList.toggle('is-idle', !p);
+            txt('tkDepan', p ? (p.dataset.menunggu === '0' ? 'Belum ada' : p.dataset.menunggu + ' orang') : '-');
 
-            submit.disabled = !(buka && p && n === 16 && nama.value.trim() !== '');
+            // ringkasan kecil di bawah judul langkah
+            txt('amHint1', p ? p.dataset.nama : '');
+            txt('amHint2', nama.value.trim());
+            txt('amHint3', '');
+
+            var n = nik.value.length;
+            txt('amCount', n + '/16');
+            $('#amCount').classList.toggle('is-ok', n === 16);
+            $('#amMeter').style.width = (n / 16 * 100) + '%';
+            $('#amMeter').classList.toggle('is-ok', n === 16);
         }
 
-        $$('.ab-field input').forEach(function (el) {
-            melayang(el);
-            el.addEventListener('input', function () { melayang(el); el.closest('.ab-field').classList.remove('is-invalid'); sync(); });
-            el.addEventListener('change', function () { melayang(el); sync(); });
+        function fill() {
+            var p = poli(), n = nik.value;
+            txt('rvPoli', p ? p.dataset.nama + ' (' + p.dataset.kode + ')' : '-');
+            txt('rvNik', n.length === 16 ? n.slice(0, 4) + ' •••• •••• ' + n.slice(-4) : (n || '-'));
+            txt('rvNama', nama.value.trim() || '-');
+            txt('rvHp', hp.value.trim() || 'Tidak diisi');
+        }
+
+        function valid(n) {
+            if (n === 1) { var ok = !!poli(); poliErr.hidden = ok; return ok; }
+            nik.setCustomValidity(nik.value.length === 16 ? '' : 'NIK harus 16 digit angka.');
+            var els = $$('input:not([type=radio])', panels[n - 1]);
+            for (var i = 0; i < els.length; i++) {
+                if (!els[i].checkValidity()) { els[i].reportValidity(); return false; }
+            }
+            return true;
+        }
+
+        function go(n, user) {
+            cur = Math.max(1, Math.min(3, n));
+            panels.forEach(function (p, i) { p.classList.toggle('is-active', i === cur - 1); });
+            steps.forEach(function (s, i) {
+                s.classList.toggle('is-active', i === cur - 1);
+                s.classList.toggle('is-done', i < cur - 1);
+                var b = $('button', s);
+                if (i === cur - 1) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+            });
+            stepsEl.style.setProperty('--am-p', (cur - 1) / 2);
+            var pct = Math.round(cur / 3 * 100);
+            $('#amBar').style.width = pct + '%';
+            txt('amPct', pct + '%');
+            $('#amProg').setAttribute('aria-valuenow', pct);
+            back.disabled = cur === 1;
+            next.hidden = cur === 3;
+            submit.hidden = cur !== 3;
+            if (cur === 3) fill();
+            if (user && cur === 2) nik.focus({ preventScroll: true });
+        }
+
+        steps.forEach(function (s, i) {
+            $('button', s).addEventListener('click', function () {
+                var target = i + 1;
+                if (target <= cur) return go(target, true);
+                for (var k = cur; k < target; k++) { if (!valid(k)) return go(k, true); }
+                go(target, true);
+            });
+        });
+
+        next.addEventListener('click', function () { if (valid(cur)) go(cur + 1, true); });
+        back.addEventListener('click', function () { go(cur - 1, true); });
+
+        form.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && cur < 3 && e.target.tagName !== 'BUTTON') { e.preventDefault(); next.click(); }
         });
 
         nik.addEventListener('input', function () {
-            var bersih = nik.value.replace(/\D/g, '').slice(0, 16);
-            if (bersih !== nik.value) { nik.value = bersih; melayang(nik); }
+            nik.value = nik.value.replace(/\D/g, '').slice(0, 16);
+            nik.setCustomValidity('');
             sync();
         });
-        nik.addEventListener('blur', function () {
-            if (nik.value.length > 0 && nik.value.length < 16) nik.closest('.ab-field').classList.add('is-invalid');
+        [nama, hp].forEach(function (el) { el.addEventListener('input', sync); });
+        $$('input[name=poli_id]', form).forEach(function (r) {
+            r.addEventListener('change', function () { poliErr.hidden = true; sync(); });
         });
 
-        $$('input[name=poli_id]').forEach(function (r) {
-            r.addEventListener('change', function () {
-                form.querySelector('.ab-chips').classList.remove('is-invalid');
-                sync();
-                if (!nik.value) nik.focus({ preventScroll: true });
-            });
+        form.addEventListener('submit', function (e) {
+            for (var k = 1; k <= 2; k++) {
+                if (!valid(k)) { e.preventDefault(); go(k, true); return; }
+            }
+            submit.disabled = true;
+            submit.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>Memproses';
         });
 
-        // Jenis kelamin opsional: klik pilihan yang sama sekali lagi untuk mengosongkan
-        var jk = $$('input[name=jenis_kelamin]');
-        jk.forEach(function (r) {
-            r.dataset.was = r.checked ? '1' : '0';
-            r.addEventListener('click', function () {
-                if (r.dataset.was === '1') { r.checked = false; r.dataset.was = '0'; return; }
-                jk.forEach(function (x) { x.dataset.was = '0'; });
-                r.dataset.was = '1';
-            });
-        });
-
-        // ?poli=ID memilih poli langsung; kalau hanya ada satu poli, otomatis terpilih
-        var semua = $$('input[name=poli_id]');
+        // Tautan langsung ?poli=ID
         if (!poli()) {
-            var q = (new URLSearchParams(location.search).get('poli') || '').replace(/\D/g, '');
-            var pilih = (q && form.querySelector('input[name=poli_id][value="' + q + '"]')) || (semua.length === 1 ? semua[0] : null);
-            if (pilih) pilih.checked = true;
+            var q = new URLSearchParams(location.search).get('poli');
+            var r = q && $('input[name=poli_id][value="' + q.replace(/\D/g, '') + '"]', form);
+            if (r) r.checked = true;
         }
 
-        form.addEventListener('submit', function () {
-            setTimeout(function () {
-                submit.disabled = true;
-                submit.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Memproses</span>';
-            }, 0);
-        });
-
         sync();
+
+        // Kalau server menolak isian, buka langkah yang bermasalah
+        var start = 1, bad = $('.is-invalid', form);
+        if (bad) { panels.forEach(function (p, i) { if (p.contains(bad)) start = i + 1; }); }
+        go(start, false);
     })();
     </script>
 </x-public-layout>

@@ -140,7 +140,7 @@ it('mengubah dokter bisa sekalian membuat akun atau mengganti password', functio
 
     $this->actingAs($admin)->put(route('admin.dokter.update', $dokter), [
         'poli_id' => $poli->id, 'nama' => 'dr. Baru', 'aktif' => 1,
-        'buat_akun' => 1, 'email' => 'dokter.baru@klinik.test', 'password' => 'rahasia-123',
+        'buat_akun' => 1, 'email' => 'dokter.baru@klinik.test', 'password' => 'Rahasia-Dokter#123',
     ])->assertRedirect(route('admin.dokter.index'));
 
     $dokter->refresh();
@@ -148,8 +148,8 @@ it('mengubah dokter bisa sekalian membuat akun atau mengganti password', functio
     expect($dokter->user->role)->toBe('dokter');
 
     $this->actingAs($admin)->put(route('admin.dokter.update', $dokter), [
-        'poli_id' => $poli->id, 'nama' => 'dr. Baru', 'aktif' => 1, 'password_baru' => 'sandi-baru-456',
+        'poli_id' => $poli->id, 'nama' => 'dr. Baru', 'aktif' => 1, 'password_baru' => 'Sandi-Baru#456x',
     ])->assertRedirect();
 
-    expect(\Illuminate\Support\Facades\Hash::check('sandi-baru-456', $dokter->user->refresh()->password))->toBeTrue();
+    expect(\Illuminate\Support\Facades\Hash::check('Sandi-Baru#456x', $dokter->user->refresh()->password))->toBeTrue();
 });

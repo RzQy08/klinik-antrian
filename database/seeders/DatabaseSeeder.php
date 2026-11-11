@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             PoliSeeder::class,
             DokterSeeder::class,
             JadwalPraktikSeeder::class,
+            JadwalRumahSakitSeeder::class,
             PasienSeeder::class,
             AntrianSeeder::class, // paling akhir, karena butuh data poli/dokter/pasien
         ]);

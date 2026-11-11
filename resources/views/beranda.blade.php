@@ -52,12 +52,11 @@
 
         // Kartu info kaca di dasar hero. Yang datanya kosong di konfigurasi tidak ditampilkan.
         $jamLayanan = config('rumahsakit.jam_layanan') ?: (\App\Services\JamOperasional::aktif()
-            ? 'Layanan sampai pukul '.\App\Services\JamOperasional::tampil((string) config('operasional.layanan_selesai'))
+            ? 'Sampai pukul '.\App\Services\JamOperasional::tampil((string) \App\Services\JamOperasional::jam('layanan_selesai'))
             : null);
         $nomorWa = $whatsapp ? preg_replace('/^0/', '62', preg_replace('/\D/', '', $whatsapp)) : null;
 
         $info = array_values(array_filter([
-            ['ticket-perforated', 'Antrian online', 'Tanpa buat akun', route('antrian.create')],
             $jamLayanan ? ['clock', 'Jam layanan', $jamLayanan, null] : null,
             $telepon
                 ? ['telephone', 'Telepon', $telepon, 'tel:'.preg_replace('/[^\d+]/', '', $telepon)]
@@ -79,7 +78,7 @@
                 <div class="hm-hero-copy">
                     @if (\App\Services\JamOperasional::aktif())
                         @if (\App\Services\JamOperasional::pendaftaranDibuka())
-                            <span class="hm-pill"><span class="hm-dot"></span>Pendaftaran buka sampai pukul {{ \App\Services\JamOperasional::tampil(config('operasional.pendaftaran_tutup')) }}</span>
+                            <span class="hm-pill"><span class="hm-dot"></span>Pendaftaran buka sampai pukul {{ \App\Services\JamOperasional::tampil(\App\Services\JamOperasional::jam('pendaftaran_tutup')) }}</span>
                         @else
                             <span class="hm-pill hm-pill-off"><span class="hm-dot"></span>Pendaftaran sedang tutup</span>
                         @endif
@@ -87,18 +86,18 @@
                         <span class="hm-pill"><span class="hm-dot"></span>Pendaftaran online dibuka</span>
                     @endif
 
-                    <h1 class="hm-title">Ambil nomor dari HP, <span class="hm-accent">tak perlu antre di loket.</span></h1>
-                    <p class="hm-lead">Pilih poli, isi NIK dan nama, nomor antrian langsung jadi. Perkiraan lama menunggu tampil di tiket, dan bila Anda mengisi nomor WhatsApp, kami kabari saat nomor Anda dipanggil.</p>
+                    <h1 class="hm-title">Daftar dari rumah, <span class="hm-accent">tak perlu antre di loket.</span></h1>
+                    <p class="hm-lead">Pilih poli, isi NIK dan nama, nomor antrian langsung jadi. Pantau dari HP dan tiba di rumah sakit saat giliran tinggal sekitar 30 menit.</p>
 
                     <div class="hm-cta-row">
-                        <a href="{{ route('antrian.create') }}" class="btn btn-lg hm-btn hm-btn-primary"><i class="bi bi-ticket-perforated me-2" aria-hidden="true"></i>Ambil nomor antrian</a>
-                        <a href="{{ route('antrian.layar') }}" class="btn btn-lg hm-btn hm-btn-ghost"><i class="bi bi-tv me-2" aria-hidden="true"></i>Lihat papan antrian</a>
+                        <a href="{{ route('antrian.create') }}" class="btn btn-lg hm-btn hm-btn-primary"><i class="bi bi-ticket-perforated" aria-hidden="true"></i>Ambil nomor</a>
+                        <a href="{{ route('antrian.layar') }}" class="btn btn-lg hm-btn hm-btn-ghost"><i class="bi bi-tv" aria-hidden="true"></i>Lihat papan</a>
                     </div>
 
                     <ul class="hm-facts list-unstyled mb-0">
                         <li><i class="bi bi-person-check" aria-hidden="true"></i>Tanpa buat akun</li>
-                        <li><i class="bi bi-hourglass-split" aria-hidden="true"></i>Ada perkiraan waktu tunggu</li>
-                        <li><i class="bi bi-whatsapp" aria-hidden="true"></i>Dikabari lewat WhatsApp</li>
+                        <li><i class="bi bi-hourglass-split" aria-hidden="true"></i>Perkiraan waktu tunggu</li>
+                        <li><i class="bi bi-whatsapp" aria-hidden="true"></i>Kabar lewat WhatsApp</li>
                     </ul>
                 </div>
 
@@ -122,7 +121,7 @@
                     </div>
 
                     <div class="hm-stage" data-stage>
-                        <div class="hm-stage-note">Memuat data antrian…</div>
+                        <div class="hm-stage-note">Memuat antrian…</div>
                     </div>
                     <div class="hm-tabs" data-tabs role="group" aria-label="Pilih poli"></div>
                     <p class="hm-panel-foot"><i class="bi bi-clock" aria-hidden="true"></i><span data-diperbarui>Menunggu data…</span></p>
@@ -151,7 +150,7 @@
     </section>
 
     {{-- ============ CARA KERJA ============ --}}
-    <section id="cara-kerja" class="hm-section hm-about-sec">
+    <section id="cara-kerja" class="hm-section hm-fit hm-about-sec">
         <div class="container-xxl hm-about">
             <div class="hm-about-media">
                 <div class="hm-about-visual" aria-hidden="true">
@@ -176,17 +175,15 @@
 
             <div>
                 <span class="hm-eyebrow hm-eyebrow-soft">Alur</span>
-                <h2 class="hm-h2">Dari rumah sampai ruang periksa, tanpa berdiri lama</h2>
-                <p class="hm-sub">Nomor dihitung dengan teori antrian dari data pelayanan 14 hari terakhir, bukan sekadar tebakan. Anda tahu kapan harus berangkat dan kapan giliran Anda hampir tiba.</p>
+                <h2 class="hm-h2">Daftar dari rumah, tiba di rumah sakit saat giliran dekat</h2>
+                <p class="hm-sub">Nomor dihitung dengan teori antrian dari data pelayanan 14 hari terakhir, bukan sekadar tebakan. Anda bisa mendaftar dari mana saja, lalu datang saat giliran sudah dekat, biasanya sekitar 30 menit sebelumnya.</p>
 
                 <ul class="hm-checks">
+                    <li><i class="bi bi-check-lg" aria-hidden="true"></i>Daftar dari rumah, tanpa antre di loket</li>
                     <li><i class="bi bi-check-lg" aria-hidden="true"></i>Perkiraan waktu tunggu dari data 14 hari terakhir</li>
-                    <li><i class="bi bi-check-lg" aria-hidden="true"></i>Tiket di HP ikut berubah sendiri sesuai antrian</li>
+                    <li><i class="bi bi-check-lg" aria-hidden="true"></i>Tiket di HP ikut berubah sesuai antrian</li>
                     <li><i class="bi bi-check-lg" aria-hidden="true"></i>Nomor tampil di layar ruang tunggu</li>
-                    <li><i class="bi bi-check-lg" aria-hidden="true"></i>Petugas siap membantu bila Anda kesulitan</li>
                 </ul>
-
-                <a href="{{ route('antrian.create') }}" class="btn btn-lg hm-btn hm-btn-primary">Ambil nomor sekarang<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
             </div>
         </div>
     </section>
@@ -203,25 +200,66 @@
         </div>
     </section>
 
-    {{-- ============ EMPAT LANGKAH ============ --}}
-    <section id="langkah" class="hm-section hm-soft">
+    {{-- ============ EMPAT LANGKAH + PANDUAN ============ --}}
+    <section id="langkah" class="hm-section hm-fit hm-soft hm-lang-sec">
         <div class="container-xxl">
-            <div class="hm-banner">
-                <h2>Empat langkah, tanpa antre di loket</h2>
-                <p>Cukup ponsel dan beberapa menit. Setelah itu Anda bisa menunggu di rumah.</p>
+            <div class="hm-head">
+                <div>
+                    <span class="hm-eyebrow hm-eyebrow-soft">Panduan pasien</span>
+                    <h2 class="hm-h2">Empat langkah, dari HP sampai ruang periksa</h2>
+                    <p class="hm-sub">Tidak perlu akun dan tidak perlu antre di loket.</p>
+                </div>
+            </div>
 
-                <ol class="hm-steps">
-                    <li class="hm-step"><span class="hm-step-no">01</span><span class="hm-feat-ico"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span><h3>Ambil nomor</h3><p>Pilih poli, isi NIK dan nama. Tiket langsung keluar.</p></li>
-                    <li class="hm-step"><span class="hm-step-no">02</span><span class="hm-feat-ico"><i class="bi bi-phone" aria-hidden="true"></i></span><h3>Pantau giliran</h3><p>Tiket di HP ikut berubah sendiri sesuai antrian.</p></li>
-                    <li class="hm-step"><span class="hm-step-no">03</span><span class="hm-feat-ico"><i class="bi bi-whatsapp" aria-hidden="true"></i></span><h3>Dikabari WhatsApp</h3><p>Pesan masuk begitu nomor Anda dipanggil.</p></li>
-                    <li class="hm-step"><span class="hm-step-no">04</span><span class="hm-feat-ico"><i class="bi bi-door-open" aria-hidden="true"></i></span><h3>Datang saat dipanggil</h3><p>Nomor muncul di layar ruang tunggu dan di tiket Anda.</p></li>
-                </ol>
+            <ol class="hm-lang">
+                <li class="hm-lg" data-w="0">
+                    <span class="hm-lg-rail"><span class="hm-lg-ico"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span></span>
+                    <a class="hm-lg-card" href="{{ route('antrian.create') }}">
+                        <span class="hm-lg-no" aria-hidden="true">01</span>
+                        <h3>Daftar dari rumah</h3>
+                        <p>Pilih poli, isi NIK dan nama dari HP. Tiket langsung keluar.</p>
+                        <em>Isi data diri <i class="bi bi-arrow-right" aria-hidden="true"></i></em>
+                    </a>
+                </li>
+                <li class="hm-lg" data-w="1">
+                    <span class="hm-lg-rail"><span class="hm-lg-ico"><i class="bi bi-phone" aria-hidden="true"></i></span></span>
+                    <a class="hm-lg-card" href="#antrian">
+                        <span class="hm-lg-no" aria-hidden="true">02</span>
+                        <h3>Pantau giliran</h3>
+                        <p>Tiket di HP ikut berubah sesuai antrian, lengkap dengan perkiraan waktu tunggu.</p>
+                        <em>Lihat antrian poli <i class="bi bi-arrow-right" aria-hidden="true"></i></em>
+                    </a>
+                </li>
+                <li class="hm-lg" data-w="2">
+                    <span class="hm-lg-rail"><span class="hm-lg-ico"><i class="bi bi-hospital" aria-hidden="true"></i></span></span>
+                    <a class="hm-lg-card" href="#cara-kerja">
+                        <span class="hm-lg-no" aria-hidden="true">03</span>
+                        <h3>Tiba saat giliran dekat</h3>
+                        <p>Usahakan sudah di rumah sakit saat nomor tinggal sekitar 30 menit lagi. Isi WhatsApp untuk dikabari.</p>
+                        <em>Cara hitungnya <i class="bi bi-arrow-right" aria-hidden="true"></i></em>
+                    </a>
+                </li>
+                <li class="hm-lg" data-w="3">
+                    <span class="hm-lg-rail"><span class="hm-lg-ico"><i class="bi bi-tv" aria-hidden="true"></i></span></span>
+                    <a class="hm-lg-card" href="{{ route('antrian.layar') }}">
+                        <span class="hm-lg-no" aria-hidden="true">04</span>
+                        <h3>Masuk saat dipanggil</h3>
+                        <p>Nomor besar di papan antrian adalah nomor yang sedang dipanggil.</p>
+                        <em>Lihat papan <i class="bi bi-arrow-right" aria-hidden="true"></i></em>
+                    </a>
+                </li>
+            </ol>
+
+            <div class="hm-rule" role="note">
+                <span class="hm-rule-node"><i class="bi bi-house-door" aria-hidden="true"></i><span><small>Mulai</small><b>Daftar dari rumah</b></span></span>
+                <span class="hm-rule-line" aria-hidden="true"><b><i class="bi bi-clock" aria-hidden="true"></i>&plusmn; 30 menit</b></span>
+                <span class="hm-rule-node"><i class="bi bi-hospital" aria-hidden="true"></i><span><small>Paling lambat</small><b>Sudah di rumah sakit</b></span></span>
             </div>
         </div>
     </section>
 
     {{-- ============ ANTRIAN TIAP POLI ============ --}}
-    <section id="antrian" class="bn-band bn-band-stripes">
+    <section id="antrian" class="bn-band bn-band-stripes hm-fit">
         <div class="container-xxl">
             <div class="bn-head">
                 <div>
@@ -260,32 +298,48 @@
     @endif
 
     {{-- ============ DOKTER PRAKTIK HARI INI ============ --}}
-    <section id="dokter" class="hm-section">
+    @php
+        $perPoli = collect($dokterHariIni)->groupBy('poli');
+        $sedangPraktik = collect($dokterHariIni)->where('praktik', 'berlangsung')->count();
+    @endphp
+    <section id="dokter" class="hm-section hm-fit hm-dokter">
         <div class="container-xxl">
             <div class="hm-head">
                 <div>
                     <span class="hm-eyebrow hm-eyebrow-soft">Jadwal</span>
                     <h2 class="hm-h2">Dokter praktik hari ini</h2>
-                    <p class="hm-sub">Dokter yang punya jadwal hari ini di setiap poli.</p>
+                    <p class="hm-sub">{{ now()->locale('id')->translatedFormat('l, j F Y') }}</p>
                 </div>
-                <div class="hm-arrows" aria-hidden="true">
-                    <button type="button" class="hm-round" data-dr-prev tabindex="-1"><i class="bi bi-chevron-left"></i></button>
-                    <button type="button" class="hm-round" data-dr-next tabindex="-1"><i class="bi bi-chevron-right"></i></button>
-                </div>
+                @if ($dokterHariIni)
+                    <p class="hm-dk-sum"><span><b class="numeral">{{ count($dokterHariIni) }}</b>dokter</span><span class="is-ok"><b class="numeral">{{ $sedangPraktik }}</b>sedang praktik</span></p>
+                @endif
             </div>
 
             @if ($dokterHariIni)
-                <div class="hm-dr-track" data-dr-track tabindex="0" aria-label="Daftar dokter praktik hari ini">
-                    @foreach ($dokterHariIni as $d)
-                        @php [$kelas, $teks] = $praktikLabel[$d['praktik']] ?? $praktikLabel['libur']; @endphp
-                        <article class="hm-dr" data-w="{{ ($indeksPoli->get($d['poli'], 0)) % 6 }}">
-                            <span class="hm-avatar" aria-hidden="true">{{ $d['inisial'] }}</span>
-                            <h3>{{ $d['nama'] }}</h3>
-                            <p class="hm-dr-poli">{{ $d['poli'] }}</p>
-                            @if ($d['jam'])<p class="hm-dr-jam"><i class="bi bi-clock" aria-hidden="true"></i>{{ $d['jam'] }}</p>@endif
-                            <span class="hm-badge hm-badge-{{ $kelas }}">{{ $teks }}</span>
-                        </article>
-                    @endforeach
+                <div class="hm-dk" data-dk>
+                    @if ($perPoli->count() > 1)
+                        <div class="hm-dk-tabs" role="group" aria-label="Saring menurut poli">
+                            <button type="button" class="hm-dk-tab" data-dk-tab="*" aria-pressed="true">Semua<b>{{ count($dokterHariIni) }}</b></button>
+                            @foreach ($perPoli as $namaPoli => $daftar)
+                                <button type="button" class="hm-dk-tab" data-w="{{ ($indeksPoli->get($namaPoli, 0)) % 6 }}" data-dk-tab="{{ \Illuminate\Support\Str::slug($namaPoli) }}" aria-pressed="false"><i aria-hidden="true"></i>{{ $namaPoli }}<b>{{ $daftar->count() }}</b></button>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div class="hm-dk-grid">
+                        @foreach (collect($dokterHariIni)->sortBy(fn ($d) => $d['praktik'] === 'berlangsung' ? 0 : 1)->values() as $d)
+                            @php [$kelas, $teks] = $praktikLabel[$d['praktik']] ?? $praktikLabel['libur']; @endphp
+                            <article class="hm-dkc is-{{ $kelas }}" data-dk-kartu data-poli="{{ \Illuminate\Support\Str::slug($d['poli']) }}" data-w="{{ ($indeksPoli->get($d['poli'], 0)) % 6 }}">
+                                <span class="hm-dkc-av" aria-hidden="true">{{ $d['inisial'] }}</span>
+                                <div class="hm-dkc-info">
+                                    <h3>{{ $d['nama'] }}</h3>
+                                    <p>{{ $d['poli'] }}</p>
+                                </div>
+                                <span class="hm-badge hm-badge-{{ $kelas }}">{{ $teks }}</span>
+                                @if ($d['jam'])<p class="hm-dkc-jam"><i class="bi bi-clock" aria-hidden="true"></i><span>{{ $d['jam'] }}</span></p>@endif
+                            </article>
+                        @endforeach
+                    </div>
                 </div>
             @else
                 <p class="hm-empty">Belum ada dokter dengan jadwal praktik hari ini.</p>
@@ -293,6 +347,7 @@
         </div>
     </section>
 
+    <div class="hm-closing">
     {{-- ============ FASILITAS ============ --}}
     <section class="hm-fas">
         <div class="container-xxl">
@@ -312,83 +367,84 @@
         </div>
     </section>
 
-    {{-- ============ PANDUAN PASIEN ============ --}}
-    <section class="hm-section hm-soft">
-        <div class="container-xxl">
-            <div class="hm-head">
-                <div>
-                    <span class="hm-eyebrow hm-eyebrow-soft">Panduan</span>
-                    <h2 class="hm-h2">Panduan untuk pasien</h2>
-                </div>
-            </div>
-
-            <div class="hm-guides">
-                <a class="hm-guide" data-w="0" href="{{ route('antrian.create') }}">
-                    <span class="hm-guide-top"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span>
-                    <span class="hm-guide-body"><b>Ambil nomor antrian</b><span>Pilih poli, isi NIK dan nama, tiket langsung jadi.</span><em>Mulai sekarang <i class="bi bi-arrow-right"></i></em></span>
-                </a>
-                <a class="hm-guide" data-w="1" href="{{ route('antrian.layar') }}">
-                    <span class="hm-guide-top"><i class="bi bi-tv" aria-hidden="true"></i></span>
-                    <span class="hm-guide-body"><b>Membaca papan antrian</b><span>Nomor yang tampil besar adalah nomor yang sedang dipanggil.</span><em>Lihat papan <i class="bi bi-arrow-right"></i></em></span>
-                </a>
-                <a class="hm-guide" data-w="2" href="#antrian">
-                    <span class="hm-guide-top"><i class="bi bi-list-ol" aria-hidden="true"></i></span>
-                    <span class="hm-guide-body"><b>Pantau antrian poli</b><span>Lihat nomor dan jumlah yang menunggu tanpa datang ke klinik.</span><em>Lihat antrian <i class="bi bi-arrow-right"></i></em></span>
-                </a>
-                <a class="hm-guide" data-w="3" href="#cara-kerja">
-                    <span class="hm-guide-top"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
-                    <span class="hm-guide-body"><b>Perkiraan waktu tunggu</b><span>Dihitung dari data pelayanan 14 hari terakhir dan muncul di tiket.</span><em>Cara kerjanya <i class="bi bi-arrow-right"></i></em></span>
-                </a>
-            </div>
-        </div>
-    </section>
-
     {{-- ============ AJAKAN ============ --}}
     <section class="hm-cta-band" id="kontak">
         <div class="container-xxl">
-            <div class="hm-cta">
+            <div class="hm-cta {{ ($telepon || $whatsapp) ? '' : 'hm-cta-solo' }}">
                 <div class="hm-cta-copy">
                     <h2>Butuh bantuan mengambil nomor?</h2>
                     <p>Cukup NIK dan nama, tanpa buat akun. Petugas kami siap membantu bila Anda kesulitan.</p>
-                    <div class="hm-cta-tags">
-                        <span><i class="bi bi-shield-check" aria-hidden="true"></i>Data aman</span>
-                        <span><i class="bi bi-people" aria-hidden="true"></i>Petugas ramah</span>
-                        <span><i class="bi bi-lightning-charge" aria-hidden="true"></i>Layanan cepat</span>
+                </div>
+                @if ($telepon || $whatsapp)
+                    <div class="hm-help">
+                        @if ($telepon)
+                            <a class="hm-help-row" href="tel:{{ preg_replace('/[^\d+]/', '', $telepon) }}">
+                                <i class="bi bi-telephone-fill" aria-hidden="true"></i>
+                                <span><small>Telepon</small><b>{{ $telepon }}</b></span>
+                                <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                        @endif
+                        @if ($whatsapp)
+                            <a class="hm-help-row" href="https://wa.me/{{ $nomorWa }}" target="_blank" rel="noopener">
+                                <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                                <span><small>WhatsApp</small><b>{{ $whatsapp }}</b></span>
+                                <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                        @endif
                     </div>
-                </div>
-                <div class="{{ ($telepon || $whatsapp) ? 'hm-call' : 'hm-call-solo' }}">
-                    @if ($telepon || $whatsapp)
-                        <div>
-                            <small>{{ $telepon ? 'Hubungi kami' : 'WhatsApp kami' }}</small>
-                            @if ($telepon)
-                                <a class="hm-tel" href="tel:{{ preg_replace('/[^\d+]/', '', $telepon) }}"><i class="bi bi-telephone-fill" aria-hidden="true"></i>{{ $telepon }}</a>
-                            @else
-                                <span class="hm-tel"><i class="bi bi-whatsapp" aria-hidden="true"></i>{{ $whatsapp }}</span>
-                            @endif
-                        </div>
-                    @endif
-                    <a href="{{ route('antrian.create') }}" class="btn btn-lg hm-btn hm-btn-primary">Ambil nomor sekarang<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
-                </div>
+                @endif
             </div>
         </div>
     </section>
+    </div>
 
-    {{-- Akses cepat untuk pengembangan: melayang di pojok, hanya saat APP_ENV=local --}}
-    @if (app()->isLocal())
-        <details class="bn-dev">
-            <summary aria-label="Akses cepat pengembangan"><i class="bi bi-lightning-charge-fill"></i><span>Dev</span></summary>
-            <div class="bn-dev-panel">
-                <div class="bn-dev-title">Masuk cepat</div>
-                @auth
-                    <div class="bn-dev-now">Masuk sebagai <strong>{{ auth()->user()->name }}</strong> ({{ auth()->user()->role }})</div>
-                @endauth
-                @foreach (['admin' => 'Admin', 'petugas' => 'Petugas', 'dokter' => 'Dokter'] as $peran => $nama)
-                    <form method="POST" action="{{ route('demo.masuk', $peran) }}">
-                        @csrf
-                        <button type="submit"><i class="bi bi-person-circle"></i>{{ $nama }}</button>
-                    </form>
-                @endforeach
-            </div>
-        </details>
+    {{-- Akses cepat untuk pengembangan: melayang di pojok, hanya saat APP_ENV=local.
+         Tombol x menyembunyikannya sampai halaman dimuat ulang (sengaja tanpa penyimpanan, cocok untuk screenshot). --}}
+    @if (\App\Support\AksesLokal::diizinkan())
+        <div class="bn-dev" data-dev>
+            <details class="bn-dev-menu">
+                <summary aria-label="Akses cepat pengembangan">
+                    <span class="bn-dev-dot" aria-hidden="true"></span>
+                    <span class="bn-dev-label">DEV</span>
+                    <span class="bn-dev-env">local</span>
+                </summary>
+                <div class="bn-dev-panel">
+                    <div class="bn-dev-head">
+                        <span class="bn-dev-title">Masuk cepat</span>
+                        @auth
+                            <span class="bn-dev-now">Aktif: <strong>{{ auth()->user()->name }}</strong></span>
+                        @else
+                            <span class="bn-dev-now">Belum masuk</span>
+                        @endauth
+                    </div>
+                    @foreach ([
+                        'admin' => ['Admin', 'Data master dan laporan', 'shield-lock'],
+                        'petugas' => ['Petugas', 'Panggil dan kelola antrian', 'megaphone'],
+                        'dokter' => ['Dokter', 'Layani pasien', 'person-badge'],
+                    ] as $peran => [$nama, $ket, $ikon])
+                        <form method="POST" action="{{ route('demo.masuk', $peran) }}">
+                            @csrf
+                            <button type="submit" @class(['is-aktif' => auth()->check() && auth()->user()->role === $peran])>
+                                <span class="bn-dev-ico"><i class="bi bi-{{ $ikon }}" aria-hidden="true"></i></span>
+                                <span class="bn-dev-txt"><b>{{ $nama }}</b><small>{{ $ket }}</small></span>
+                                <i class="bi bi-arrow-right-short bn-dev-go" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    @endforeach
+                    <button type="button" class="bn-dev-sembunyi" data-dev-hide><i class="bi bi-eye-slash" aria-hidden="true"></i>Sembunyikan sampai dimuat ulang</button>
+                </div>
+            </details>
+            <button type="button" class="bn-dev-x" data-dev-hide aria-label="Sembunyikan panel Dev sampai halaman dimuat ulang" title="Sembunyikan (muncul lagi saat dimuat ulang)"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </div>
+        <script>
+            // Delegasi klik: aman dipakai berulang, dan tidak menyimpan apa pun, jadi reload memunculkannya lagi.
+            if (!window.__devHide) {
+                window.__devHide = true;
+                document.addEventListener('click', function (e) {
+                    var b = e.target.closest('[data-dev-hide]');
+                    if (b) { var d = b.closest('[data-dev]'); if (d) d.hidden = true; }
+                });
+            }
+        </script>
     @endif
 </x-public-layout>

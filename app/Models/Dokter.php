@@ -38,6 +38,26 @@ class Dokter extends Model
         return $this->hasMany(JadwalPraktik::class);
     }
 
+    public function cutis(): HasMany
+    {
+        return $this->hasMany(CutiDokter::class);
+    }
+
+    /** Dokter yang tidak sedang cuti pada tanggal tertentu (default hari ini). */
+    public function scopeTidakCuti($query, $tanggal = null)
+    {
+        $tanggal = ($tanggal ? \Illuminate\Support\Carbon::parse($tanggal) : now())->toDateString();
+
+        return $query->whereDoesntHave('cutis', fn ($q) => $q->whereDate('tanggal_mulai', '<=', $tanggal)->whereDate('tanggal_selesai', '>=', $tanggal));
+    }
+
+    public function sedangCuti($tanggal = null): bool
+    {
+        $tanggal = ($tanggal ? \Illuminate\Support\Carbon::parse($tanggal) : now())->toDateString();
+
+        return $this->cutis()->whereDate('tanggal_mulai', '<=', $tanggal)->whereDate('tanggal_selesai', '>=', $tanggal)->exists();
+    }
+
     public function antrians(): HasMany
     {
         return $this->hasMany(Antrian::class);

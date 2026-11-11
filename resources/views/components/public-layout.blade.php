@@ -1,19 +1,18 @@
-@props(['title' => null, 'wide' => false, 'full' => false])
+@props(['title' => null, 'wide' => false, 'full' => false, 'fit' => false])
 @php
     $jamAktif = \App\Services\JamOperasional::aktif();
     $buka = \App\Services\JamOperasional::pendaftaranDibuka();
-    $jam = fn (string $kunci) => \App\Services\JamOperasional::tampil((string) config('operasional.'.$kunci));
+    $jam = fn (string $kunci) => \App\Services\JamOperasional::tampil(\App\Services\JamOperasional::jam($kunci));
 
     $statusTeks = ! $jamAktif
         ? 'Antrian online aktif'
         : ($buka ? 'Pendaftaran dibuka sampai pukul '.$jam('pendaftaran_tutup') : 'Pendaftaran ditutup, dibuka lagi pukul '.$jam('pendaftaran_buka'));
     $statusPendek = ! $jamAktif ? 'Antrian online aktif' : ($buka ? 'Pendaftaran dibuka' : 'Pendaftaran ditutup');
 
+    // Menu utama: hanya tiga tujuan inti supaya navbar ringkas di semua layar
     $menu = [
         ['Beranda', route('beranda'), request()->routeIs('beranda'), 'house-door'],
         ['Ambil antrian', route('antrian.create'), request()->routeIs('antrian.create'), 'ticket-perforated'],
-        ['Antrian hari ini', route('beranda').'#antrian', false, 'list-ol'],
-        ['Jadwal dokter', route('beranda').'#dokter', false, 'person-badge'],
         ['Papan antrian', route('antrian.layar'), request()->routeIs('antrian.layar'), 'tv'],
     ];
 
@@ -34,7 +33,7 @@
 <head>
     @include('partials.head', ['title' => $title])
 </head>
-<body @class(['d-flex flex-column min-vh-dvh bn-pub', 'has-ctabar' => $ctaBar])>
+<body @class(['d-flex flex-column bn-pub', 'min-vh-dvh' => ! $fit, 'am-fit' => $fit, 'has-ctabar' => $ctaBar])>
 
 <a class="nv-skip" href="#konten">Lewati ke konten</a>
 
@@ -106,6 +105,7 @@
 @endif
 
 {{-- Footer --}}
+@unless ($fit)
 <footer class="ft" aria-label="Footer">
     <div class="container-xxl">
 
@@ -149,10 +149,21 @@
                 <h2 class="ft-h">Jam layanan</h2>
                 <span class="ft-status"><span class="nv-dot {{ $jamAktif && ! $buka ? 'off' : '' }}" aria-hidden="true"></span>{{ $statusPendek }}</span>
                 @if ($jamAktif)
-                    <dl class="ft-jam">
-                        <div><dt>Pendaftaran</dt><dd>{{ $jam('pendaftaran_buka') }} sampai {{ $jam('pendaftaran_tutup') }}</dd></div>
-                        <div><dt>Layanan</dt><dd>sampai {{ $jam('layanan_selesai') }}</dd></div>
-                    </dl>
+                    <ul class="ft-minggu" aria-label="Jam buka per hari">
+                        @foreach (\App\Services\JamOperasional::mingguan() as $m)
+                            <li @class(['is-today' => $m['hari_ini'], 'is-tutup' => ! $m['buka']])>
+                                <span class="ft-hari">{{ $m['label'] }}@if ($m['hari_ini'])<small>hari ini</small>@endif</span>
+                                @if ($m['buka'])
+                                    <span class="ft-jm"><b>{{ $m['pendaftaran'] }}</b><small>layanan sampai {{ $m['layanan'] }}</small></span>
+                                @else
+                                    <span class="ft-jm"><b>Tutup</b></span>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                    @if ($libur = \App\Services\JamOperasional::liburBerikutnya())
+                        <p class="ft-libur"><i class="bi bi-calendar-x" aria-hidden="true"></i><span>Libur {{ $libur['tanggal']->translatedFormat('j F Y') }}: {{ $libur['keterangan'] }}</span></p>
+                    @endif
                 @else
                     <p class="mb-0 text-on-navy-muted">Pendaftaran antrian online tersedia setiap saat selama klinik beroperasi.</p>
                 @endif
@@ -173,6 +184,7 @@
         </div>
     </div>
 </footer>
+@endunless
 
 {{-- Bilah ajakan di HP --}}
 @if ($ctaBar)
@@ -189,19 +201,37 @@
 
     // Navbar tetap gelap; .is-scrolled hanya menambah bayangan.
     // Dua ambang (24px aktif, 8px mati) mencegah bayangan berkedip di batas.
-    var scrolled = false;
+    var scrolled = false, ticking = false;
     function baca() {
         var y = window.scrollY;
         if (!scrolled && y > 24) scrolled = true;
         else if (scrolled && y < 8) scrolled = false;
         wrap.classList.toggle('is-scrolled', scrolled);
+        ticking = false;
     }
     baca();
-    window.addEventListener('scroll', baca, { passive: true });
+    window.addEventListener('scroll', function () {
+        if (!ticking) { ticking = true; window.requestAnimationFrame(baca); }
+    }, { passive: true });
 
     if (sheet && burger) {
-        sheet.addEventListener('show.bs.offcanvas', function () { burger.classList.add('is-open'); });
-        sheet.addEventListener('hidden.bs.offcanvas', function () { burger.classList.remove('is-open'); });
+        sheet.addEventListener('show.bs.offcanvas', function () { burger.classList.add('is-open'); burger.setAttribute('aria-expanded', 'true'); });
+        sheet.addEventListener('hidden.bs.offcanvas', function () { burger.classList.remove('is-open'); burger.setAttribute('aria-expanded', 'false'); });
+
+        function tutupSheet() {
+            var inst = window.bootstrap && window.bootstrap.Offcanvas && window.bootstrap.Offcanvas.getInstance(sheet);
+            if (inst) inst.hide();
+        }
+
+        // Layar membesar ke ukuran desktop saat lembar menu terbuka (rotasi tablet, ubah ukuran jendela): tutup otomatis
+        var lebar = window.matchMedia('(min-width: 992px)');
+        var saatUbah = function () { if (lebar.matches) tutupSheet(); };
+        if (lebar.addEventListener) lebar.addEventListener('change', saatUbah); else lebar.addListener(saatUbah);
+
+        // Pilih menu di lembar: lembar menutup dulu supaya perpindahan halaman terasa halus
+        sheet.addEventListener('click', function (e) {
+            if (e.target.closest('a.nv-sheet-link, a.nv-btn')) tutupSheet();
+        });
     }
 
     var atas = document.getElementById('ftTop');

@@ -63,7 +63,7 @@ class AntrianController extends Controller
             ->orderBy('waktu_dipanggil')
             ->get();
 
-        $dokters = Dokter::where('poli_id', $poli->id)->where('aktif', true)->get();
+        $dokters = Dokter::where('poli_id', $poli->id)->where('aktif', true)->tidakCuti()->get();
         $layananBerjalan = JamOperasional::layananBerjalan();
 
         return view('antrian.kelola', compact('poli', 'daftarMenunggu', 'sedangDilayani', 'tidakHadir', 'dokters', 'layananBerjalan'));
@@ -244,7 +244,11 @@ class AntrianController extends Controller
         $validated = $request->validate([
             'dokter_id' => [
                 'required',
-                Rule::exists('dokters', 'id')->where('poli_id', $poli->id)->where('aktif', true),
+                Rule::exists('dokters', 'id')->where(fn ($q) => $q->where('poli_id', $poli->id)->where('aktif', true)
+                    ->whereNotExists(fn ($c) => $c->selectRaw('1')->from('cuti_dokters')
+                        ->whereColumn('cuti_dokters.dokter_id', 'dokters.id')
+                        ->whereDate('tanggal_mulai', '<=', now()->toDateString())
+                        ->whereDate('tanggal_selesai', '>=', now()->toDateString()))),
             ],
         ]);
 

@@ -1,2 +1,9 @@
 User-agent: *
-Disallow:
+Disallow: /admin/
+Disallow: /antrian/tiket/
+Disallow: /antrian/riwayat
+Disallow: /antrian/kelola/
+Disallow: /antrian/dokter
+Disallow: /profile
+Disallow: /login
+Disallow: /livewire

@@ -86,7 +86,8 @@ $c-lembut: unquote('color-mix(in srgb, var(--c, #{$primary}) 12%, #fff)');
 .hm-title { color: #fff; font-size: clamp(2.2rem, 5.2vw, 4.3rem); line-height: 1; letter-spacing: -.03em; text-transform: uppercase; margin-bottom: 1.3rem; text-wrap: balance; }
 .hm-accent { color: $glow; }
 .hm-lead { font-size: clamp(1rem, 1.5vw, 1.15rem); color: $on-navy-muted; max-width: 34rem; margin-bottom: 1.9rem; text-wrap: pretty; }
-.hm-cta-row { display: flex; flex-wrap: wrap; gap: .8rem; margin-bottom: 1.6rem; }
+.hm-cta-row { display: grid; grid-template-columns: repeat(2, max-content); gap: .75rem; margin-bottom: 1.6rem;
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; white-space: nowrap; padding: .8rem 1.5rem; font-size: clamp(.95rem, .5rem + .7vw, 1.1rem); } }
 .hm-facts { display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; font-size: .88rem; font-weight: 600; color: $on-navy; li { display: flex; align-items: center; gap: .5rem; } i { color: $glow; font-size: 1.1rem; } }
 
 // di atas latar gelap, tombol memakai warna terang supaya kontras
@@ -94,7 +95,7 @@ $c-lembut: unquote('color-mix(in srgb, var(--c, #{$primary}) 12%, #fff)');
 .hm-hero .hm-btn-ghost { background: transparent; color: #fff; border-color: rgba(#fff, .45); &:hover { background: #fff; color: $navy; border-color: #fff; } }
 
 // kartu info kaca di dasar hero
-.hm-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .9rem; margin: clamp(2.25rem, 5vw, 3.75rem) 0 0; padding: 0; list-style: none; }
+.hm-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: .9rem; margin: clamp(2.25rem, 5vw, 3.75rem) 0 0; padding: 0; list-style: none; }
 .hm-info-item {
     display: flex; align-items: center; gap: .9rem; height: 100%; padding: 1rem 1.15rem; border-radius: 1.1rem; color: #fff;
     background: rgba(#fff, .07); border: 1px solid rgba(#fff, .15);
@@ -107,28 +108,48 @@ $c-lembut: unquote('color-mix(in srgb, var(--c, #{$primary}) 12%, #fff)');
 a.hm-info-item:hover { color: #fff; transform: translateY(-3px); background: rgba(#fff, .13); border-color: rgba(#fff, .32); }
 
 // ---------- panel antrian ----------
+// Kaca buram di atas latar hero. Di dalamnya satu tiket putih berlekuk: nomor yang dipanggil jadi fokus,
+// statistik dan nomor berikutnya ada di sobekan bawah. Pemilih poli berbentuk segmen di bawah tiket.
 .hm-panel {
-    position: relative; background: #fff; border: 1px solid $hm-garis; border-radius: 1.75rem; padding: clamp(1rem, 2.4vw, 1.5rem);
-    box-shadow: 0 50px 90px -40px rgba(0, 0, 0, .75), 0 0 0 6px rgba(#fff, .08);
+    position: relative; padding: clamp(.85rem, 2vw, 1.2rem); border-radius: 2rem; color: #fff;
+    background: linear-gradient(155deg, rgba(#fff, .2), rgba(#fff, .06) 60%); border: 1px solid rgba(#fff, .24);
+    box-shadow: 0 50px 90px -44px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(#fff, .3);
+    @supports (backdrop-filter: blur(1px)) { backdrop-filter: blur(20px) saturate(1.25); -webkit-backdrop-filter: blur(20px) saturate(1.25); }
+    @supports not (backdrop-filter: blur(1px)) { background: rgba($hm-gelap-1, .82); }
 }
-.hm-panel-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
-.hm-panel-date { display: block; font-size: .82rem; color: $hm-teks-redup; }
+.hm-panel-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding-inline: .3rem; }
+.hm-panel .hm-eyebrow { color: $glow; }
+.hm-panel-date { display: block; margin-top: .1rem; font-size: .82rem; color: $on-navy-muted; }
 .hm-panel-tools { display: flex; align-items: center; gap: .5rem; flex: none; }
-.hm-live { display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .75rem; border-radius: 999px; font-size: .74rem; font-weight: 700; color: $success; background: rgba($success, .1);
+.hm-live { display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .8rem; border-radius: 999px; font-size: .74rem; font-weight: 700; color: #8CF3D2; background: rgba(#8CF3D2, .14); border: 1px solid rgba(#8CF3D2, .25);
     i { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; animation: hm-denyut 1.8s infinite; }
-    &.is-off { color: $danger; background: rgba($danger, .1); i { animation: none; } } }
-.hm-icon-btn { width: 2.1rem; height: 2.1rem; border-radius: .65rem; display: grid; place-items: center; background: $light; color: $primary; transition: background .2s; &:hover { background: rgba($primary, .14); } .hm-i-play { display: none; } &[aria-pressed="true"] { .hm-i-play { display: block; } .hm-i-pause { display: none; } } }
+    &.is-off { color: #FFB4AE; background: rgba($danger, .18); border-color: rgba(#FFB4AE, .3); i { animation: none; } } }
+.hm-icon-btn { width: 2.1rem; height: 2.1rem; border-radius: 50%; display: grid; place-items: center; background: rgba(#fff, .14); color: #fff; border: 1px solid rgba(#fff, .2); transition: background .2s;
+    &:hover { background: rgba(#fff, .26); } .hm-i-play { display: none; } &[aria-pressed="true"] { .hm-i-play { display: block; } .hm-i-pause { display: none; } } }
 
-.hm-stage { display: grid; grid-template-columns: minmax(0, 1fr); overflow: hidden; margin-top: 1rem; touch-action: pan-y; }
-.hm-stage-note { grid-area: 1 / 1; padding: 3rem .75rem; text-align: center; color: $hm-teks-redup; font-size: .92rem; }
+.hm-stage { display: grid; grid-template-columns: minmax(0, 1fr); overflow: hidden; margin: .6rem -.65rem 0; padding: .35rem .65rem .85rem; touch-action: pan-y; }
+.hm-stage-note { grid-area: 1 / 1; padding: 3rem .75rem; text-align: center; color: $on-navy-muted; font-size: .92rem; a { color: $glow; } }
 
 .hm-slide {
-    grid-area: 1 / 1; display: flex; flex-direction: column; gap: .9rem; opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(var(--dx, 0px));
+    grid-area: 1 / 1; opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(var(--dx, 0px));
     transition: opacity .55s ease, transform .65s $hm-ease, visibility 0s linear .65s;
     &.is-active { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s, 0s, 0s; }
 }
+
+// tiket: dua bagian putih dengan lekuk di sisi sambungan, garis putus-putus di tengah
+$hm-lekuk: .7rem;
+.hm-tk { display: flex; flex-direction: column; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .22)); color: $body-color; }
+.hm-tk-main, .hm-tk-stub { position: relative; background: #fff; }
+.hm-tk-main { padding: 1.15rem 1.3rem 1rem; border-radius: 1.5rem 1.5rem 0 0;
+    -webkit-mask: radial-gradient(circle #{$hm-lekuk} at 0 100%, #0000 calc(100% - 1px), #000) left / 51% 100% no-repeat, radial-gradient(circle #{$hm-lekuk} at 100% 100%, #0000 calc(100% - 1px), #000) right / 51% 100% no-repeat;
+    mask: radial-gradient(circle #{$hm-lekuk} at 0 100%, #0000 calc(100% - 1px), #000) left / 51% 100% no-repeat, radial-gradient(circle #{$hm-lekuk} at 100% 100%, #0000 calc(100% - 1px), #000) right / 51% 100% no-repeat; }
+.hm-tk-stub { padding: .95rem 1.3rem 1.05rem; border-radius: 0 0 1.5rem 1.5rem;
+    -webkit-mask: radial-gradient(circle #{$hm-lekuk} at 0 0, #0000 calc(100% - 1px), #000) left / 51% 100% no-repeat, radial-gradient(circle #{$hm-lekuk} at 100% 0, #0000 calc(100% - 1px), #000) right / 51% 100% no-repeat;
+    mask: radial-gradient(circle #{$hm-lekuk} at 0 0, #0000 calc(100% - 1px), #000) left / 51% 100% no-repeat, radial-gradient(circle #{$hm-lekuk} at 100% 0, #0000 calc(100% - 1px), #000) right / 51% 100% no-repeat;
+    &::before { content: ''; position: absolute; left: 1.1rem; right: 1.1rem; top: 0; border-top: 2px dashed $hm-garis; } }
+
 .hm-slide-top { display: flex; align-items: center; gap: .8rem; }
-.hm-slide-title { min-width: 0; flex: 1; h3 { font-size: 1.1rem; margin: 0; line-height: 1.25; letter-spacing: -.01em; } p { margin: 0; font-size: .8rem; color: $hm-teks-redup; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
+.hm-slide-title { min-width: 0; flex: 1; h3 { font-size: 1.1rem; margin: 0; line-height: 1.25; letter-spacing: -.01em; color: $navy; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } p { margin: .1rem 0 0; font-size: .8rem; color: $hm-teks-redup; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
 
 .hm-badge { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .7rem; border-radius: 999px; font-size: .72rem; font-weight: 700; white-space: nowrap; flex: none;
     &::before { content: ''; width: .4rem; height: .4rem; border-radius: 50%; background: currentColor; }
@@ -136,40 +157,43 @@ a.hm-info-item:hover { color: #fff; transform: translateY(-3px); background: rgb
     &.hm-badge-warn { color: #8A5A00; background: rgba($warning, .22); }
     &.hm-badge-off { color: #4F626A; background: #E9EFF1; } }
 
-.hm-callbox { position: relative; overflow: hidden; isolation: isolate; border-radius: 1.35rem; padding: clamp(1.1rem, 3vw, 1.6rem); color: $on-navy;
-    background: linear-gradient(140deg, $navy-soft 0%, $navy 70%);
-    &::before, &::after { content: ''; position: absolute; border-radius: 50%; z-index: -1; }
-    &::before { width: 14rem; height: 14rem; right: -4rem; top: -6rem; background: rgba($glow, .1); }
-    &::after { width: 9rem; height: 9rem; left: -3rem; bottom: -4.5rem; background: rgba(255, 255, 255, .06); } }
-.hm-call-top { display: flex; justify-content: space-between; align-items: center; gap: .6rem; font-size: .74rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: $on-navy-muted; }
-.hm-call-state { padding: .22rem .65rem; border-radius: 999px; background: rgba(255, 255, 255, .12); letter-spacing: .02em; text-transform: none; color: #fff; }
-.hm-call-no { display: block; margin: .5rem 0 .9rem; font-family: $headings-font-family; font-weight: 800; font-variant-numeric: tabular-nums; font-size: clamp(3.2rem, 11vw, 5.2rem); line-height: 1; letter-spacing: -.03em; color: $glow;
-    &.is-kosong { color: rgba(255, 255, 255, .4); } }
-.hm-bump { animation: hm-loncat .7s $hm-ease; }
-.hm-prog { height: .45rem; border-radius: .45rem; background: rgba(255, 255, 255, .16); overflow: hidden; i { display: block; height: 100%; width: 0; border-radius: .45rem; background: $glow; transition: width .9s $hm-ease; } }
-.hm-prog-label { display: flex; justify-content: space-between; gap: .5rem; margin-top: .5rem; font-size: .74rem; color: $on-navy-muted; }
-
-.hm-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; div { background: $light; border-radius: 1rem; padding: .7rem .4rem; text-align: center; } b { display: block; font-family: $headings-font-family; font-weight: 800; font-size: 1.3rem; line-height: 1.2; font-variant-numeric: tabular-nums; } span { display: block; font-size: .72rem; font-weight: 600; line-height: 1.3; color: $hm-teks-redup; } }
-.hm-next { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .7rem; min-height: 2.1rem; > span { font-size: .76rem; font-weight: 700; color: $hm-teks-redup; } }
-.hm-chips { display: flex; flex-wrap: wrap; gap: .45rem; }
-.hm-nochip { padding: .3rem .7rem; border-radius: .6rem; background: rgba($primary, .1); color: $navy; font-weight: 700; font-size: .82rem; font-variant-numeric: tabular-nums; &.is-kosong { background: #E9EFF1; color: #4F626A; font-weight: 600; } }
-.hm-slide-link { align-self: flex-start; font-size: .82rem; font-weight: 700; color: $primary; i { transition: transform .25s $hm-ease; } &:hover i { transform: translateX(4px); } }
 
 .hm-kode { display: inline-flex; align-items: center; justify-content: center; flex: none; min-width: 2.9rem; height: 2.9rem; padding: 0 .5rem; border-radius: .85rem; background: $navy; color: $glow; font-family: $headings-font-family; font-weight: 800; font-size: 1.5rem; line-height: 1; }
 
-.hm-tabs { position: relative; display: flex; gap: .5rem; margin-top: 1rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; &::-webkit-scrollbar { display: none; } }
-.hm-tab { position: relative; flex: 1 0 auto; min-width: 5.6rem; text-align: left; padding: .55rem .75rem .75rem; border-radius: .9rem; background: $light; border: 1px solid transparent; overflow: hidden; transition: background .25s, border-color .25s;
-    &:hover { background: rgba($primary, .1); }
-    &.is-active { background: #fff; border-color: rgba($primary, .35); box-shadow: 0 8px 20px -14px rgba($primary, .8); }
-    .t-nama { display: block; font-size: .72rem; font-weight: 600; color: $hm-teks-redup; white-space: nowrap; }
+.hm-tk-no { margin-top: 1rem; small { display: block; font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: $hm-teks-redup; } }
+.hm-tk-row { display: flex; align-items: flex-end; justify-content: space-between; gap: .75rem; margin-top: .15rem; }
+.hm-call-no { display: block; min-width: 0; font-family: $headings-font-family; font-weight: 800; font-variant-numeric: tabular-nums; font-size: clamp(3.3rem, 10vw, 4.9rem); line-height: 1; letter-spacing: -.035em; color: $navy;
+    &.is-kosong { color: #C3D2D7; } }
+.hm-call-state { flex: none; margin-bottom: .55rem; padding: .3rem .75rem; border-radius: 999px; font-size: .74rem; font-weight: 700; color: $primary; background: rgba($primary, .1); }
+.hm-bump { animation: hm-loncat .7s $hm-ease; }
+.hm-prog { height: .4rem; margin-top: .9rem; border-radius: .4rem; background: #E4EDF0; overflow: hidden; i { display: block; height: 100%; width: 0; border-radius: .4rem; background: linear-gradient(90deg, $primary, #2BB3C0); transition: width .9s $hm-ease; } }
+.hm-prog-label { display: flex; justify-content: space-between; gap: .5rem; margin-top: .5rem; font-size: .74rem; color: $hm-teks-redup; font-variant-numeric: tabular-nums; }
+
+.hm-mini { display: grid; grid-template-columns: repeat(3, 1fr);
+    div { padding: .1rem .3rem; text-align: center; + div { border-left: 1px solid $hm-garis; } }
+    b { display: block; font-family: $headings-font-family; font-weight: 800; font-size: 1.45rem; line-height: 1.15; color: $navy; font-variant-numeric: tabular-nums; }
+    span { display: block; margin-top: .1rem; font-size: .72rem; font-weight: 600; color: $hm-teks-redup; } }
+.hm-next { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem .7rem; margin-top: .85rem; padding-top: .8rem; border-top: 1px solid $hm-garis; > span { font-size: .74rem; font-weight: 700; color: $hm-teks-redup; } }
+.hm-chips { display: flex; flex-wrap: wrap; gap: .4rem; min-width: 0; }
+.hm-nochip { padding: .28rem .65rem; border-radius: .6rem; background: rgba($primary, .1); color: $navy; font-weight: 700; font-size: .8rem; font-variant-numeric: tabular-nums; &.is-kosong { background: #EEF3F5; color: #4F626A; font-weight: 600; } }
+.hm-slide-link { margin-left: auto; font-size: .8rem; font-weight: 700; white-space: nowrap; color: $primary; i { display: inline-block; transition: transform .25s $hm-ease; } &:hover { color: $navy; i { transform: translate(2px, -2px); } } }
+
+// pemilih poli: segmen di bawah tiket
+.hm-tabs { position: relative; display: flex; gap: .25rem; margin-top: .3rem; padding: .3rem; border-radius: 1.25rem; background: rgba(#000, .2); overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; &::-webkit-scrollbar { display: none; } }
+.hm-tab { position: relative; flex: 1 0 auto; min-width: 4.7rem; text-align: left; padding: .5rem .8rem .7rem; border-radius: .95rem; background: transparent; border: 0; color: #fff; overflow: hidden; transition: background .3s, color .3s;
+    &:hover { background: rgba(#fff, .12); }
+    &.is-active { background: #fff; box-shadow: 0 10px 20px -12px rgba(0, 0, 0, .6); }
+    .t-nama { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .02em; color: $on-navy-muted; white-space: nowrap; }
     &.is-active .t-nama { color: $primary; }
-    .t-no { display: block; font-family: $headings-font-family; font-size: .98rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .t-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: $primary; transform: scaleX(0); transform-origin: left; }
-    &.is-active .t-bar { animation: hm-isi var(--putar, 6s) linear forwards; } }
+    .t-no { display: block; font-family: $headings-font-family; font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    &.is-active .t-no { color: $navy; }
+    .t-bar { position: absolute; left: .8rem; right: .8rem; bottom: .3rem; height: 2px; border-radius: 2px; background: $primary; transform: scaleX(0); transform-origin: left; }
+    &.is-active .t-bar { animation: hm-isi var(--putar, 6s) linear forwards; }
+    &:focus-visible { outline: 2px solid $glow; outline-offset: 2px; } }
 .hm-tabs.is-single .t-bar { display: none; }
 .hm-panel.is-paused .hm-tab.is-active .t-bar { animation-play-state: paused; }
 @media (hover: hover) { .hm-panel:hover .hm-tab.is-active .t-bar { animation-play-state: paused; } }
-.hm-panel-foot { display: flex; align-items: center; gap: .45rem; margin: .8rem 0 0; font-size: .76rem; color: $hm-teks-redup; }
+.hm-panel-foot { display: flex; align-items: center; gap: .45rem; margin: .75rem .3rem 0; font-size: .76rem; color: $on-navy-muted; }
 
 // ---------- cara kerja: tiket dengan blok navy yang bergeser ----------
 .hm-about-sec { padding-top: clamp(3.5rem, 7vw, 6rem); }
@@ -208,36 +232,72 @@ a.hm-info-item:hover { color: #fff; transform: translateY(-3px); background: rgb
     span { display: block; margin-top: .35rem; font-size: .85rem; color: $on-navy-muted; line-height: 1.3; } }
 .hm-stat-ico { flex: none; font-size: 2.4rem; line-height: 1; color: $glow; }
 
-// ---------- empat langkah: banner ----------
-.hm-banner { position: relative; isolation: isolate; overflow: hidden; border-radius: 2rem; padding: clamp(1.5rem, 4vw, 2.75rem); color: #fff;
-    background: radial-gradient(30rem 18rem at 100% 0, rgba($glow, .28), transparent 70%), linear-gradient(135deg, $navy-soft 0%, $primary 100%);
-    &::before { content: ''; position: absolute; z-index: -1; right: -3rem; top: -3rem; width: 16rem; height: 16rem; opacity: .1; pointer-events: none;
-        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4v40M4 24h40' stroke='white' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
-    h2 { margin: 0; color: #fff; text-align: center; text-transform: uppercase; font-size: clamp(1.5rem, 3.2vw, 2.3rem); letter-spacing: -.02em; text-wrap: balance; }
-    > p { max-width: 38rem; margin: .7rem auto 0; text-align: center; color: rgba(#fff, .88); } }
-.hm-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 2.25rem 0 0; padding: 0; list-style: none; }
-.hm-step { position: relative; display: flex; flex-direction: column; gap: .7rem; padding: 1.6rem 1.25rem 1.3rem; border-radius: 1.25rem; background: #fff; color: $body-color; box-shadow: 0 24px 40px -28px rgba(0, 0, 0, .65); transition: transform .3s $hm-ease;
-    &:hover { transform: translateY(-4px); }
-    h3 { margin: 0; font-size: 1.02rem; line-height: 1.3; }
-    p { margin: 0; font-size: .86rem; color: $hm-teks-redup; } }
-.hm-step-no { position: absolute; left: 1.1rem; top: -.75rem; padding: .15rem .65rem; border-radius: 999px; background: $navy; color: $glow; font-family: $headings-font-family; font-weight: 800; font-size: .8rem; letter-spacing: .04em; }
-.hm-feat-ico { width: 3rem; height: 3rem; flex: none; border-radius: .9rem; display: grid; place-items: center; font-size: 1.3rem; color: $primary; background: rgba($primary, .12); }
+// ---------- empat langkah + panduan ----------
+// Empat kartu disambung satu jalur: ikon berwarna di atas, garis putus-putus ke langkah berikutnya.
+// Tiap kartu sekaligus tautan panduan ke halaman yang dibahasnya.
+.hm-lang-sec { background: linear-gradient(180deg, #fff 0%, #EAF4F6 100%); }
+.hm-lang { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 1.25rem; margin: 0; padding: 0; list-style: none; counter-reset: lg; }
+.hm-lg { display: flex; flex-direction: column; min-width: 0; }
+.hm-lg-rail { display: flex; align-items: center; margin-bottom: 1rem;
+    &::after { content: ''; flex: 1; height: 0; margin-left: .6rem; border-top: 2px dashed rgba($primary, .35); }
+    .hm-lg:last-child &::after { display: none; } }
+.hm-lg-ico { position: relative; z-index: 1; flex: none; display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 1.1rem; font-size: 1.5rem; color: #fff; background: $c;
+    box-shadow: 0 0 0 5px $c-lembut, 0 14px 26px -12px $c; transition: transform .4s $hm-ease; }
+.hm-lg:hover .hm-lg-ico { transform: rotate(-6deg) scale(1.06); }
+.hm-lg-card { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: .5rem; flex: 1; padding: 1.35rem 1.3rem 1.25rem; border-radius: 1.4rem; background: #fff; color: $body-color; border: 1px solid $hm-garis;
+    transition: transform .35s $hm-ease, box-shadow .35s, border-color .35s;
+    &:hover { color: $body-color; transform: translateY(-5px); border-color: $c; box-shadow: 0 26px 40px -28px $c; }
+    h3 { margin: 0; padding-right: 2.6rem; font-size: 1.05rem; line-height: 1.3; letter-spacing: -.01em; }
+    p { margin: 0; font-size: .88rem; line-height: 1.55; color: $hm-teks-redup; }
+    em { margin-top: auto; padding-top: .6rem; font-style: normal; font-size: .84rem; font-weight: 700; color: $c; i { display: inline-block; transition: transform .25s $hm-ease; } }
+    &:hover em i { transform: translateX(4px); } }
+.hm-lg-no { position: absolute; right: 1rem; top: .75rem; font-family: $headings-font-family; font-weight: 800; font-size: 1.9rem; line-height: 1; letter-spacing: -.03em; color: $c-lembut; -webkit-text-stroke: 1.5px $c; paint-order: stroke fill; opacity: .5; }
 
-// ---------- dokter ----------
-.hm-arrows { display: flex; gap: .5rem; }
-.hm-round { width: 2.8rem; height: 2.8rem; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 1px solid $hm-garis; color: $primary; box-shadow: 0 8px 20px -14px rgba($primary, .7); transition: background .2s, transform .2s; &:hover { background: rgba($primary, .1); } &:active { transform: scale(.94); } }
-.hm-dr-track { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: .25rem .15rem 1.25rem; margin: 0 -.15rem; &::-webkit-scrollbar { display: none; } }
-.hm-dr { position: relative; overflow: hidden; flex: 0 0 min(78%, 15.5rem); scroll-snap-align: start; padding: 1.6rem 1.1rem 1.4rem; text-align: center; background: #fff; border: 1px solid $hm-garis; border-radius: 1.5rem; transition: transform .3s $hm-ease, box-shadow .3s;
-    &::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: $c; }
-    &:hover { transform: translateY(-4px); box-shadow: 0 24px 40px -28px rgba($primary, .7); }
-    h3 { font-size: .98rem; margin: 0; line-height: 1.3; }
-    .hm-badge { margin-top: .8rem; } }
-.hm-dr-poli { margin: .1rem 0 .6rem; font-size: .82rem; font-weight: 600; color: $c; }
-.hm-dr-jam { display: flex; justify-content: center; align-items: center; gap: .4rem; margin: 0; font-size: .78rem; font-weight: 600; color: #2D4852; i { color: $primary; } }
-.hm-avatar { width: 5.2rem; height: 5.2rem; margin: 0 auto .9rem; border-radius: 50%; display: grid; place-items: center; font-family: $headings-font-family; font-weight: 800; font-size: 1.6rem; color: #fff; background: $c; box-shadow: 0 0 0 5px #fff, 0 0 0 6px $hm-garis; }
+// aturan emas: daftar dari rumah, sampai di rumah sakit saat giliran dekat
+.hm-rule { display: grid; grid-template-columns: auto minmax(2rem, 1fr) auto; align-items: center; gap: 1.1rem; margin-top: clamp(1.25rem, 3vw, 2rem); padding: 1rem 1.4rem; border-radius: 1.4rem; background: $navy; color: #fff;
+    background-image: radial-gradient(22rem 10rem at 100% 0, rgba($glow, .22), transparent 70%); }
+.hm-rule-node { display: flex; align-items: center; gap: .85rem; min-width: 0;
+    > i { flex: none; display: grid; place-items: center; width: 2.8rem; height: 2.8rem; border-radius: .9rem; font-size: 1.3rem; color: $glow; background: rgba(#fff, .1); }
+    small { display: block; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: $on-navy-muted; }
+    b { display: block; font-size: .98rem; line-height: 1.25; }
+    &:last-child { justify-content: flex-end; text-align: right; } }
+.hm-rule-line { position: relative; display: block; height: 0; border-top: 2px dashed rgba($glow, .5);
+    b { position: absolute; left: 50%; top: 50%; translate: -50% -50%; display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .8rem; border-radius: 999px; white-space: nowrap; font-size: .82rem; color: $navy; background: $glow; i { font-size: .9rem; } } }
+
+// ---------- dokter praktik hari ini ----------
+// Saringan poli di atas, kartu dokter di bawah. Yang sedang praktik naik ke depan dan diberi tanda hijau.
+@keyframes hm-kartu { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+.hm-dk-sum { display: flex; gap: .6rem; margin: 0; flex-wrap: wrap;
+    span { display: inline-flex; align-items: baseline; gap: .45rem; padding: .5rem 1rem; border-radius: 999px; font-size: .85rem; font-weight: 600; color: $hm-teks-redup; background: $light; border: 1px solid $hm-garis; }
+    b { font-size: 1.35rem; color: $navy; line-height: 1; }
+    .is-ok { color: $success; background: rgba($success, .1); border-color: rgba($success, .25); b { color: $success; } } }
+.hm-dk-tabs { display: none; gap: .55rem; margin-bottom: 1.25rem; overflow-x: auto; scrollbar-width: none; padding: .15rem .1rem .35rem; margin-inline: -.1rem; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; &::-webkit-scrollbar { display: none; } }
+.hm-dk.is-js .hm-dk-tabs { display: flex; }
+.hm-dk-tab { flex: none; scroll-snap-align: start; display: inline-flex; align-items: center; gap: .55rem; padding: .55rem .5rem .55rem 1rem; border-radius: 999px; font-size: .86rem; font-weight: 700; color: $body-color; background: #fff; border: 1px solid $hm-garis; white-space: nowrap;
+    transition: background .25s, color .25s, border-color .25s, box-shadow .25s;
+    > i { width: .55rem; height: .55rem; border-radius: 50%; background: $c; }
+    b { display: inline-grid; place-items: center; min-width: 1.6rem; height: 1.6rem; padding: 0 .4rem; border-radius: 999px; font-size: .76rem; color: $hm-teks-redup; background: $light; transition: inherit; }
+    &:hover { border-color: $c; }
+    &[aria-pressed="true"] { color: #fff; background: $c; border-color: $c; box-shadow: 0 10px 20px -12px $c; > i { background: #fff; } b { color: $c; background: #fff; } }
+    &:not([data-w]) { --c: #{$navy}; }
+    &:focus-visible { outline: 2px solid $c; outline-offset: 2px; } }
+.hm-dk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr)); gap: .9rem; }
+.hm-dkc { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "av info" "badge badge" "jam jam"; align-items: center; gap: .85rem .9rem; padding: 1.1rem 1.15rem; background: #fff; border: 1px solid $hm-garis; border-radius: 1.35rem;
+    transition: transform .35s $hm-ease, box-shadow .35s, border-color .35s;
+    &:hover { transform: translateY(-3px); border-color: $c; box-shadow: 0 22px 36px -28px $c; }
+    &[hidden] { display: none; }
+    &.is-masuk { animation: hm-kartu .5s calc(var(--i, 0) * 45ms) $hm-ease both; }
+    h3 { margin: 0; font-size: 1rem; line-height: 1.25; letter-spacing: -.01em; overflow-wrap: anywhere; }
+    .hm-badge { grid-area: badge; justify-self: start; margin: 0; }
+    &.is-ok { border-color: rgba($success, .35); background: linear-gradient(180deg, rgba($success, .05), #fff 70%); }
+    &.is-off { background: $light; h3, .hm-dkc-av { opacity: .75; } } }
+.hm-dkc-av { grid-area: av; position: relative; display: grid; place-items: center; width: 3.4rem; height: 3.4rem; border-radius: 1.1rem; font-family: $headings-font-family; font-weight: 800; font-size: 1.15rem; letter-spacing: .02em; color: $c; background: $c-lembut; }
+.hm-dkc.is-ok .hm-dkc-av::after { content: ''; position: absolute; right: -.3rem; bottom: -.3rem; width: .85rem; height: .85rem; border-radius: 50%; background: $success; border: 2px solid #fff; animation: hm-denyut 2s infinite; color: $success; }
+.hm-dkc-info { grid-area: info; min-width: 0; p { margin: .15rem 0 0; font-size: .82rem; font-weight: 700; color: $c; } }
+.hm-dkc-jam { grid-area: jam; display: flex; align-items: center; gap: .55rem; margin: 0; padding: .6rem .8rem; border-radius: .85rem; background: $light; font-size: .88rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #2D4852; i { color: $c; font-size: 1rem; } }
 
 // ---------- fasilitas: strip keunggulan ----------
-.hm-fas { padding: clamp(2.75rem, 6vw, 4.5rem) 0; background: #fff;
+.hm-fas { padding: clamp(1.75rem, 5vh, 3.5rem) 0; background: #fff;
     h2 { margin: 0; color: $navy; font-size: clamp(1.5rem, 2.8vw, 2.1rem); letter-spacing: -.02em; line-height: 1.2; text-wrap: balance; }
     p { margin: .8rem 0 0; color: $hm-teks-redup; } }
 .hm-fas-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 2fr); gap: clamp(1.5rem, 4vw, 3rem); align-items: center; > * { min-width: 0; } }
@@ -247,37 +307,115 @@ a.hm-info-item:hover { color: #fff; transform: translateY(-3px); background: rgb
     i { font-size: 1.8rem; line-height: 1; color: $primary; }
     &:hover { color: $body-color; background: #fff; } }
 
-// ---------- panduan ----------
-.hm-guides { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; }
-.hm-guide { display: flex; flex-direction: column; overflow: hidden; background: #fff; border: 1px solid $hm-garis; border-radius: 1.4rem; color: $body-color; transition: transform .3s $hm-ease, box-shadow .3s, border-color .3s;
-    &:hover { color: $body-color; transform: translateY(-4px); border-color: $c; box-shadow: 0 24px 40px -28px $c; } }
-.hm-guide-top { height: 6.75rem; display: grid; place-items: center; background: $c-lembut;
-    i { display: grid; place-items: center; width: 4rem; height: 4rem; border-radius: 50%; background: #fff; color: $c; font-size: 1.7rem; box-shadow: 0 12px 24px -14px $c; } }
-.hm-guide-body { display: flex; flex-direction: column; gap: .45rem; flex: 1; padding: 1.1rem 1.2rem 1.3rem;
-    b { font-family: $headings-font-family; font-size: 1rem; line-height: 1.3; }
-    > span { font-size: .85rem; color: $hm-teks-redup; }
-    em { margin-top: auto; padding-top: .5rem; font-style: normal; font-size: .84rem; font-weight: 700; color: $c; } }
-
 // ---------- ajakan ----------
-.hm-cta-band { padding: 0 0 clamp(3rem, 6vw, 5rem); background: #EEF6F8; }
+.hm-cta-band { padding: clamp(1.75rem, 5vh, 4rem) 0; background: #EEF6F8; }
 .hm-cta { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 1.5rem; align-items: center; padding: clamp(1.5rem, 4vw, 2.75rem); border-radius: 2rem; color: #fff;
     background: radial-gradient(30rem 16rem at 100% 0, rgba($glow, .25), transparent 70%), linear-gradient(130deg, $hm-gelap-3 0%, $navy 100%);
     > * { min-width: 0; }
     h2 { color: #fff; font-size: clamp(1.5rem, 3vw, 2.2rem); letter-spacing: -.02em; line-height: 1.2; margin: 0; }
-    p { margin: .6rem 0 1.1rem; color: $on-navy-muted; } }
-.hm-cta-tags { display: flex; flex-wrap: wrap; gap: .6rem; span { display: inline-flex; align-items: center; gap: .5rem; padding: .45rem .85rem; border-radius: .8rem; font-size: .8rem; font-weight: 600; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .16); } i { color: $glow; } }
-.hm-call { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.2rem 1.4rem; border-radius: 1.4rem; background: #fff; color: $body-color;
-    small { display: block; font-size: .78rem; font-weight: 600; color: $hm-teks-redup; } }
-.hm-tel { display: flex; align-items: center; gap: .7rem; font-family: $headings-font-family; font-weight: 800; font-size: clamp(1.25rem, 2.4vw, 1.7rem); line-height: 1.2; color: $primary; i { font-size: 1.5rem; } &:hover { color: $primary; } }
-.hm-call-solo { display: flex; justify-content: flex-end; .btn { width: auto; } }
+    p { margin: .6rem 0 0; color: $on-navy-muted; } }
+.hm-help { display: grid; gap: .7rem; }
+.hm-help-row { display: flex; align-items: center; gap: 1rem; padding: .9rem 1.1rem; border-radius: 1.1rem; color: #fff; background: rgba(#fff, .08); border: 1px solid rgba(#fff, .16);
+    transition: transform .3s $hm-ease, background .3s, border-color .3s;
+    > i:first-child { flex: none; display: grid; place-items: center; width: 2.9rem; height: 2.9rem; border-radius: .95rem; font-size: 1.3rem; color: $navy; background: $glow; }
+    > i:last-child { margin-left: auto; color: $glow; transition: transform .3s $hm-ease; }
+    span { min-width: 0; }
+    small { display: block; font-size: .72rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: $on-navy-muted; }
+    b { display: block; font-family: $headings-font-family; font-size: clamp(1.1rem, 2vw, 1.4rem); line-height: 1.25; overflow-wrap: anywhere; }
+    &:hover { color: #fff; transform: translateY(-2px); background: rgba(#fff, .14); border-color: rgba($glow, .5); > i:last-child { transform: translate(3px, -3px); } } }
+.hm-cta-solo { grid-template-columns: minmax(0, 1fr); }
 .bn-pub:has(.hm-cta) .ft-cta { display: none; }
+
+// judul dan tombol/ringkasan sejajar bila muat; bila tidak, tombol turun ke bawah judul
+.hm-head > div:first-child { flex: 1 1 28rem; min-width: 0; }
+.hm-head > .hm-btn, .hm-head > .hm-dk-sum { flex: none; }
+
+// layar laptop yang pendek: panel hero dan jarak dirapatkan supaya hero tetap muat satu layar
+@media (min-width: 992px) and (max-height: 960px) {
+    .hm-hero { padding-top: calc(var(--nv-h) + clamp(1rem, 3.5vh, 3rem)); padding-bottom: clamp(1.25rem, 3vh, 2.25rem); }
+    .hm-title { font-size: clamp(2.2rem, min(5.2vw, 7.2vh), 4.3rem); margin-bottom: 1rem; }
+    .hm-lead { margin-bottom: 1.4rem; }
+    .hm-pill { margin-bottom: 1rem; }
+    .hm-panel { padding: .8rem 1rem; }
+    .hm-stage { margin-top: .3rem; padding-bottom: .5rem; }
+    .hm-tk-main { padding: .85rem 1.1rem .8rem; }
+    .hm-tk-stub { padding: .7rem 1.1rem .8rem; }
+    .hm-tk-no { margin-top: .6rem; }
+    .hm-call-no { font-size: clamp(2.6rem, 8.5vh, 4rem); }
+    .hm-prog { margin-top: .6rem; }
+    .hm-next { margin-top: .6rem; padding-top: .6rem; }
+    .hm-tab { padding-bottom: .6rem; }
+    .hm-info-item { padding: .8rem 1rem; }
+}
+
+// laptop 720 sampai 820 piksel: rapatkan agar tiap section tetap muat satu layar
+@media (min-width: 992px) and (max-height: 820px) {
+    .hm-fit { padding-block: 1.5rem; }
+    .hm-head { margin-bottom: 1rem; }
+    .hm-h2 { font-size: clamp(1.5rem, 2.6vw, 2.1rem); }
+    .hm-sub { margin-top: .4rem; }
+    .hm-lg-rail { margin-bottom: .7rem; }
+    .hm-lg-ico { width: 3rem; height: 3rem; font-size: 1.3rem; }
+    .hm-lg-card { padding: 1rem 1.1rem .95rem; gap: .35rem; }
+    .hm-lg-card p { font-size: .84rem; line-height: 1.45; }
+    .hm-rule { margin-top: 1rem; padding: .7rem 1.2rem; }
+    .hm-dk-tabs { margin-bottom: .8rem; }
+    .hm-dk-grid { gap: .7rem; }
+    .hm-dkc { padding: .8rem .95rem; gap: .55rem .8rem; }
+    .hm-dkc-av { width: 2.8rem; height: 2.8rem; font-size: 1rem; border-radius: .9rem; }
+    .hm-dkc-jam { padding: .45rem .7rem; }
+}
+
+// layar laptop sangat pendek
+@media (min-width: 992px) and (max-height: 640px) {
+    .hm-fit { padding-block: 1rem; }
+    .hm-head { margin-bottom: .7rem; }
+    .hm-head .hm-sub, .bn-head .bn-sub { display: none; }
+}
+
+// ---------- tiap section setinggi layar ----------
+// Semua section utama mengisi satu layar (tinggi layar dikurangi navbar) dan isinya di tengah, di semua perangkat.
+// Bila isinya lebih panjang dari layar, tinggi mengikuti isi. Batas tinggi menjaga layar yang sangat tinggi.
+.hm-fit, .hm-closing { min-height: min(calc(100svh - var(--nv-h)), 62rem); display: flex; flex-direction: column; justify-content: center; > .container-xxl { width: 100%; } }
+.hm-closing { justify-content: stretch; > .hm-fas { flex: none; } > .hm-cta-band { flex: 1; display: flex; flex-direction: column; justify-content: center; } }
+
+// hero di layar lebar: satu layar penuh, panel dan teks di tengah, kartu info di dasar
+@media (min-width: 992px) and (min-height: 560px) {
+    .hm-hero { min-height: min(100svh, 68rem); display: flex; flex-direction: column; justify-content: center;
+        > .container-xxl { width: 100%; display: flex; flex-direction: column; }
+        .hm-hero-grid { flex: 1; }
+        .hm-info { margin-top: clamp(1.25rem, 3.5vh, 3rem); } }
+    html:has(.hm-hero) { scroll-snap-type: y proximity; }
+    .hm-hero, .hm-fit, .hm-closing, .hm-band { scroll-snap-align: start; }
+}
+// layar tinggi menengah: elemen pelengkap hero disembunyikan lebih dulu, supaya yang penting tetap utuh
+@media (min-width: 992px) and (max-height: 800px) {
+    .hm-facts, .hm-panel-foot { display: none; }
+    .hm-info { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 992px) and (max-height: 720px) {
+    .hm-info, .hm-lead { display: none; }
+    .hm-mini { display: none; }
+    .hm-title { margin-bottom: .9rem; }
+    .hm-cta-row { margin-bottom: 0; }
+}
+// ponsel dan tablet tegak: layar pertama berisi pengantar dan dua tombol, panel antrian menyusul di bawahnya
+@media (max-width: 991.98px) {
+    .hm-hero-copy { min-height: calc(100svh - var(--nv-h) - clamp(2.25rem, 5vw, 4.25rem) - 5.5rem); display: flex; flex-direction: column; justify-content: center; }
+}
+
+// kartu antrian poli: di layar lebar empat poli muat sebaris, jadi tinggi section tidak membengkak
+@media (min-width: 992px) { .bn-poli-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr)); } }
 
 // ---------- responsif ----------
 @include media-breakpoint-down(xl) {
     .hm-fas-grid { grid-template-columns: minmax(0, 1fr); }
     .hm-fas-tiles { grid-template-columns: repeat(5, minmax(8.5rem, 1fr)); overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
-    .hm-guides { grid-template-columns: repeat(2, 1fr); }
-    .hm-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 1.6rem; }
+    // dua kolom: ikon di kiri kartu, garis penghubung dihilangkan
+    .hm-lang { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .hm-lg { flex-direction: row; gap: 1rem; }
+    .hm-lg-rail { align-items: flex-start; margin: 0; &::after { display: none; } }
+    .hm-lg-ico { width: 3.2rem; height: 3.2rem; font-size: 1.35rem; }
 }
 @include media-breakpoint-down(lg) {
     .hm-hero-grid { grid-template-columns: minmax(0, 1fr); }
@@ -287,28 +425,73 @@ a.hm-info-item:hover { color: #fff; transform: translateY(-3px); background: rgb
     .hm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem 1rem; }
     .hm-stat:nth-child(odd) { padding-left: 0; border-left: 0; }
 }
-@include media-breakpoint-down(lg) {
-    .hm-call-solo { justify-content: stretch; .btn { width: 100%; } }
-}
 @include media-breakpoint-down(md) {
-    .hm-cta-row .btn { flex: 1 1 100%; }
     .hm-checks { grid-template-columns: minmax(0, 1fr); }
-    .hm-arrows { display: none; }
     .hm-chip { font-size: .72rem; padding: .5rem .7rem; }
     .hm-chip-a { display: none; } // bertabrakan dengan tombol panah bulat di layar sempit
-    .hm-call { flex-direction: column; align-items: stretch; .btn { width: 100%; } }
-    .hm-guides { grid-template-columns: minmax(0, 1fr); }
-    .hm-guide { flex-direction: row; .hm-guide-top { width: 6rem; height: auto; i { width: 3rem; height: 3rem; font-size: 1.3rem; } } }
     .hm-stat-ico { font-size: 1.9rem; }
     .hm-stat { gap: .7rem; }
-    .hm-steps { grid-template-columns: minmax(0, 1fr); }
-    .hm-banner { border-radius: 1.5rem; }
-    .hm-info { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .hm-info-item { flex-direction: column; align-items: flex-start; gap: .6rem; }
+    // satu kolom: jalur vertikal menyambung ikon antar langkah
+    .hm-lang { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .hm-lg { gap: .9rem; padding-bottom: 1rem; &:last-child { padding-bottom: 0; } }
+    .hm-lg-rail { flex-direction: column; align-items: center;
+        &::after { display: block; flex: 1; width: 0; height: auto; margin: .5rem 0 -1rem; border-top: 0; border-left: 2px dashed rgba($primary, .35); }
+        .hm-lg:last-child &::after { display: none; } }
+    .hm-lg-card { padding: 1.1rem 1.1rem 1rem; }
+    .hm-rule { grid-template-columns: minmax(0, 1fr); gap: .9rem; padding: 1.1rem 1.2rem;
+        .hm-rule-node:last-child { justify-content: flex-start; text-align: left; }
+        .hm-rule-line { height: 2.4rem; border-top: 0; border-left: 2px dashed rgba($glow, .5); margin-left: 1.4rem; b { left: 0; translate: 1rem -50%; } } }
+    .hm-info { grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
+    .hm-info-item { padding: .85rem 1rem; }
 }
 @include media-breakpoint-down(sm) {
+    // ---- hero: kartu info jadi daftar satu kolom
+    .hm-info { grid-template-columns: minmax(0, 1fr); gap: .6rem; margin-top: 1.25rem; }
+    .hm-cta-row { gap: .6rem; .btn { padding: .8rem .6rem; font-size: .95rem; } }
+
+    // ---- alur: tiket lebih kecil, daftar centang disembunyikan (isinya sudah ada di teks)
+    .hm-about-media { max-width: 16.5rem; padding-bottom: 0; }
+    .hm-orb { display: none; }
+    .hm-about-visual { padding: 1.4rem 0 0 1.2rem; }
+    .hm-ticket-head small { display: none; }
+    .hm-about { gap: 1.25rem; }
+    .hm-checks { display: none; }
+    .hm-about .hm-sub { font-size: .95rem; }
+
+    // ---- empat langkah: daftar ringkas, tanpa tautan dan angka latar
+    .hm-lang-sec .hm-sub { display: none; }
+    .hm-lg { padding-bottom: .65rem; }
+    .hm-lg-ico { width: 2.7rem; height: 2.7rem; font-size: 1.15rem; border-radius: .9rem; }
+    .hm-lg-card { padding: .8rem .95rem; gap: .25rem; border-radius: 1.1rem; h3 { padding-right: 0; font-size: .98rem; } p { font-size: .83rem; line-height: 1.45; } em, .hm-lg-no { display: none; } }
+    .hm-rule { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: .6rem; padding: .85rem .8rem; margin-top: .85rem;
+        .hm-rule-node { flex-direction: column; text-align: center; gap: .4rem; small { display: none; } b { font-size: .8rem; } > i { width: 2.3rem; height: 2.3rem; font-size: 1.1rem; } }
+        .hm-rule-node:last-child { justify-content: center; text-align: center; }
+        .hm-rule-line { height: 0; border-left: 0; border-top: 2px dashed rgba($glow, .5); margin: 0; width: 5.4rem; b { left: 50%; translate: -50% -50%; padding: .3rem .55rem; font-size: .72rem; i { display: none; } } } }
+
+    // ---- antrian tiap poli: baris ringkas tanpa bilah, supaya empat poli muat satu layar
+    #antrian { .bn-sub { display: none; } .bn-head { margin-bottom: 1rem; } .bn-poli-grid { gap: .6rem; }
+        .bn-poli-foot { border-top: 0; padding-top: 0; .bar { display: none; } > .d-flex { margin-bottom: 0 !important; } } }
+
+    // ---- jadwal dokter: geser mendatar, satu kartu penuh dengan sedikit kartu berikutnya mengintip
+    .hm-dk-sum span { padding: .4rem .8rem; font-size: .8rem; }
+    .hm-dk-grid { display: grid; grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 84%; gap: .75rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+        margin-inline: -1.25rem; padding: .2rem 1.25rem .8rem; scroll-padding-inline: 1.25rem; -webkit-overflow-scrolling: touch; &::-webkit-scrollbar { display: none; } }
+    .hm-dkc { scroll-snap-align: start; }
+
+    // ---- penutup
+    .hm-fas p { display: none; }
+    .hm-fas h2 { font-size: 1.2rem; }
+    .hm-help-row { padding: .7rem .9rem; > i:first-child { width: 2.5rem; height: 2.5rem; font-size: 1.15rem; } }
+    .hm-cta p { font-size: .92rem; }
+}
+@include media-breakpoint-down(sm) {
+    // kartu dokter ringkas: jam dan status satu baris
+    .hm-dkc { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "av info info" "jam jam badge"; gap: .75rem .85rem; padding: .95rem 1rem; .hm-badge { justify-self: end; } }
+    .hm-dkc-jam { padding: .5rem .75rem; font-size: .84rem; }
     .hm-hero::after { width: 13rem; height: 13rem; right: -4rem; }
     .hm-mini b { font-size: 1.15rem; }
+    .hm-slide-top .hm-badge { padding: .25rem .6rem; font-size: .68rem; }
+    .hm-tk-main { padding: 1rem 1rem .9rem; } .hm-tk-stub { padding: .85rem 1rem .95rem; }
     .hm-ecg { height: 5rem; }
 }
 @media (max-width: 380px) {

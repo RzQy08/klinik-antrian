@@ -1,158 +1,251 @@
 // =====================================================================
-// Halaman ambil antrian (kelas berawalan ab-)
-// Satu kartu, satu layar: poli berupa chip, isian berbentuk pil dengan
-// label yang naik saat diisi, dan pita bawah berisi ringkasan + tombol.
+// Halaman ambil antrian (kelas berawalan am-)
+// Satu layar penuh tanpa scroll: rel langkah di kiri, kartu form di kanan.
+// Tinggi dihitung dari layar (dvh), isi panel mengecil mengikuti ruang yang ada.
 // =====================================================================
 
-$ab-garis: #C5D3D8;
-$ab-isi: #F1F6F7;
-$ab-pita: #E2F0F4;
-$ab-redup: #6B8089;
+$am-teks: #12303B;
+$am-muted: #5B747D;
+$am-line: #E1EBEE;
+$am-soft: 0 1px 2px rgba($navy, .05), 0 22px 40px -28px rgba($navy, .45);
 
-.ab-page {
-    display: grid; align-content: center; min-height: calc(100dvh - 13.5rem); padding-block: .25rem;
+@keyframes am-masuk { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+@keyframes am-pop { 0% { transform: scale(.55); opacity: .3; } 100% { transform: none; opacity: 1; } }
+@keyframes am-kedip { 0%, 100% { opacity: .25; } 50% { opacity: .8; } }
+@keyframes am-denyut { 0% { box-shadow: 0 0 0 0 rgba($glow, .55); } 70%, 100% { box-shadow: 0 0 0 .5rem rgba($glow, 0); } }
+@keyframes am-geser { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+// ---------- kunci tinggi halaman ----------
+body.am-fit {
+    height: 100vh; height: 100dvh; overflow: hidden; background: #EEF4F6;
+    > main { min-height: 0; flex: 1 1 0; display: flex; }
 }
 
-// ---------- kartu ----------
-.ab-card {
-    width: 100%; overflow: hidden; background: #fff; border: 1px solid #DCE8EB; border-radius: 1.75rem;
-    box-shadow: 0 1px 2px rgba($dark, .05), 0 34px 64px -40px rgba($navy, .5);
+// ---------- panggung ----------
+.am-stage {
+    position: relative; isolation: isolate; flex: 1; min-width: 0; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); align-content: center; gap: .75rem;
+    width: 100%; max-width: 70rem; margin: 0 auto; padding: .5rem clamp(.75rem, 2.5vw, 1.5rem) clamp(.75rem, 2vh, 1.5rem);
+    // bidang warna tumpang tindih di belakang, sebagai pengganti latar polos
+    &::before, &::after { content: ''; position: fixed; z-index: -1; pointer-events: none; border-radius: 2.5rem; transform: rotate(-18deg); }
+    &::before { width: 46vmax; height: 30vmax; left: -14vmax; top: 18vh; background: linear-gradient(135deg, rgba($primary, .16), rgba($glow, .1)); }
+    &::after { width: 40vmax; height: 36vmax; right: -12vmax; top: -8vmax; background: linear-gradient(200deg, rgba($glow, .22), rgba($primary, .08)); }
 }
-.ab-body { min-width: 0; margin: 0; border: 0; padding: clamp(1.1rem, 2.4vw, 1.6rem) clamp(1.1rem, 3vw, 2rem) clamp(1.1rem, 2.4vw, 1.5rem); }
-.ab-body:disabled { opacity: .65; }
 
-.ab-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.ab-state {
-    display: inline-flex; align-items: center; gap: .55rem; padding: .42rem .95rem; border-radius: 999px;
-    background: #F2F5F6; color: $body-secondary-color; font-size: .82rem; font-weight: 600;
-    i { width: .5rem; height: .5rem; border-radius: 50%; background: $success; }
-    &.is-off i { background: $danger; }
+.am-top {
+    grid-row: 1; text-align: center; line-height: 1.15;
+    h1 { margin: 0; color: $am-teks; font-size: clamp(1.35rem, 2.6vw + .4rem, 2rem); letter-spacing: -.03em; }
+    p { margin: .2rem 0 0; color: $am-muted; font-size: .92rem; }
+    @media (max-height: 740px) { p { display: none; } }
+    @media (max-height: 600px) { display: none; }
 }
-.ab-close {
-    display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; color: $dark; font-size: 1.05rem;
-    transition: background-color .2s;
-    &:hover { background: #F2F5F6; color: $dark; }
-    &:focus-visible { outline: 3px solid rgba($primary, .5); outline-offset: 2px; }
-}
-.ab-title { margin: .8rem 0 1rem; font-size: clamp(1.5rem, 3vw, 1.95rem); line-height: 1.1; letter-spacing: -.025em; }
 
-// ---------- chip poli ----------
-.ab-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.1rem; }
-.ab-chip-wrap { position: relative; }
-.ab-chip-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
-.ab-chip {
-    display: inline-flex; align-items: center; gap: .55rem; min-height: 2.7rem; margin: 0; padding: .3rem 1.05rem .3rem .35rem;
-    border: 1.5px solid transparent; border-radius: 999px; background: #F2F5F6; color: $dark;
-    font-size: .95rem; font-weight: 600; cursor: pointer; user-select: none;
-    transition: background-color .2s, color .2s, border-color .2s, transform .2s;
-    &:hover { background: #E7EEF0; }
-    &:active { transform: scale(.97); }
+// ---------- pemberitahuan (satu baris) ----------
+.am-alerts { grid-row: 2; display: grid; gap: .4rem; width: 100%; max-width: 54rem; margin: 0 auto; }
+.am-alert {
+    display: flex; align-items: center; gap: .75rem; padding: .55rem .9rem; border: 1px solid; border-radius: 1rem; background: #fff; font-size: .9rem; line-height: 1.3;
+    animation: am-geser .3s cubic-bezier(.2, .8, .2, 1) both;
+    > i { flex: none; display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .65rem; font-size: 1.05rem; }
+    b { margin-right: .5rem; }
+    span { color: $am-muted; }
+    @media (max-width: 575.98px) { b, span { display: block; margin: 0; } }
 }
-.ab-chip-k {
-    display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: #fff; color: $navy;
-    font-family: $headings-font-family; font-size: .92rem; line-height: 1; transition: background-color .2s, color .2s;
-    b { font-weight: 800; }
-    i { display: none; font-size: 1rem; }
+.am-alert-warn { border-color: rgba($warning, .55); background: linear-gradient(90deg, rgba($warning, .16), #fff 70%); > i { background: $warning; color: #5C3B00; } b { color: #6B4500; } }
+.am-alert-stop { border-color: rgba($danger, .45); background: linear-gradient(90deg, rgba($danger, .1), #fff 70%); > i { background: $danger; color: #fff; } b { color: darken($danger, 10%); } }
+.am-alert-ok { border-color: rgba($success, .45); background: linear-gradient(90deg, rgba($success, .12), #fff 70%); > i { background: $success; color: #fff; } b { color: darken($success, 8%); } }
+
+// ---------- konsol: rel + kartu ----------
+.am-console {
+    grid-row: 3; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: .75rem; min-height: 0; width: 100%;
+    @include media-breakpoint-up(sm) { max-height: 44rem; }
+    @include media-breakpoint-up(lg) { max-height: 36rem; grid-template-columns: 17.5rem minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 1.1rem; }
 }
-.ab-chip-input:checked + .ab-chip {
-    background: $navy; color: #fff;
-    .ab-chip-k { background: #3FB57A; color: #fff; b { display: none; } i { display: block; } }
+
+// ---------- rel kiri ----------
+.am-rail {
+    display: flex; flex-direction: column; gap: 1rem; min-height: 0; padding: .75rem;
+    background: #fff; border: 1px solid $am-line; border-radius: 1.4rem; box-shadow: $am-soft;
+    @include media-breakpoint-up(lg) { padding: 1.25rem 1.1rem 1.1rem; }
 }
-.ab-chip-input:focus-visible + .ab-chip { outline: 3px solid rgba($primary, .55); outline-offset: 2px; }
-.ab-chips.is-invalid .ab-chip { border-color: $danger; }
-.ab-empty { margin: 0; color: $body-secondary-color; }
 
-// ---------- isian berbentuk pil ----------
-.ab-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
-.ab-full { grid-column: 1 / -1; }
-
-.ab-field {
-    position: relative; display: block; height: 3.5rem; margin: 0; background: #fff; border: 1.5px solid $ab-garis; border-radius: 999px;
-    cursor: text; transition: background-color .2s, border-color .2s, box-shadow .2s;
-
-    input {
-        width: 100%; height: 100%; padding: 1.3rem 1.35rem .2rem; border: 0; border-radius: 999px; outline: 0;
-        background: transparent; color: $dark; font-size: 1rem; font-weight: 600;
-        &::placeholder { color: transparent; transition: color .2s; }
+// langkah: garis tegak yang terisi, seperti referensi
+.am-steps {
+    --am-p: 0; position: relative; display: flex; margin: 0; padding: 0; list-style: none;
+    // HP: mendatar
+    @include media-breakpoint-up(lg) {
+        display: grid; gap: 0; padding: .2rem 0 .2rem;
+        &::before, &::after { content: ''; position: absolute; left: 1.2rem; top: 1.55rem; bottom: 1.55rem; width: 2px; border-radius: 2px; transform: translateX(-50%); }
+        &::before { background: $am-line; }
+        &::after { background: linear-gradient(180deg, $primary, $glow); transform-origin: top; transform: translateX(-50%) scaleY(var(--am-p)); transition: transform .5s $sh-ease; }
     }
-
-    // label: besar di tengah saat kosong, kecil di atas saat fokus atau terisi
-    .ab-lab {
-        position: absolute; top: .5rem; left: 1.35rem; right: 1.35rem; overflow: hidden; margin: 0; pointer-events: none;
-        color: $ab-redup; font-size: .72rem; font-weight: 600; line-height: 1.2; white-space: nowrap; text-overflow: ellipsis;
-        transform-origin: left top; transform: translateY(.7rem) scale(1.3);
-        transition: transform .18s cubic-bezier(.2, .8, .2, 1), color .2s;
-    }
-
-    &:focus-within, &.is-float { .ab-lab { transform: none; } }
-    &:focus-within {
-        border-color: $primary; background: #fff; box-shadow: 0 0 0 .22rem rgba($primary, .18);
-        .ab-lab { color: $primary; }
-        input::placeholder { color: #9AAEB5; }
-    }
-    &.is-float:not(:focus-within) { background: $ab-isi; border-color: transparent; }
-    &.is-invalid { border-color: $danger; box-shadow: none; .ab-lab { color: $danger; } }
+}
+.am-step { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.am-step-btn {
+    display: flex; align-items: center; gap: .8rem; width: 100%; padding: .55rem .35rem; text-align: left; cursor: pointer; background: none; border: 0; border-radius: 1rem; color: $am-muted; transition: background .2s;
+    &:hover { background: rgba($primary, .06); }
+    &:focus-visible { outline: 2px solid $primary; outline-offset: 2px; }
+    @media (max-width: 991.98px) { flex-direction: column; gap: .3rem; padding: .25rem; text-align: center; }
+}
+.am-step-ico {
+    position: relative; flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; font-size: 1.05rem;
+    background: #fff; border: 2px solid $am-line; color: #8BA1A9; transition: background .25s, border-color .25s, color .25s, box-shadow .25s, transform .25s;
+    .am-ck { position: absolute; opacity: 0; transform: scale(.4); transition: opacity .2s, transform .25s; }
+}
+.am-step-txt { min-width: 0; display: grid; line-height: 1.25;
+    b { font-size: .95rem; font-weight: 700; transition: color .2s; }
+    small { display: block; max-width: 11rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .78rem; color: $am-muted; &:empty { display: none; } }
+    @media (max-width: 991.98px) { small { display: none; } b { font-size: .8rem; } }
+}
+.am-step.is-active {
+    .am-step-ico { background: $navy; border-color: $navy; color: $glow; box-shadow: 0 0 0 .3rem rgba($glow, .4); }
+    .am-step-txt b { color: $am-teks; }
+}
+.am-step.is-done {
+    .am-step-ico { background: $primary; border-color: $primary; color: #fff; > i:not(.am-ck) { opacity: 0; } .am-ck { opacity: 1; transform: none; } }
+    .am-step-txt b { color: $am-teks; }
 }
 
-.ab-count {
-    position: absolute; top: 50%; right: 1.35rem; translate: 0 -50%; opacity: 0; pointer-events: none;
-    color: $ab-redup; font-size: .78rem; font-weight: 700; font-variant-numeric: tabular-nums; transition: opacity .2s;
-    &.is-ok { color: $success; }
+// tiket mini (hanya laptop ke atas)
+.am-mini { display: none; margin-top: auto; border-radius: 1.1rem; overflow: hidden; background: $navy; color: #fff; box-shadow: 0 16px 28px -20px rgba($navy, .8);
+    @include media-breakpoint-up(lg) { display: block; }
 }
-.ab-field:focus-within .ab-count, .ab-field.is-float .ab-count { opacity: 1; }
-#nik { padding-right: 4rem; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
-
-// jenis kelamin
-.ab-seg-field { cursor: default; }
-.ab-seg { position: absolute; left: 1rem; bottom: .38rem; display: flex; gap: .35rem; }
-.ab-opt {
-    position: relative; margin: 0; cursor: pointer;
-    input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
-    span {
-        display: inline-flex; align-items: center; height: 1.75rem; padding: 0 .95rem; border-radius: 999px;
-        background: #fff; border: 1px solid $ab-garis; color: $dark; font-size: .85rem; font-weight: 600;
-        transition: background-color .2s, color .2s, border-color .2s;
-    }
-    &:hover span { border-color: $primary; }
-    input:checked + span { background: $navy; border-color: $navy; color: #fff; }
-    input:focus-visible + span { outline: 3px solid rgba($primary, .55); outline-offset: 2px; }
+.am-mini-top {
+    position: relative; display: grid; gap: .1rem; padding: .9rem 1rem .8rem;
+    background: radial-gradient(14rem 8rem at 100% 0, rgba($glow, .22), transparent 70%), linear-gradient(160deg, $navy-soft, $navy-deep);
+    &::after { content: ''; position: absolute; left: .75rem; right: .75rem; bottom: -1px; border-bottom: 2px dashed rgba(#fff, .22); }
 }
-.ab-seg-field.is-float:not(:focus-within) { background: #fff; border-color: $ab-garis; }
+.am-mini-poli { font-size: .8rem; font-weight: 600; color: $on-navy-muted; }
+.am-mini-no { display: flex; align-items: baseline; gap: .35rem; font-size: 2.6rem; line-height: 1; font-weight: 800; color: $glow; }
+.am-mini-dots { font-size: 1rem; letter-spacing: .15em; color: rgba(#fff, .55); animation: am-kedip 1.8s ease-in-out infinite; &:not(.is-idle) { animation: none; opacity: 0; } }
+.am-pop { display: inline-block; animation: am-pop .4s cubic-bezier(.3, 1.6, .5, 1); }
+.am-mini-foot { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; padding: .65rem 1rem .75rem; font-size: .84rem; color: $on-navy-muted; b { color: #fff; font-weight: 700; } }
 
-// ---------- pita bawah ----------
-.ab-foot {
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem 1.5rem;
-    padding: 1.05rem clamp(1.1rem, 3vw, 2rem); background: $ab-pita;
+// jam hari ini (hanya laptop ke atas)
+.am-jam { display: none; align-items: center; gap: .65rem; padding: .6rem .8rem; border-radius: 1rem; background: rgba($primary, .08);
+    @include media-breakpoint-up(lg) { display: flex; }
+    .am-dot { flex: none; width: .55rem; height: .55rem; border-radius: 50%; background: #1FB586; animation: am-denyut 2.4s ease-out infinite; }
+    &.is-off .am-dot { background: $danger; animation: none; }
 }
-.ab-foot-info { min-width: 0; }
-.ab-foot-main { color: $dark; font-size: 1.05rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
-.ab-foot-sub { margin-top: .15rem; color: $body-secondary-color; font-size: .85rem; line-height: 1.35; }
+.am-jam-t { display: grid; line-height: 1.2; b { font-size: .95rem; color: $am-teks; font-variant-numeric: tabular-nums; } small { font-size: .74rem; color: $am-muted; } }
 
-.ab-submit {
-    display: inline-flex; flex: none; align-items: center; justify-content: center; gap: .6rem; min-height: 3.2rem; padding: 0 1.7rem;
-    border: 0; border-radius: 999px; background: $primary; color: #fff; font-size: 1rem; font-weight: 700;
-    transition: background-color .2s, transform .2s, box-shadow .2s;
-    i { transition: transform .2s; }
-    &:hover:not(:disabled) { background: $navy; transform: translateY(-1px); box-shadow: 0 14px 24px -14px rgba($navy, .8); i { transform: translateX(3px); } }
-    &:active:not(:disabled) { transform: none; }
-    &:disabled { background: #C9D3D7; color: #fff; cursor: not-allowed; }
+// ---------- kartu form ----------
+.am-card {
+    position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; margin: 0; overflow: hidden;
+    background: #fff; border: 1px solid $am-line; border-radius: 1.4rem; box-shadow: $am-soft;
+}
+.am-prog {
+    display: flex; align-items: center; gap: .9rem; padding: 1rem clamp(1rem, 3vw, 1.75rem) .8rem; border-bottom: 1px solid $am-line;
+    em { flex: none; font-style: normal; font-size: .8rem; font-weight: 700; color: $am-muted; font-variant-numeric: tabular-nums; }
+}
+.am-prog-bar { flex: 1; height: .5rem; border-radius: 999px; background: #E8F0F2; overflow: hidden; i { display: block; height: 100%; width: 33%; border-radius: inherit; background: linear-gradient(90deg, $primary, $glow); transition: width .5s $sh-ease; } }
+
+.am-body { flex: 1; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; }
+.am-panel {
+    display: none; flex: 1; min-height: 0; flex-direction: column; gap: .9rem; padding: clamp(.9rem, 2.2vh, 1.4rem) clamp(1rem, 3vw, 1.75rem) .5rem; overflow-y: auto; overscroll-behavior: contain;
+    &.is-active { display: flex; animation: am-masuk .35s cubic-bezier(.2, .8, .2, 1) both; }
+}
+.am-panel-title { margin: 0; color: $am-teks; font-size: clamp(1.15rem, 1.4vw + .6rem, 1.5rem); letter-spacing: -.02em; }
+
+// poli: kartu padat yang mengisi lebar
+.am-poli-grid { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr)); align-content: start; }
+.am-poli-input { position: absolute; opacity: 0; pointer-events: none; }
+.am-poli-wrap { position: relative; min-width: 0; }
+.am-poli {
+    position: relative; display: flex; align-items: center; gap: .7rem; width: 100%; height: 100%; padding: .6rem .75rem .6rem .6rem; cursor: pointer;
+    background: #fff; border: 1.5px solid $am-line; border-radius: 1.1rem; box-shadow: 0 2px 6px rgba($navy, .05); transition: border-color .2s, background .2s, box-shadow .2s, transform .2s;
+    .kode { min-width: 2.5rem; height: 2.5rem; font-size: 1.25rem; border-radius: .8rem; }
+    &:hover { border-color: rgba($primary, .5); transform: translateY(-1px); }
+}
+.am-poli-name { flex: 1; min-width: 0; font-weight: 700; font-size: .95rem; line-height: 1.2; color: $am-teks; }
+.am-poli-q { flex: none; display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .55rem; border-radius: 999px; background: #EEF4F6; font-size: .8rem; font-weight: 700; color: $am-muted; font-variant-numeric: tabular-nums;
+    &.is-busy { background: rgba($warning, .25); color: #7A4E00; } }
+.am-poli-check { position: absolute; top: -.4rem; right: -.4rem; font-size: 1.2rem; color: $primary; background: #fff; border-radius: 50%; opacity: 0; transform: scale(.4); transition: opacity .2s, transform .25s cubic-bezier(.3, 1.6, .5, 1); }
+.am-poli-input:checked + .am-poli { border-color: $navy; background: linear-gradient(135deg, rgba($glow, .24), rgba($primary, .05)); box-shadow: 0 0 0 3px rgba($navy, .1); .am-poli-check { opacity: 1; transform: none; } }
+.am-poli-input:focus-visible + .am-poli { outline: 3px solid rgba($primary, .55); outline-offset: 2px; }
+.am-poli-grid.is-invalid .am-poli { border-color: rgba($danger, .6); }
+.am-err { padding: .4rem .8rem; border-radius: .8rem; background: rgba($danger, .09); color: darken($danger, 8%); font-size: .86rem; font-weight: 600; }
+.am-empty { margin: 0; color: $am-muted; }
+
+// isian: lembut, tanpa garis tebal (mengikuti referensi)
+.am-fields { display: grid; gap: .85rem 1rem; align-content: start; grid-template-columns: minmax(0, 1fr); @include media-breakpoint-up(md) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.am-f { display: grid; gap: .35rem; min-width: 0; align-content: start;
+    label, .am-lbl { font-size: .78rem; font-weight: 700; letter-spacing: .03em; color: $am-muted; }
+}
+.am-opt { margin-left: .3rem; font-weight: 500; letter-spacing: 0; color: #8BA1A9; }
+.am-in {
+    width: 100%; height: 2.9rem; padding: 0 .95rem; font-size: 1rem; color: $am-teks; background: #fff; border: 1px solid $am-line; border-radius: .9rem;
+    box-shadow: 0 2px 6px rgba($navy, .06); transition: border-color .2s, box-shadow .2s;
+    &::placeholder { color: #A5B8BE; }
+    &:focus { outline: 0; border-color: $primary; box-shadow: 0 0 0 4px rgba($primary, .15), 0 2px 6px rgba($navy, .06); }
+    &.is-invalid { border-color: $danger; }
+}
+.am-nik-wrap { position: relative; .am-nik { padding-right: 4.2rem; font-family: $headings-font-family; font-weight: 700; letter-spacing: .08em; font-variant-numeric: tabular-nums; } }
+.am-count { position: absolute; right: .9rem; top: 50%; transform: translateY(-50%); font-size: .8rem; font-weight: 700; color: #8BA1A9; font-variant-numeric: tabular-nums; &.is-ok { color: $success; } }
+.am-meter { display: block; height: 3px; border-radius: 3px; background: #E8F0F2; overflow: hidden; i { display: block; height: 100%; width: 0; background: $primary; transition: width .2s, background .2s; &.is-ok { background: $success; } } }
+.am-hp { position: relative; > i { position: absolute; left: .95rem; top: 50%; transform: translateY(-50%); color: #25A15A; font-size: 1.05rem; } .am-in { padding-left: 2.6rem; } }
+.am-f-jk { @include media-breakpoint-up(md) { grid-column: 1 / -1; } }
+.am-seg {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; padding: .25rem; border-radius: 1rem; background: #EEF4F6;
+    input { position: absolute; opacity: 0; pointer-events: none; }
+    label { display: grid; place-items: center; height: 2.4rem; border-radius: .8rem; cursor: pointer; font-size: .92rem; font-weight: 700; letter-spacing: 0; color: $am-muted; transition: background .2s, color .2s, box-shadow .2s; &:hover { color: $am-teks; } }
+    input:checked + label { background: #fff; color: $navy; box-shadow: 0 2px 8px rgba($navy, .15); }
+    input:focus-visible + label { outline: 3px solid rgba($primary, .55); outline-offset: 1px; }
+}
+
+// tinjau
+.am-review { display: grid; gap: 0; margin: 0; border: 1px solid $am-line; border-radius: 1.1rem; overflow: hidden;
+    > div { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; &:not(:last-child) { border-bottom: 1px dashed $am-line; } }
+    dt { display: inline-flex; align-items: center; gap: .55rem; font-size: .85rem; font-weight: 600; color: $am-muted; i { color: $primary; } }
+    dd { margin: 0; min-width: 0; font-weight: 700; color: $am-teks; text-align: right; overflow-wrap: anywhere; }
+}
+
+// tombol: bulat kiri, pil utama di tengah
+.am-actions { display: flex; align-items: center; justify-content: center; gap: .9rem; padding: .75rem 1.25rem 1rem; }
+.am-round {
+    display: grid; place-items: center; flex: none; width: 3rem; height: 3rem; padding: 0; font-size: 1.1rem; color: $primary; cursor: pointer; background: #fff; border: 1px solid $am-line; border-radius: 50%; box-shadow: 0 2px 6px rgba($navy, .08); transition: transform .2s, border-color .2s, opacity .2s;
+    &:hover:not(:disabled) { transform: translateX(-2px); border-color: $primary; }
+    &:disabled { opacity: .35; cursor: default; }
+    &:focus-visible { outline: 3px solid rgba($primary, .55); outline-offset: 2px; }
+}
+.am-main {
+    display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-width: 12rem; height: 3rem; padding: 0 1.8rem; font-size: 1rem; font-weight: 700; color: #fff; cursor: pointer; border: 0; border-radius: 999px;
+    background: linear-gradient(135deg, $primary, #12A6A0); box-shadow: 0 12px 24px -10px rgba($primary, .75); transition: transform .2s, box-shadow .2s, filter .2s;
+    &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 16px 28px -10px rgba($primary, .85); filter: brightness(1.05); }
+    &:disabled { filter: grayscale(.7); opacity: .55; cursor: not-allowed; box-shadow: none; }
     &:focus-visible { outline: 3px solid rgba($primary, .55); outline-offset: 3px; }
-    .spinner-border { width: 1rem; height: 1rem; border-width: .15em; }
+    i { transition: transform .2s; } &:hover:not(:disabled) i { transform: translateX(3px); }
+    &[hidden] { display: none; }
+}
+.am-main-go { background: linear-gradient(135deg, $navy, $primary); box-shadow: 0 12px 24px -10px rgba($navy, .8); }
+@media (max-width: 575.98px) { .am-main { flex: 1; min-width: 0; } }
+
+// layar tinggi: kartu poli lebih lega
+@media (min-height: 800px) and (min-width: 768px) {
+    .am-poli { padding: .85rem .9rem .85rem .75rem; .kode { min-width: 2.9rem; height: 2.9rem; font-size: 1.4rem; } }
+    .am-poli-grid { gap: .8rem; }
+    .am-in { height: 3.1rem; } .am-fields { gap: 1.05rem 1.1rem; }
+    .am-steps { @include media-breakpoint-up(lg) { gap: .35rem; } }
 }
 
-// ---------- responsif ----------
-@include media-breakpoint-down(md) {
-    .ab-page { min-height: 0; align-content: start; }
+// HP: judul dihilangkan, langkah sudah jelas dari stepper
+@media (max-width: 575.98px) {
+    .am-top { display: none; }
+    .am-fields { gap: .55rem; }
+    .am-f { gap: .25rem; }
+    .am-in { height: 2.6rem; }
+    .am-seg label { height: 2.1rem; }
+    .am-panel { gap: .6rem; padding-top: .8rem; }
+    .am-rail { padding: .4rem; border-radius: 1.2rem; }
+    .am-prog { padding-top: .75rem; padding-bottom: .65rem; }
 }
-@include media-breakpoint-down(sm) {
-    .ab-grid { grid-template-columns: minmax(0, 1fr); gap: .6rem; }
-    .ab-field { height: 3.3rem; }
-    .ab-field .ab-lab { transform: translateY(.62rem) scale(1.3); }
-    .ab-field:focus-within .ab-lab, .ab-field.is-float .ab-lab { transform: none; }
-    .ab-foot { flex-direction: column; align-items: stretch; gap: .8rem; }
-    .ab-submit { width: 100%; }
+@media (max-height: 700px) { body.am-fit .nv-strip { display: none; } }
+
+// layar sangat pendek: kecilkan jarak, isian tetap tampil utuh
+@media (max-height: 700px) {
+    .am-stage { gap: .5rem; padding-top: .25rem; }
+    .am-in { height: 2.6rem; } .am-poli { padding: .45rem .65rem .45rem .5rem; .kode { min-width: 2.2rem; height: 2.2rem; font-size: 1.1rem; } }
+    .am-panel { gap: .65rem; } .am-fields { gap: .6rem .9rem; }
+    .am-prog { padding-top: .7rem; padding-bottom: .6rem; } .am-actions { padding: .5rem 1rem .75rem; } .am-main, .am-round { height: 2.7rem; } .am-round { width: 2.7rem; }
+    .am-seg label { height: 2.1rem; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .ab-chip, .ab-chip-k, .ab-field, .ab-field .ab-lab, .ab-submit, .ab-submit i, .ab-count, .ab-opt span { transition: none; }
-}
+@media (prefers-reduced-motion: reduce) { .am-mini-dots, .am-pop, .am-panel.is-active, .am-alert, .am-jam .am-dot { animation: none !important; } .am-steps::after, .am-prog-bar i { transition: none; } }

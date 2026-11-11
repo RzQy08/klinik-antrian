@@ -9,7 +9,7 @@ it('beranda publik tidak menampilkan menu staf atau urutan uji', function () {
     $this->get(route('beranda'))
         ->assertOk()
         ->assertSee('Ambil nomor antrian')
-        ->assertSee('Cara kerjanya')
+        ->assertSee('Empat langkah')
         ->assertDontSee('Semua halaman')
         ->assertDontSee('Urutan uji')
         ->assertDontSee('Menu Anda');

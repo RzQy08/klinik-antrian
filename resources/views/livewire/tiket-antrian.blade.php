@@ -35,7 +35,7 @@
                 </li>
                 <li class="list-group-item d-flex justify-content-between px-4 py-3"><span class="text-body-secondary">Di depan Anda</span><span class="fw-semibold">{{ $posisiDidepan }} orang</span></li>
             @endif
-            <li class="list-group-item d-flex justify-content-between px-4 py-3"><span class="text-body-secondary">Atas nama</span><span class="fw-semibold">{{ $antrian->pasien->nama }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-4 py-3"><span class="text-body-secondary">Atas nama</span><span class="fw-semibold">{{ $antrian->pasien->nama_samar }}</span></li>
             <li class="list-group-item d-flex justify-content-between px-4 py-3"><span class="text-body-secondary">Terdaftar pukul</span><span class="fw-semibold">{{ $antrian->waktu_daftar->format('H:i') }}</span></li>
         </ul>
     </article>

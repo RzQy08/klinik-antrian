@@ -23,7 +23,7 @@
                         <span class="pt-pill off"><i class="bi bi-door-closed"></i>Pendaftaran ditutup</span>
                     @endif
                     @if (\App\Services\JamOperasional::layananBerjalan())
-                        <span class="pt-pill info"><i class="bi bi-activity"></i>Layanan sampai {{ \App\Services\JamOperasional::tampil(config('operasional.layanan_selesai')) }}</span>
+                        <span class="pt-pill info"><i class="bi bi-activity"></i>Layanan sampai {{ \App\Services\JamOperasional::tampil(\App\Services\JamOperasional::jam('layanan_selesai')) }}</span>
                     @else
                         <span class="pt-pill off"><i class="bi bi-moon-stars"></i>Layanan selesai</span>
                     @endif

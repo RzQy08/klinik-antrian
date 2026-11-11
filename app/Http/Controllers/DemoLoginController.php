@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Dokter;
 use App\Models\User;
+use App\Support\AksesLokal;
+use App\Support\Audit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,15 +14,16 @@ use Illuminate\Support\Str;
 class DemoLoginController extends Controller
 {
     /**
-     * Masuk cepat untuk pengujian. Hanya aktif saat APP_ENV=local;
-     * di server produksi route ini otomatis menjawab 404.
+     * Masuk cepat untuk pengujian. Hanya aktif untuk permintaan dari komputer developer sendiri
+     * (APP_ENV=local, tanpa proxy/tunnel, host lokal; lihat AksesLokal). Lewat ngrok, port forward,
+     * IP jaringan, atau hosting, route ini menjawab 404 walaupun APP_ENV salah diisi local.
      *
      * Memakai akun yang sudah ada untuk peran tersebut (misalnya hasil DemoSeeder).
      * Akun demo.* baru dibuat hanya kalau belum ada akun sama sekali untuk peran itu.
      */
     public function __invoke(Request $request, string $role): RedirectResponse
     {
-        abort_unless(app()->isLocal(), 404);
+        abort_unless(AksesLokal::diizinkan($request), 404);
         abort_unless(in_array($role, ['admin', 'petugas', 'dokter'], true), 404);
 
         // Untuk dokter, pilih akun yang sudah terhubung ke data dokter
@@ -52,6 +55,7 @@ class DemoLoginController extends Controller
         }
 
         Auth::login($user);
+        Audit::catat('login_demo', $user->email, $user);
         $request->session()->regenerate();
 
         return redirect()->route('dashboard');

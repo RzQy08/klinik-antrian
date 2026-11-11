@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\DokterController;
 use App\Http\Controllers\Admin\JadwalPraktikController;
 use App\Http\Controllers\Admin\PoliController;
@@ -53,7 +54,7 @@ Route::middleware('auth')->group(function () {
 */
 Route::get('/antrian/ambil', [AntrianController::class, 'create'])->name('antrian.create');
 Route::post('/antrian/ambil', [AntrianController::class, 'store'])->middleware('throttle:20,1')->name('antrian.store');
-Route::get('/antrian/tiket/{antrian:kode_tiket}', [AntrianController::class, 'tiket'])->name('antrian.tiket');
+Route::get('/antrian/tiket/{antrian:kode_tiket}', [AntrianController::class, 'tiket'])->middleware('throttle:60,1')->name('antrian.tiket');
 Route::get('/antrian/display/{poli}', [AntrianController::class, 'display'])->name('antrian.display');
 Route::view('/antrian/layar', 'antrian.layar')->name('antrian.layar');
 
@@ -73,11 +74,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('antrian.analitik');
 
     Route::get('/antrian/riwayat', [RiwayatController::class, 'index'])
-        ->middleware('role:admin,petugas')
+        ->middleware(['role:admin,petugas', 'audit:lihat_riwayat'])
         ->name('antrian.riwayat');
 
     Route::get('/antrian/riwayat/csv', [RiwayatController::class, 'csv'])
-        ->middleware(['role:admin,petugas', 'throttle:10,1'])
+        ->middleware(['role:admin,petugas', 'throttle:10,1', 'audit:ekspor_csv'])
         ->name('antrian.riwayat.csv');
 
     Route::get('/antrian/dokter', [AntrianController::class, 'dokterDashboard'])
@@ -114,6 +115,12 @@ Route::middleware(['auth'])->group(function () {
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin/dashboard')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('penjadwalan/{tab?}', fn (string $tab = 'rumah-sakit') => view('admin.penjadwalan', compact('tab')))
+        ->whereIn('tab', ['rumah-sakit', 'dokter'])
+        ->name('penjadwalan');
+
+    Route::get('audit', AuditController::class)->name('audit');
 
     Route::resource('poli', PoliController::class);
     Route::resource('dokter', DokterController::class)->except(['show']);

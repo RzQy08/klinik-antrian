@@ -84,7 +84,7 @@
         {{-- Tabel --}}
         <div class="lp-tabel">
             <div class="lp-scroll" tabindex="0" role="region" aria-label="Tabel riwayat antrian">
-                <table class="table table-stack lp-table align-middle">
+                <table class="table lp-table align-middle">
                     <thead>
                         <tr>
                             <th scope="col">Tanggal</th><th scope="col">Nomor</th><th scope="col">Poli</th><th scope="col">Pasien</th>
@@ -98,14 +98,14 @@
                                 $layanan = $a->lama_layanan_detik !== null ? (int) round($a->lama_layanan_detik / 60) : null;
                             @endphp
                             <tr>
-                                <td data-label="Tanggal" class="text-nowrap">{{ $a->tanggal->translatedFormat('j M Y') }}<div class="small text-body-secondary">{{ $a->waktu_daftar?->format('H:i') }}</div></td>
-                                <td data-label="Nomor" class="text-nowrap"><span class="lp-no">{{ $a->nomor_antrian }}</span>@if ($a->limpahan)<span class="lp-lim">Limpahan</span>@endif</td>
-                                <td data-label="Poli"><span class="lp-poli {{ $warna($a->poli?->kode_poli) }}"><span class="lp-kode" aria-hidden="true">{{ $a->poli?->kode_poli }}</span>{{ $a->poli?->nama_poli }}</span></td>
-                                <td data-label="Pasien">{{ $a->pasien?->nama }}<div class="small text-body-secondary">{{ \App\Http\Controllers\RiwayatController::samarkanNik($a->pasien?->nik) }}</div></td>
-                                <td data-label="Dokter">{{ $a->dokter?->nama ?? '-' }}</td>
-                                <td data-label="Status">@include('partials.status', ['status' => $a->status])</td>
-                                <td data-label="Tunggu" class="text-end text-nowrap">@if ($tunggu !== null)<span class="lp-dur {{ $tunggu > 30 ? 'bad' : ($tunggu > 15 ? 'warn' : '') }}">{{ $tunggu }} mnt</span>@else - @endif</td>
-                                <td data-label="Layanan" class="text-end text-nowrap">@if ($layanan !== null)<span class="lp-dur">{{ $layanan }} mnt</span>@else - @endif</td>
+                                <td data-label="Tanggal" class="lp-td-tgl text-nowrap">{{ $a->tanggal->translatedFormat('j M Y') }}<div class="small text-body-secondary">{{ $a->waktu_daftar?->format('H:i') }}</div></td>
+                                <td data-label="Nomor" class="lp-td-no text-nowrap"><span class="lp-no">{{ $a->nomor_antrian }}</span>@if ($a->limpahan)<span class="lp-lim">Limpahan</span>@endif</td>
+                                <td data-label="Poli" class="lp-td-poli"><span class="lp-poli {{ $warna($a->poli?->kode_poli) }}"><span class="lp-kode" aria-hidden="true">{{ $a->poli?->kode_poli }}</span>{{ $a->poli?->nama_poli }}</span></td>
+                                <td data-label="Pasien" class="lp-td-pasien">{{ $a->pasien?->nama }}<div class="small text-body-secondary">{{ \App\Http\Controllers\RiwayatController::samarkanNik($a->pasien?->nik) }}</div></td>
+                                <td data-label="Dokter" class="lp-td-dokter">{{ $a->dokter?->nama ?? '-' }}</td>
+                                <td data-label="Status" class="lp-td-status">@include('partials.status', ['status' => $a->status])</td>
+                                <td data-label="Tunggu" class="lp-td-tunggu text-end text-nowrap">@if ($tunggu !== null)<span class="lp-dur {{ $tunggu > 30 ? 'bad' : ($tunggu > 15 ? 'warn' : '') }}">{{ $tunggu }} mnt</span>@else - @endif</td>
+                                <td data-label="Layanan" class="lp-td-layanan text-end text-nowrap">@if ($layanan !== null)<span class="lp-dur">{{ $layanan }} mnt</span>@else - @endif</td>
                             </tr>
                         @empty
                             <tr><td colspan="8" class="p-0">
@@ -123,7 +123,7 @@
         </div>
 
         <div class="lp-pager">
-            <span class="small text-body-secondary">Halaman {{ $data->currentPage() }}, {{ $data->count() }} data ditampilkan. NIK disamarkan demi privasi pasien.</span>
+            <span class="lp-pager-info">Halaman {{ $data->currentPage() }}, {{ $data->count() }} data ditampilkan. NIK disamarkan demi privasi pasien.</span>
             {{ $data->links('pagination::simple-bootstrap-5') }}
         </div>
         <p class="small text-body-secondary mt-2" style="max-width: 44rem">Berkas CSV memakai pemisah titik koma dan bisa langsung dibuka di Excel.</p>

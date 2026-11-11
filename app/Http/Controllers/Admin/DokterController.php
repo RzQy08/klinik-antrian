@@ -8,6 +8,7 @@ use App\Models\Poli;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -36,7 +37,7 @@ class DokterController extends Controller
             // akun login opsional - kalau diisi, otomatis dibuatkan akun User role dokter
             'buat_akun' => ['nullable', 'boolean'],
             'email' => ['required_if:buat_akun,1', 'nullable', 'email', 'unique:users,email'],
-            'password' => ['required_if:buat_akun,1', 'nullable', 'string', 'min:8'],
+            'password' => ['required_if:buat_akun,1', 'nullable', 'string', Password::defaults()],
         ]);
 
         DB::transaction(function () use ($validated, $request) {
@@ -72,9 +73,9 @@ class DokterController extends Controller
             // dokter yang belum punya akun boleh dibuatkan sekarang
             'buat_akun' => ['nullable', 'boolean'],
             'email' => ['required_if:buat_akun,1', 'nullable', 'email', 'unique:users,email'],
-            'password' => ['required_if:buat_akun,1', 'nullable', 'string', 'min:8'],
+            'password' => ['required_if:buat_akun,1', 'nullable', 'string', Password::defaults()],
             // dokter yang sudah punya akun boleh diganti passwordnya
-            'password_baru' => ['nullable', 'string', 'min:8'],
+            'password_baru' => ['nullable', 'string', Password::defaults()],
         ]);
 
         DB::transaction(function () use ($validated, $request, $dokter) {

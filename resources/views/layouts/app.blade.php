@@ -10,6 +10,8 @@
         $nav[] = ['Ringkasan', route('admin.dashboard'), request()->routeIs('admin.dashboard'), 'house', 'Kelola'];
         $nav[] = ['Poli', route('admin.poli.index'), request()->routeIs('admin.poli.*'), 'building', 'Kelola'];
         $nav[] = ['Dokter', route('admin.dokter.index'), request()->routeIs('admin.dokter.*', 'admin.jadwal.*'), 'person-badge', 'Kelola'];
+        $nav[] = ['Jadwal', route('admin.penjadwalan'), request()->routeIs('admin.penjadwalan'), 'calendar-week', 'Kelola'];
+        $nav[] = ['Jejak audit', route('admin.audit'), request()->routeIs('admin.audit'), 'shield-check', 'Kelola'];
     }
 
     if (in_array($role, ['admin', 'petugas'], true)) {

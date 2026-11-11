@@ -301,32 +301,75 @@ body { overflow-x: clip; }
 .bn-footer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; padding: 1.25rem 0 1.5rem; border-top: 1px solid rgba(255, 255, 255, .12); font-size: .85rem; }
 
 // ---------- widget akses cepat pengembangan (melayang, tidak mengubah tata letak) ----------
+// Bentuknya seperti label gantung: pil gelap dengan lampu indikator, panel peran terbuka dari pojok kiri bawah.
+@property --dev-ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes dev-putar { to { --dev-ang: 360deg; } }
+@keyframes dev-denyut { 0%, 100% { box-shadow: 0 0 0 0 rgba($glow, .55); } 60% { box-shadow: 0 0 0 .45rem rgba($glow, 0); } }
+@keyframes dev-buka { from { opacity: 0; transform: translateY(.5rem) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes dev-baris { from { opacity: 0; transform: translateX(-.4rem); } to { opacity: 1; transform: none; } }
+
 .bn-dev {
-    position: fixed; left: 1rem; bottom: 1rem; z-index: 1080; font-size: .875rem;
-    summary {
-        display: inline-flex; align-items: center; gap: .4rem; padding: .5rem .85rem; list-style: none; cursor: pointer;
-        color: #fff; font-weight: 700; border-radius: 999px; background: rgba($navy, .92);
-        border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 10px 24px -8px rgba(0, 0, 0, .5);
-        -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); user-select: none;
-        &::-webkit-details-marker { display: none; }
-        i { color: $warning; }
-        &:hover { background: $navy; }
-    }
-    &[open] summary { background: $primary; i { color: #fff; } }
+    position: fixed; left: 1rem; bottom: 1rem; z-index: 1080; font-size: .85rem;
+    display: inline-flex; align-items: stretch; border-radius: 999px; color: #fff;
+    background: linear-gradient(180deg, rgba($navy-soft, .96), rgba($navy-deep, .96));
+    border: 1px solid rgba(#fff, .14); box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(#fff, .08);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    @include media-breakpoint-down(lg) { bottom: calc(5.4rem + env(safe-area-inset-bottom)); }
+    &[hidden] { display: none; }
 }
+.bn-dev-menu { position: relative; }
+
+// pil: [lampu DEV local | x]
+.bn-dev-menu summary {
+    display: inline-flex; align-items: center; gap: .55rem; height: 2.5rem; padding: 0 .8rem 0 .9rem; list-style: none; cursor: pointer; user-select: none;
+    color: inherit; border-radius: 999px 0 0 999px; transition: background .2s;
+    &::-webkit-details-marker { display: none; }
+    &:hover { background: rgba(#fff, .06); }
+    &:focus-visible { outline: 2px solid $glow; outline-offset: -2px; }
+}
+.bn-dev-dot { width: .5rem; height: .5rem; border-radius: 50%; background: $glow; animation: dev-denyut 2.4s ease-out infinite; }
+.bn-dev-label { font-family: $headings-font-family; font-weight: 800; letter-spacing: .14em; font-size: .78rem; }
+.bn-dev-env { padding: .1rem .5rem; border-radius: 999px; font-size: .66rem; font-weight: 700; letter-spacing: .04em; color: $navy-deep; background: $glow; }
+.bn-dev-menu[open] summary { background: rgba(#fff, .08); }
+.bn-dev-x {
+    display: grid; place-items: center; width: 2.3rem; padding: 0; cursor: pointer; font-size: .72rem; color: rgba(#fff, .65);
+    background: transparent; border: 0; border-left: 1px solid rgba(#fff, .12); border-radius: 0 999px 999px 0; transition: background .2s, color .2s;
+    &:hover { background: rgba($danger, .85); color: #fff; }
+    &:focus-visible { outline: 2px solid $glow; outline-offset: -2px; }
+}
+
+// panel: gelap, dengan garis tepi berputar tipis
 .bn-dev-panel {
-    position: absolute; left: 0; bottom: calc(100% + .6rem); width: 15rem; display: grid; gap: .4rem; padding: .8rem;
-    background: #fff; border: 1px solid $border-color; border-radius: 1rem; box-shadow: 0 24px 48px -16px rgba($navy, .45);
+    position: absolute; left: 0; bottom: calc(100% + .65rem); width: 18rem; display: grid; gap: .4rem; padding: .85rem; transform-origin: 0 100%;
+    color: #fff; border: 1px solid transparent; border-radius: 1.35rem; animation: dev-buka .22s cubic-bezier(.2, .8, .2, 1) both;
+    background:
+        linear-gradient(160deg, rgba($navy-soft, .98), rgba($navy-deep, .99)) padding-box,
+        conic-gradient(from var(--dev-ang), rgba($glow, .55), rgba(#fff, .06) 30%, rgba($glow, .5) 60%, rgba(#fff, .06) 90%, rgba($glow, .55)) border-box;
+    box-shadow: 0 32px 60px -20px rgba(0, 0, 0, .75);
     form { margin: 0; }
     button {
-        display: flex; align-items: center; gap: .6rem; width: 100%; padding: .55rem .7rem; text-align: left; font-weight: 600;
-        color: $dark; background: $light; border: 0; border-radius: .7rem; transition: background .15s, color .15s;
-        i { color: $primary; }
-        &:hover { background: rgba($primary, .12); color: $primary; }
+        display: flex; align-items: center; gap: .75rem; width: 100%; padding: .5rem .65rem .5rem .5rem; text-align: left; cursor: pointer;
+        color: #fff; background: rgba(#fff, .05); border: 1px solid rgba(#fff, .07); border-radius: 1rem; transition: background .15s, border-color .15s, transform .15s;
+        &:hover { background: rgba($glow, .12); border-color: rgba($glow, .35); .bn-dev-go { transform: translateX(3px); color: $glow; } }
+        &:focus-visible { outline: 2px solid $glow; outline-offset: 2px; }
+        &.is-aktif { background: rgba($glow, .14); border-color: rgba($glow, .5); }
     }
+    form, .bn-dev-sembunyi { animation: dev-baris .3s cubic-bezier(.2, .8, .2, 1) both; }
+    form:nth-of-type(1) { animation-delay: .04s; } form:nth-of-type(2) { animation-delay: .09s; } form:nth-of-type(3) { animation-delay: .14s; }
 }
-.bn-dev-title { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: $body-secondary-color; }
-.bn-dev-now { font-size: .78rem; color: $body-secondary-color; padding-bottom: .2rem; }
+.bn-dev-menu[open] .bn-dev-panel { animation-name: dev-buka; }
+.bn-dev-menu[open] { --dev-ang: 0deg; .bn-dev-panel { animation: dev-buka .22s cubic-bezier(.2, .8, .2, 1) both, dev-putar 9s linear infinite; } }
+.bn-dev-head { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; padding: .1rem .2rem .3rem; }
+.bn-dev-title { font-family: $headings-font-family; font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: $glow; }
+.bn-dev-now { min-width: 0; font-size: .74rem; color: $on-navy-muted; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; strong { color: #fff; font-weight: 600; } }
+.bn-dev-ico { flex: none; display: grid; place-items: center; width: 2.3rem; height: 2.3rem; border-radius: .75rem; background: rgba($glow, .14); color: $glow; font-size: 1.05rem; }
+.bn-dev-txt { flex: 1; min-width: 0; line-height: 1.25; b { display: block; font-size: .9rem; } small { display: block; font-size: .73rem; font-weight: 500; color: $on-navy-muted; } }
+.bn-dev-go { color: rgba(#fff, .4); font-size: 1.3rem; transition: transform .15s, color .15s; }
+.bn-dev-panel .bn-dev-sembunyi {
+    justify-content: center; gap: .45rem; margin-top: .1rem; padding: .5rem; font-size: .76rem; font-weight: 600; color: $on-navy-muted; background: transparent; border: 1px dashed rgba(#fff, .2);
+    &:hover { color: #fff; background: rgba($danger, .22); border-color: rgba($danger, .6); }
+}
+@media (prefers-reduced-motion: reduce) { .bn-dev-dot, .bn-dev-panel, .bn-dev-panel form, .bn-dev-sembunyi { animation: none !important; } }
 
 // ---------- jarak tepi: semua konten di layout publik tidak menempel ke pinggir layar ----------
 .bn-pub .container-xxl { padding-left: clamp(1.25rem, 5vw, 3.5rem); padding-right: clamp(1.25rem, 5vw, 3.5rem); }

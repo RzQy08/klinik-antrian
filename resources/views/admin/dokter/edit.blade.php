@@ -55,7 +55,7 @@
                                 <input id="password" name="password" :type="lihat ? 'text' : 'password'" autocomplete="new-password" class="form-control @error('password') is-invalid @enderror">
                                 <button type="button" @click="lihat = ! lihat" :aria-label="lihat ? 'Sembunyikan password' : 'Tampilkan password'"><i class="bi" :class="lihat ? 'bi-eye-slash' : 'bi-eye'"></i></button>
                             </div>
-                            <div class="form-text">Minimal 8 karakter.</div>
+                            <div class="form-text">Minimal 10 karakter, dengan huruf besar, huruf kecil, angka, dan simbol.</div>
                             @error('password')<div class="text-danger small">{{ $message }}</div>@enderror
                         </div>
                     </div>

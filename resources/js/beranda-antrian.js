@@ -79,24 +79,32 @@
     // ---------- slide poli ----------
     const templatSlide = (p) => `
 <article class="hm-slide" data-id="${p.id}" aria-hidden="true">
-  <div class="hm-slide-top">
-    <span class="hm-kode">${esc(p.kode)}</span>
-    <div class="hm-slide-title"><h3 data-k="nama"></h3><p data-k="dokter"></p></div>
-    <span class="hm-badge" data-k="praktik"></span>
+  <div class="hm-tk">
+    <div class="hm-tk-main">
+      <div class="hm-slide-top">
+        <span class="hm-kode">${esc(p.kode)}</span>
+        <div class="hm-slide-title"><h3 data-k="nama"></h3><p data-k="dokter"></p></div>
+        <span class="hm-badge" data-k="praktik"></span>
+      </div>
+      <div class="hm-tk-no">
+        <small>Sedang dipanggil</small>
+        <div class="hm-tk-row"><strong class="hm-call-no" data-k="nomor"></strong><span class="hm-call-state" data-k="state"></span></div>
+      </div>
+      <div class="hm-prog"><i data-k="prog"></i></div>
+      <div class="hm-prog-label"><span data-k="progL"></span><span data-k="jam"></span></div>
+    </div>
+    <div class="hm-tk-stub">
+      <div class="hm-mini">
+        <div><b data-k="menunggu"></b><span>Menunggu</span></div>
+        <div><b data-k="selesai"></b><span>Selesai</span></div>
+        <div><b data-k="estimasi"></b><span>Perkiraan</span></div>
+      </div>
+      <div class="hm-next">
+        <span>Berikutnya</span><div class="hm-chips" data-k="chips"></div>
+        <a class="hm-slide-link" href="${esc(p.url_layar)}">Buka layar <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+      </div>
+    </div>
   </div>
-  <div class="hm-callbox">
-    <div class="hm-call-top"><span>Sedang dipanggil</span><span class="hm-call-state" data-k="state"></span></div>
-    <strong class="hm-call-no" data-k="nomor"></strong>
-    <div class="hm-prog"><i data-k="prog"></i></div>
-    <div class="hm-prog-label"><span data-k="progL"></span><span data-k="jam"></span></div>
-  </div>
-  <div class="hm-mini">
-    <div><b data-k="menunggu"></b><span>Menunggu</span></div>
-    <div><b data-k="selesai"></b><span>Selesai</span></div>
-    <div><b data-k="estimasi"></b><span>Perkiraan tunggu</span></div>
-  </div>
-  <div class="hm-next"><span>Berikutnya</span><div class="hm-chips" data-k="chips"></div></div>
-  <a class="hm-slide-link" href="${esc(p.url_layar)}">Lihat layar ${esc(p.nama)} <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
 </article>`;
 
     function perbaruiSlide(el, p) {
@@ -303,7 +311,7 @@
         elMode.lastElementChild.textContent = ok ? 'Langsung' : 'Terputus';
 
         if (ok) {
-            elUpdate.textContent = 'Diperbarui ' + waktu(new Date()) + ', otomatis tiap ' + Math.round(jedaPoll / 1000) + ' detik';
+            elUpdate.textContent = 'Diperbarui ' + waktu(new Date()) + ' · otomatis';
         } else {
             elUpdate.textContent = 'Koneksi terputus, mencoba lagi…';
         }
@@ -334,12 +342,36 @@
     setInterval(() => { if (! document.hidden) muat(); }, jedaPoll);
     document.addEventListener('visibilitychange', () => { if (! document.hidden) muat(); });
 
-    // ---------- carousel dokter ----------
-    const lintasan = document.querySelector('[data-dr-track]');
+    // ---------- saringan poli di jadwal dokter ----------
+    const jadwal = document.querySelector('[data-dk]');
 
-    if (lintasan) {
-        const geser = (arah) => lintasan.scrollBy({ left: arah * 280, behavior: kurangiGerak ? 'auto' : 'smooth' });
-        document.querySelector('[data-dr-prev]')?.addEventListener('click', () => geser(-1));
-        document.querySelector('[data-dr-next]')?.addEventListener('click', () => geser(1));
+    if (jadwal) {
+        const tombol = [...jadwal.querySelectorAll('[data-dk-tab]')];
+        const kartu = [...jadwal.querySelectorAll('[data-dk-kartu]')];
+
+        const tampilkan = (poli) => {
+            let urut = 0;
+
+            kartu.forEach((k) => {
+                const cocok = poli === '*' || k.dataset.poli === poli;
+                k.hidden = ! cocok;
+                k.classList.remove('is-masuk');
+
+                if (cocok && ! kurangiGerak) {
+                    k.style.setProperty('--i', urut++);
+                    void k.offsetWidth; // mulai ulang animasi
+                    k.classList.add('is-masuk');
+                }
+            });
+
+            tombol.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.dkTab === poli)));
+        };
+
+        tombol.forEach((t) => t.addEventListener('click', () => {
+            tampilkan(t.dataset.dkTab);
+            t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: kurangiGerak ? 'auto' : 'smooth' });
+        }));
+
+        jadwal.classList.add('is-js');
     }
 })();

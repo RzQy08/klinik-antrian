@@ -77,7 +77,7 @@ class RingkasanAntrian
 
         // Kueri 6: jadwal praktik hari ini dari dokter yang aktif
         $jadwal = JadwalPraktik::where('hari', $hari)
-            ->whereHas('dokter', fn ($q) => $q->where('aktif', true))
+            ->whereHas('dokter', fn ($q) => $q->where('aktif', true)->tidakCuti())
             ->with('dokter:id,poli_id,nama')
             ->get();
 

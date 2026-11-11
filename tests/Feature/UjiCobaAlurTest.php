@@ -26,7 +26,7 @@ it('membuka semua halaman utama sesuai peran dan login akun uji berjalan', funct
     $this->get(route('beranda'))
         ->assertOk()
         ->assertSee('Ambil nomor antrian')
-        ->assertSee('Cara kerjanya');
+        ->assertSee('Empat langkah');
 
     $this->get(route('antrian.create'))->assertOk()->assertSee('Ambil nomor antrian');
     $this->get(route('antrian.layar'))->assertOk();
@@ -56,7 +56,8 @@ it('membuka semua halaman utama sesuai peran dan login akun uji berjalan', funct
     $dokterPertama = Dokter::query()->where('aktif', true)->firstOrFail();
     $this->actingAs($admin)->get(route('admin.dokter.jadwal.index', $dokterPertama))->assertOk();
 
-    // Petugas
+    // Petugas (sesi dibersihkan: ganti akun dalam satu sesi memang dianggap pembajakan oleh AuthenticateSession)
+    $this->flushSession();
     $this->actingAs($petugas)->get(route('antrian.index'))->assertOk();
     $this->actingAs($petugas)->get(route('antrian.kelola', $poli))->assertOk();
     $this->actingAs($petugas)->get(route('antrian.analitik'))->assertOk()->assertSee('Analitik antrian');
@@ -64,10 +65,13 @@ it('membuka semua halaman utama sesuai peran dan login akun uji berjalan', funct
     $this->actingAs($petugas)->get(route('antrian.riwayat.csv'))->assertOk();
 
     // Dokter
+    $this->flushSession();
     $this->actingAs($dokter)->get(route('antrian.dokter'))->assertOk();
 
     // Pembatasan peran
+    $this->flushSession();
     $this->actingAs($dokter)->get(route('admin.dashboard'))->assertForbidden();
+    $this->flushSession();
     $this->actingAs($petugas)->get(route('admin.dashboard'))->assertForbidden();
 });
 
@@ -114,7 +118,7 @@ it('alur ambil nomor sampai selesai pelayanan berjalan lancar', function () {
 
     $this->get(route('antrian.tiket', $antrianBaru->kode_tiket))
         ->assertOk()
-        ->assertSee('Pasien Alur Uji');
+        ->assertSee('P***** A*** U**');
 
     // Pendaftaran ulang di poli yang sama mengembalikan tiket yang sama
     $jumlahSebelum = Antrian::query()->where('pasien_id', $pasien->id)->count();
@@ -148,6 +152,7 @@ it('alur ambil nomor sampai selesai pelayanan berjalan lancar', function () {
     expect($dipanggil->dokter_id)->toBe($dokter->id);
 
     // Dokter mulai dan menyelesaikan pelayanan
+    $this->flushSession();
     $this->actingAs($userDokter)
         ->post(route('antrian.mulai-layani', $dipanggil))
         ->assertSessionHas('success');
@@ -165,6 +170,7 @@ it('alur ambil nomor sampai selesai pelayanan berjalan lancar', function () {
     expect($dipanggil->waktu_selesai)->not->toBeNull();
 
     // Panggil, tandai tidak hadir, lalu panggil ulang
+    $this->flushSession();
     $berikutnya = Antrian::query()
         ->untukPoli($poli->id)
         ->hariIni()

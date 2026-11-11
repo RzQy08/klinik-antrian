@@ -37,7 +37,7 @@
                             <span class="ad-chip is-off"><i class="bi bi-door-closed"></i>Pendaftaran ditutup</span>
                         @endif
                         @if (\App\Services\JamOperasional::layananBerjalan())
-                            <span class="ad-chip"><i class="bi bi-clock"></i>Layanan sampai {{ \App\Services\JamOperasional::tampil(config('operasional.layanan_selesai')) }}</span>
+                            <span class="ad-chip"><i class="bi bi-clock"></i>Layanan sampai {{ \App\Services\JamOperasional::tampil(\App\Services\JamOperasional::jam('layanan_selesai')) }}</span>
                         @else
                             <span class="ad-chip is-off"><i class="bi bi-moon"></i>Layanan selesai</span>
                         @endif
