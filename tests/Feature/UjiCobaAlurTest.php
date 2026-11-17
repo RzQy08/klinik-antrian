@@ -26,7 +26,7 @@ it('membuka semua halaman utama sesuai peran dan login akun uji berjalan', funct
     $this->get(route('beranda'))
         ->assertOk()
         ->assertSee('Ambil nomor antrian')
-        ->assertSee('Empat langkah');
+        ->assertSee('Datang saat giliran Anda sudah dekat');
 
     $this->get(route('antrian.create'))->assertOk()->assertSee('Ambil nomor antrian');
     $this->get(route('antrian.layar'))->assertOk();

@@ -9,7 +9,6 @@
         : ($buka ? 'Pendaftaran dibuka sampai pukul '.$jam('pendaftaran_tutup') : 'Pendaftaran ditutup, dibuka lagi pukul '.$jam('pendaftaran_buka'));
     $statusPendek = ! $jamAktif ? 'Antrian online aktif' : ($buka ? 'Pendaftaran dibuka' : 'Pendaftaran ditutup');
 
-    // Menu utama: hanya tiga tujuan inti supaya navbar ringkas di semua layar
     $menu = [
         ['Beranda', route('beranda'), request()->routeIs('beranda'), 'house-door'],
         ['Ambil antrian', route('antrian.create'), request()->routeIs('antrian.create'), 'ticket-perforated'],
@@ -21,12 +20,20 @@
     $ctaBar = ! request()->routeIs('antrian.create');
     $nama = config('rumahsakit.nama', 'RS Bersama');
     $namaLengkap = config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama');
-    $kontak = array_filter([
-        'geo-alt' => config('rumahsakit.alamat'),
-        'telephone' => config('rumahsakit.telepon'),
-        'whatsapp' => config('rumahsakit.whatsapp'),
-        'envelope' => config('rumahsakit.email'),
-    ]);
+    $alamat = config('rumahsakit.alamat');
+    $telp = config('rumahsakit.telepon');
+    $wa = config('rumahsakit.whatsapp');
+    $email = config('rumahsakit.email');
+    $kontak = array_values(array_filter([
+        $alamat ? ['geo-alt', 'Alamat', $alamat, config('rumahsakit.maps')] : null,
+        $telp ? ['telephone', 'Telepon', $telp, 'tel:'.preg_replace('/[^\d+]/', '', $telp)] : null,
+        $wa ? ['whatsapp', 'WhatsApp', $wa, 'https://wa.me/'.preg_replace('/^0/', '62', preg_replace('/\D/', '', $wa))] : null,
+        $email ? ['envelope', 'Email', $email, 'mailto:'.$email] : null,
+    ]));
+    $sosial = array_values(array_filter([
+        config('rumahsakit.instagram') ? ['instagram', 'Instagram', config('rumahsakit.instagram')] : null,
+        config('rumahsakit.facebook') ? ['facebook', 'Facebook', config('rumahsakit.facebook')] : null,
+    ]));
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -59,7 +66,7 @@
             @auth
                 <a href="{{ route('dashboard') }}" class="nv-btn nv-btn-cta"><i class="bi bi-speedometer2" aria-hidden="true"></i>Buka dashboard</a>
             @else
-                <a href="{{ route('login') }}" class="nv-btn nv-btn-ghost"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Masuk staf</a>
+                <a href="{{ route('login') }}" class="nv-staf"><i class="bi bi-person-lock" aria-hidden="true"></i>Masuk staf</a>
                 <a href="{{ route('antrian.create') }}" class="nv-btn nv-btn-cta">Ambil nomor<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             @endauth
         </div>
@@ -112,38 +119,58 @@
         @if ($ctaBar)
             <div class="ft-cta">
                 <div>
-                    <h2>Berobat tanpa berdiri lama di loket</h2>
-                    <p>Ambil nomor dari ponsel, lihat perkiraan waktu tunggu, lalu datang saat giliran Anda hampir tiba.</p>
+                    <h2>Daftar dari rumah, tanpa antre di loket</h2>
+                    <p>Ambil nomor dari ponsel, lalu datang ke rumah sakit saat giliran Anda tinggal sekitar 30 menit lagi.</p>
                 </div>
-                <a href="{{ route('antrian.create') }}" class="btn btn-light btn-lg"><i class="bi bi-ticket-perforated me-2" aria-hidden="true"></i>Ambil nomor antrian</a>
+                <a href="{{ route('antrian.create') }}" class="btn btn-light btn-lg">Ambil nomor<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
             </div>
         @endif
 
-        <div class="ft-grid">
-            <div>
-                <a href="{{ route('beranda') }}" class="d-inline-block text-decoration-none" aria-label="{{ $nama }}, ke beranda">@include('partials.brand', ['terang' => true])</a>
-                <p class="ft-desc">{{ $namaLengkap }}. Sistem antrian poliklinik dengan perkiraan waktu tunggu yang dihitung dari teori antrian.</p>
+        <div class="ft-main">
+            <div class="ft-brand">
+                <a href="{{ route('beranda') }}" class="d-inline-block" aria-label="{{ $nama }}, ke beranda">@include('partials.brand', ['terang' => true])</a>
+                <p class="ft-desc">{{ $namaLengkap }}. Ambil nomor antrian poliklinik dari ponsel, lihat giliran Anda, lalu berangkat saat sudah dekat.</p>
+                @if ($sosial)
+                    <ul class="ft-sosial" aria-label="Media sosial">
+                        @foreach ($sosial as [$ikon, $label, $url])
+                            <li><a href="{{ $url }}" target="_blank" rel="noopener" aria-label="{{ $label }}"><i class="bi bi-{{ $ikon }}" aria-hidden="true"></i></a></li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
 
             <nav aria-labelledby="ft-nav">
-                <h2 class="ft-h" id="ft-nav">Untuk pasien</h2>
-                <ul class="ft-list">
-                    <li><a href="{{ route('antrian.create') }}"><i class="bi bi-ticket-perforated" aria-hidden="true"></i>Ambil nomor antrian</a></li>
-                    <li><a href="{{ route('beranda') }}#antrian"><i class="bi bi-list-ol" aria-hidden="true"></i>Antrian hari ini</a></li>
-                    <li><a href="{{ route('antrian.layar') }}"><i class="bi bi-tv" aria-hidden="true"></i>Papan antrian</a></li>
+                <h2 class="ft-h" id="ft-nav">Layanan pasien</h2>
+                <ul class="ft-links">
+                    <li><a href="{{ route('antrian.create') }}">Ambil nomor antrian</a></li>
+                    <li><a href="{{ route('beranda') }}#antrian">Antrian hari ini</a></li>
+                    <li><a href="{{ route('beranda') }}#dokter">Jadwal dokter</a></li>
+                    <li><a href="{{ route('antrian.layar') }}">Papan antrian</a></li>
                 </ul>
             </nav>
 
-            <nav aria-labelledby="ft-staf">
-                <h2 class="ft-h" id="ft-staf">Untuk staf</h2>
-                <ul class="ft-list">
-                    @auth
-                        <li><a href="{{ route('dashboard') }}"><i class="bi bi-speedometer2" aria-hidden="true"></i>Buka dashboard</a></li>
-                    @else
-                        <li><a href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Masuk staf</a></li>
-                    @endauth
-                </ul>
-            </nav>
+            <div>
+                <h2 class="ft-h">Hubungi kami</h2>
+                @if ($telepon)
+                    <a class="ft-call" href="tel:{{ preg_replace('/[^\d+]/', '', $telepon) }}"><i class="bi bi-telephone-fill" aria-hidden="true"></i><span><small>Telepon</small><b>{{ $telepon }}</b></span></a>
+                @endif
+                @if ($kontak)
+                    <ul class="ft-kontak">
+                        @foreach ($kontak as [$ikon, $label, $isi, $url])
+                            @continue($telepon && $label === 'Telepon')
+                            <li>
+                                <i class="bi bi-{{ $ikon }}" aria-hidden="true"></i>
+                                <span><small>{{ $label }}</small>@if ($url)<a href="{{ $url }}" @if (str_starts_with($url, 'http')) target="_blank" rel="noopener" @endif>{{ $isi }}</a>@else<b>{{ $isi }}</b>@endif</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="ft-note">Hubungi petugas di loket informasi rumah sakit.</p>
+                @endif
+                @if (config('rumahsakit.maps'))
+                    <a class="ft-arah" href="{{ config('rumahsakit.maps') }}" target="_blank" rel="noopener"><i class="bi bi-sign-turn-right" aria-hidden="true"></i>Petunjuk arah</a>
+                @endif
+            </div>
 
             <div>
                 <h2 class="ft-h">Jam layanan</h2>
@@ -165,24 +192,25 @@
                         <p class="ft-libur"><i class="bi bi-calendar-x" aria-hidden="true"></i><span>Libur {{ $libur['tanggal']->translatedFormat('j F Y') }}: {{ $libur['keterangan'] }}</span></p>
                     @endif
                 @else
-                    <p class="mb-0 text-on-navy-muted">Pendaftaran antrian online tersedia setiap saat selama klinik beroperasi.</p>
-                @endif
-
-                @if ($kontak)
-                    <ul class="ft-list mt-3">
-                        @foreach ($kontak as $ikon => $isi)
-                            <li><span><i class="bi bi-{{ $ikon }} me-2" aria-hidden="true"></i>{{ $isi }}</span></li>
-                        @endforeach
-                    </ul>
+                    <p class="ft-note">Pendaftaran antrian online tersedia selama rumah sakit beroperasi.</p>
                 @endif
             </div>
         </div>
 
         <div class="ft-bottom">
-            <span>&copy; {{ now()->year }} {{ $namaLengkap }}. Seluruh hak dilindungi.</span>
-            <button type="button" class="ft-top" id="ftTop"><i class="bi bi-arrow-up" aria-hidden="true"></i>Kembali ke atas</button>
+            <p class="ft-copy">&copy; {{ now()->year }} {{ $namaLengkap }}</p>
+            <p class="ft-aman"><i class="bi bi-shield-lock" aria-hidden="true"></i>Data Anda hanya dipakai untuk keperluan antrian.</p>
+            <div class="ft-aksi">
+                @auth
+                    <a href="{{ route('dashboard') }}">Dashboard</a>
+                @else
+                    <a href="{{ route('login') }}">Masuk staf</a>
+                @endauth
+                <button type="button" class="ft-top" id="ftTop"><i class="bi bi-arrow-up" aria-hidden="true"></i>Ke atas</button>
+            </div>
         </div>
     </div>
+    <div class="ft-mark" aria-hidden="true">{{ $nama }}</div>
 </footer>
 @endunless
 
@@ -190,6 +218,9 @@
 @if ($ctaBar)
     <div class="nv-ctabar">
         <span><span class="nv-dot {{ $jamAktif && ! $buka ? 'off' : '' }}" aria-hidden="true"></span>{{ $statusPendek }}</span>
+        @if ($telepon)
+            <a href="tel:{{ preg_replace('/[^\d+]/', '', $telepon) }}" class="nv-ctabar-tel" aria-label="Telepon {{ $telepon }}"><i class="bi bi-telephone-fill" aria-hidden="true"></i></a>
+        @endif
         <a href="{{ route('antrian.create') }}" class="nv-btn nv-btn-cta">Ambil nomor<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
     </div>
 @endif
@@ -201,37 +232,19 @@
 
     // Navbar tetap gelap; .is-scrolled hanya menambah bayangan.
     // Dua ambang (24px aktif, 8px mati) mencegah bayangan berkedip di batas.
-    var scrolled = false, ticking = false;
+    var scrolled = false;
     function baca() {
         var y = window.scrollY;
         if (!scrolled && y > 24) scrolled = true;
         else if (scrolled && y < 8) scrolled = false;
         wrap.classList.toggle('is-scrolled', scrolled);
-        ticking = false;
     }
     baca();
-    window.addEventListener('scroll', function () {
-        if (!ticking) { ticking = true; window.requestAnimationFrame(baca); }
-    }, { passive: true });
+    window.addEventListener('scroll', baca, { passive: true });
 
     if (sheet && burger) {
-        sheet.addEventListener('show.bs.offcanvas', function () { burger.classList.add('is-open'); burger.setAttribute('aria-expanded', 'true'); });
-        sheet.addEventListener('hidden.bs.offcanvas', function () { burger.classList.remove('is-open'); burger.setAttribute('aria-expanded', 'false'); });
-
-        function tutupSheet() {
-            var inst = window.bootstrap && window.bootstrap.Offcanvas && window.bootstrap.Offcanvas.getInstance(sheet);
-            if (inst) inst.hide();
-        }
-
-        // Layar membesar ke ukuran desktop saat lembar menu terbuka (rotasi tablet, ubah ukuran jendela): tutup otomatis
-        var lebar = window.matchMedia('(min-width: 992px)');
-        var saatUbah = function () { if (lebar.matches) tutupSheet(); };
-        if (lebar.addEventListener) lebar.addEventListener('change', saatUbah); else lebar.addListener(saatUbah);
-
-        // Pilih menu di lembar: lembar menutup dulu supaya perpindahan halaman terasa halus
-        sheet.addEventListener('click', function (e) {
-            if (e.target.closest('a.nv-sheet-link, a.nv-btn')) tutupSheet();
-        });
+        sheet.addEventListener('show.bs.offcanvas', function () { burger.classList.add('is-open'); });
+        sheet.addEventListener('hidden.bs.offcanvas', function () { burger.classList.remove('is-open'); });
     }
 
     var atas = document.getElementById('ftTop');

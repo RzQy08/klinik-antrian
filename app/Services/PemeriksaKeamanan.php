@@ -55,7 +55,7 @@ class PemeriksaKeamanan
         }
 
         if ((int) config('session.lifetime') > 60) {
-            $tambah('waspada', 'Sesi login terlalu panjang', 'SESSION_LIFETIME='.config('session.lifetime').' menit. Komputer loket yang ditinggal tetap terbuka. Disarankan 30.');
+            $tambah('waspada', 'Sesi login terlalu panjang', 'Pengguna baru keluar otomatis setelah '.config('session.lifetime').' menit tidak aktif. Komputer loket yang ditinggal tetap terbuka selama itu. Disarankan 30 menit (SESSION_LIFETIME di .env).');
         }
 
         if ($produksi && ! config('session.secure')) {

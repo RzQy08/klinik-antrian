@@ -5,7 +5,9 @@ namespace App\Http\Requests\Auth;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -28,13 +30,33 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            // Batas panjang mencegah input raksasa membebani hashing password
+            'email' => ['required', 'string', 'email', 'max:254'],
+            'password' => ['required', 'string', 'max:255'],
         ];
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Batas percobaan masuk. Tiga lapis supaya tebakan password tidak bisa disebar:
+     * per email dan IP, per IP saja (satu penyerang mencoba banyak akun), dan per email saja
+     * (banyak IP menyerang satu akun).
+     *
+     * @return array<string, array{0: int, 1: int}> kunci => [maksimum percobaan, detik]
+     */
+    private function batasan(): array
+    {
+        $email = Str::transliterate(Str::lower((string) $this->input('email')));
+
+        return [
+            'login|'.$email.'|'.$this->ip() => [5, 300],
+            'login-ip|'.$this->ip() => [25, 600],
+            'login-akun|'.$email => [12, 900],
+        ];
+    }
+
+    /**
+     * Masuk dengan email dan password. Pesan gagal selalu sama, baik email tidak terdaftar
+     * maupun password salah, dan waktu prosesnya disamakan agar akun tidak bisa ditebak.
      *
      * @throws ValidationException
      */
@@ -42,11 +64,22 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        $email = (string) $this->input('email');
+        $password = (string) $this->input('password');
+
+        // Samakan waktu proses bila akun tidak ada (hash palsu bercost sama dengan hash asli)
+        if (! User::where('email', $email)->exists()) {
+            Hash::check($password, '$2y$12$95cxnhPWJxquG3XQqxdRuu1k6nss3OVxQYiE/Z5iOiObbd/.mplJq');
+        }
+
+        // Tanpa "ingat saya": komputer rumah sakit dipakai bergantian
+        if (! Auth::attempt(['email' => $email, 'password' => $password, fn ($q) => $q->whereNull('nonaktif_at')], false)) {
+            foreach ($this->batasan() as $kunci => [, $detik]) {
+                RateLimiter::hit($kunci, $detik);
+            }
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Email atau password tidak sesuai.',
             ]);
         }
 
@@ -54,31 +87,25 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Ensure the login request is not rate limited.
-     *
      * @throws ValidationException
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
-            return;
+        foreach ($this->batasan() as $kunci => [$maks]) {
+            if (! RateLimiter::tooManyAttempts($kunci, $maks)) {
+                continue;
+            }
+
+            event(new Lockout($this));
+
+            $detik = RateLimiter::availableIn($kunci);
+
+            throw ValidationException::withMessages([
+                'email' => 'Terlalu banyak percobaan masuk. Coba lagi dalam '.max(1, (int) ceil($detik / 60)).' menit.',
+            ]);
         }
-
-        event(new Lockout($this));
-
-        $seconds = RateLimiter::availableIn($this->throttleKey());
-
-        throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
-        ]);
     }
 
-    /**
-     * Get the rate limiting throttle key for the request.
-     */
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());

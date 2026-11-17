@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CatatAkses;
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\PastikanAkunAktif;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -25,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'audit' => CatatAkses::class,
         ]);
         // AuthenticateSession: ganti password otomatis mengeluarkan sesi di perangkat lain (laptop yang lupa logout)
-        $middleware->web(append: [AuthenticateSession::class, SecurityHeaders::class]);
+        $middleware->web(append: [PastikanAkunAktif::class, AuthenticateSession::class, SecurityHeaders::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

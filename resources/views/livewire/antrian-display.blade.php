@@ -53,13 +53,13 @@
         <aside class="ly-side" aria-label="Antrian berikutnya">
             <div class="ly-side-head">
                 <h2 class="ly-side-title">Berikutnya</h2>
-                <span class="ly-side-sub">bersiap ya</span>
+                <span class="ly-side-sub">Harap bersiap</span>
             </div>
             <ul class="ly-nextlist">
                 @forelse ($berikut as $i => $no)
-                    <li style="--k:{{ $i }}"><span class="numeral">{{ $no }}</span><small>{{ $i === 0 ? 'Selanjutnya' : 'Menyusul' }}</small></li>
+                    <li style="--k:{{ $i }}"><span class="numeral">{{ $no }}</span><small>Giliran selanjutnya</small></li>
                 @empty
-                    <li class="is-empty">Tidak ada antrian yang menunggu</li>
+                    <li class="is-empty">Belum ada yang menunggu</li>
                 @endforelse
             </ul>
             <div class="ly-wait">

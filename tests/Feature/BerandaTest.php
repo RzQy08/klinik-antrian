@@ -9,7 +9,7 @@ it('beranda publik tidak menampilkan menu staf atau urutan uji', function () {
     $this->get(route('beranda'))
         ->assertOk()
         ->assertSee('Ambil nomor antrian')
-        ->assertSee('Empat langkah')
+        ->assertSee('Datang saat giliran Anda sudah dekat')
         ->assertDontSee('Semua halaman')
         ->assertDontSee('Urutan uji')
         ->assertDontSee('Menu Anda');
@@ -61,7 +61,7 @@ it('endpoint antrian hari ini mengembalikan nomor, jumlah, dan estimasi per poli
         ->assertJsonPath('poli.0.nomor', 'A002')
         ->assertJsonPath('poli.0.dokter', 'dr. Andika Pratama')
         ->assertJsonPath('poli.0.total', 4)
-        ->assertJsonPath('poli.0.berikutnya', ['A003', 'A004'])
+        ->assertJsonPath('poli.0.berikutnya', ['A003'])
         ->assertJsonPath('poli.0.persen', 25);
 });
 

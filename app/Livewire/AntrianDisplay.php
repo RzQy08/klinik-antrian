@@ -36,8 +36,8 @@ class AntrianDisplay extends Component
             ->limit(5)
             ->get();
 
-        // lima nomor berikutnya yang menunggu
-        $berikut = Antrian::untukPoli($poli->id)->hariIni()->menunggu()->orderBy('id')->limit(5)->pluck('nomor_antrian');
+        // hanya satu nomor berikutnya (urutan datang, FIFO) agar layar tidak ramai
+        $berikut = Antrian::untukPoli($poli->id)->hariIni()->menunggu()->orderBy('id')->limit(1)->pluck('nomor_antrian');
 
         $jumlahMenunggu = Antrian::untukPoli($poli->id)->hariIni()->menunggu()->count();
 

@@ -21,11 +21,7 @@
             @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
 
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <div class="form-check">
-                <input id="remember_me" type="checkbox" name="remember" class="form-check-input">
-                <label for="remember_me" class="form-check-label">Ingat saya</label>
-            </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
             @if (\Illuminate\Support\Facades\Route::has('password.request'))
                 <a href="{{ route('password.request') }}" class="small">Lupa password?</a>
             @endif

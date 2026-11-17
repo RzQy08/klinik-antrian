@@ -61,7 +61,7 @@
 
         if (root.dataset.ids !== ids) {
             root.dataset.ids = ids;
-            root.innerHTML = items.map(templat).join('');
+            root.innerHTML = items.map((p, i) => templat(p, i)).join('');
             dibangun = true;
         }
 
@@ -77,31 +77,41 @@
     }
 
     // ---------- slide poli ----------
-    const templatSlide = (p) => `
-<article class="hm-slide" data-id="${p.id}" aria-hidden="true">
-  <div class="hm-tk">
-    <div class="hm-tk-main">
-      <div class="hm-slide-top">
-        <span class="hm-kode">${esc(p.kode)}</span>
-        <div class="hm-slide-title"><h3 data-k="nama"></h3><p data-k="dokter"></p></div>
-        <span class="hm-badge" data-k="praktik"></span>
-      </div>
-      <div class="hm-tk-no">
-        <small>Sedang dipanggil</small>
-        <div class="hm-tk-row"><strong class="hm-call-no" data-k="nomor"></strong><span class="hm-call-state" data-k="state"></span></div>
-      </div>
-      <div class="hm-prog"><i data-k="prog"></i></div>
-      <div class="hm-prog-label"><span data-k="progL"></span><span data-k="jam"></span></div>
+    // ikon per poli, dicocokkan dari kata kunci pada nama
+    const IKON = [
+        [/anak|pediatri/i, 'balloon-heart'], [/kia|kandungan|ibu|obgyn|bidan/i, 'person-hearts'], [/gigi|mulut/i, 'emoji-smile'],
+        [/mata/i, 'eye'], [/tht|telinga/i, 'ear'], [/dalam/i, 'activity'], [/paru/i, 'lungs'], [/kulit/i, 'bandaid'],
+        [/umum/i, 'heart-pulse'], [/gizi|farmasi|obat/i, 'capsule'],
+    ];
+    const ikonPoli = (nama) => (IKON.find(([re]) => re.test(nama || '')) || [0, 'hospital'])[1];
+
+    const templatSlide = (p, i) => `
+<article class="hm-slide" data-id="${p.id}" data-w="${i % 6}" aria-hidden="true">
+  <div class="hm-kc">
+    <div class="hm-kc-top">
+      <span class="hm-kc-ico" aria-hidden="true"><i class="bi bi-${ikonPoli(p.nama)}"></i></span>
+      <h3 data-k="nama"></h3>
+      <p data-k="dokter"></p>
+      <span class="hm-badge" data-k="praktik"></span>
     </div>
-    <div class="hm-tk-stub">
-      <div class="hm-mini">
-        <div><b data-k="menunggu"></b><span>Menunggu</span></div>
-        <div><b data-k="selesai"></b><span>Selesai</span></div>
-        <div><b data-k="estimasi"></b><span>Perkiraan</span></div>
-      </div>
-      <div class="hm-next">
-        <span>Berikutnya</span><div class="hm-chips" data-k="chips"></div>
-        <a class="hm-slide-link" href="${esc(p.url_layar)}">Buka layar <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+    <div class="hm-kc-bottom">
+      <i class="hm-wave hm-wave-b" aria-hidden="true"></i><i class="hm-wave hm-wave-a" aria-hidden="true"></i>
+      <svg class="hm-kc-ecg" viewBox="0 0 300 50" preserveAspectRatio="none" aria-hidden="true"><path d="M0 28H92l10-16 12 34 11-26 8 8H300"/></svg>
+      <div class="hm-kc-body">
+        <div class="hm-tk-no">
+          <small>Sedang dipanggil</small>
+          <div class="hm-tk-row"><strong class="hm-call-no" data-k="nomor"></strong><span class="hm-call-state" data-k="state"></span></div>
+        </div>
+        <div class="hm-mini">
+          <div><b data-k="menunggu"></b><span>Menunggu</span></div>
+          <div><b data-k="selesai"></b><span>Selesai</span></div>
+          <div><b data-k="estimasi"></b><span>Estimasi</span></div>
+        </div>
+        <div class="hm-next">
+          <span class="hm-next-l">Berikutnya</span>
+          <div class="hm-chips" data-k="chips"></div>
+          <a class="hm-slide-link" href="${esc(p.url_layar)}" aria-label="Buka layar ${esc(p.nama)}"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
       </div>
     </div>
   </div>
@@ -110,7 +120,6 @@
     function perbaruiSlide(el, p) {
         isiTeks(el, 'nama', p.nama);
         isiTeks(el, 'dokter', p.dokter || 'Jadwal dokter belum tersedia');
-        isiTeks(el, 'jam', p.jam || '');
 
         const [kelas, teks] = PRAKTIK[p.praktik] || PRAKTIK.libur;
         const badge = el.querySelector('[data-k="praktik"]');
@@ -127,17 +136,15 @@
             noEl.classList.add('hm-bump');
         }
 
-        isiTeks(el, 'state', p.status_panggil === 'dipanggil' ? 'Dipanggil' : (p.status_panggil === 'dilayani' ? 'Sedang dilayani' : 'Belum ada panggilan'));
-        el.querySelector('[data-k="prog"]').style.width = p.persen + '%';
-        isiTeks(el, 'progL', p.total + ' antrian hari ini');
+        isiTeks(el, 'state', p.status_panggil === 'dipanggil' ? 'Dipanggil' : (p.status_panggil === 'dilayani' ? 'Sedang dilayani' : 'Belum dipanggil'));
         isiTeks(el, 'menunggu', p.menunggu);
         isiTeks(el, 'selesai', p.selesai);
         isiTeks(el, 'estimasi', p.menunggu > 0 ? '± ' + p.estimasi_menit + ' mnt' : '–');
 
         const chips = el.querySelector('[data-k="chips"]');
         const html = p.berikutnya.length
-            ? p.berikutnya.map((n) => '<span class="hm-nochip">' + esc(n) + '</span>').join('')
-            : '<span class="hm-nochip is-kosong">Tidak ada yang menunggu</span>';
+            ? p.berikutnya.slice(0, 1).map((n) => '<span class="hm-nochip">' + esc(n) + '</span>').join('')
+            : '<span class="hm-nochip is-kosong">Belum ada</span>';
 
         if (chips.dataset.v !== html) {
             chips.dataset.v = html;
@@ -172,39 +179,37 @@
     }
 
     // ---------- pindah slide ----------
-    function pindah(i, arah) {
+    // posisi tiap kartu relatif terhadap yang aktif: 0 di tengah, ±1 mengintip di sisi, sisanya disembunyikan
+    function susun() {
         const slides = Array.from(stage.querySelectorAll('.hm-slide'));
+        const n = slides.length;
 
-        if (! slides.length) {
+        slides.forEach((el, k) => {
+            let o = k - cur;
+
+            if (o > n / 2) { o -= n; } else if (o < -n / 2) { o += n; }
+
+            const a = Math.abs(o);
+            const sisi = a === 1 && n > 1;
+            el.style.setProperty('--o', Math.max(-2, Math.min(2, o)));
+            el.style.setProperty('--a', Math.min(a, 2));
+            el.classList.toggle('is-active', o === 0);
+            el.classList.toggle('is-sisi', sisi && n > 2 || (n === 2 && a === 1));
+            el.tabIndex = o === 0 ? -1 : (sisi ? 0 : -1);
+            el.toggleAttribute('aria-hidden', o !== 0);
+        });
+    }
+
+    function pindah(i) {
+        const n = stage.querySelectorAll('.hm-slide').length;
+
+        if (! n) {
             return;
         }
 
-        i = (i + slides.length) % slides.length;
-
-        if (i === cur && slides[i].classList.contains('is-active')) {
-            return;
-        }
-
-        arah = arah || (i > cur ? 1 : -1);
-        const keluar = slides[cur];
-        const masuk = slides[i];
-
-        if (keluar && keluar !== masuk) {
-            keluar.style.setProperty('--dx', (-arah * 36) + 'px');
-            keluar.classList.remove('is-active');
-            keluar.setAttribute('aria-hidden', 'true');
-        }
-
-        // slide masuk mulai dari sisi lawan tanpa transisi, lalu meluncur ke tengah
-        masuk.style.transition = 'none';
-        masuk.style.setProperty('--dx', (arah * 36) + 'px');
-        void masuk.offsetWidth;
-        masuk.style.transition = '';
-        masuk.style.setProperty('--dx', '0px');
-        masuk.classList.add('is-active');
-        masuk.removeAttribute('aria-hidden');
-
+        i = (i % n + n) % n;
         cur = i;
+        susun();
         aktifkanTab(i);
     }
 
@@ -236,6 +241,17 @@
         if (Math.abs(dx) > 50) { dx < 0 ? berikut() : sebelum(); }
     });
     stage.addEventListener('pointercancel', () => { awalX = null; });
+
+    // klik atau Enter pada kartu yang mengintip di sisi untuk memilihnya
+    const pilihSisi = (e) => {
+        const el = e.target.closest('.hm-slide.is-sisi');
+        if (el && (e.type === 'click' || e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            pindah(Array.from(stage.children).indexOf(el));
+        }
+    };
+    stage.addEventListener('click', pilihSisi);
+    stage.addEventListener('keydown', pilihSisi);
 
     // ---------- angka ringkasan ----------
     function hitungKe(el, ke) {
@@ -291,10 +307,7 @@
 
             if (dibangun) {
                 cur = Math.min(cur, items.length - 1);
-                const s = stage.querySelectorAll('.hm-slide')[cur];
-                s.style.setProperty('--dx', '0px');
-                s.classList.add('is-active');
-                s.removeAttribute('aria-hidden');
+                susun();
                 aktifkanTab(cur);
             }
         }

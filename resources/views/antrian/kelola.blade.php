@@ -137,10 +137,14 @@
 
                 <section class="pt-sec" id="bagian-menunggu" aria-labelledby="h-menunggu">
                     <div class="pt-sec-head"><h2 id="h-menunggu">Menunggu</h2><span class="pt-sec-n">{{ $daftarMenunggu->count() }}</span></div>
+                    @if ($daftarMenunggu->count() > 4)
+                        <div class="pt-cari"><i class="bi bi-search" aria-hidden="true"></i><input type="search" id="cariPasien" class="form-control" placeholder="Cari nomor atau nama pasien" autocomplete="off" aria-label="Cari pasien yang menunggu"></div>
+                        <p class="pt-cari-kosong" id="cariKosong" hidden>Tidak ada pasien yang cocok.</p>
+                    @endif
                     @if ($daftarMenunggu->isEmpty())
                         <div class="pt-empty"><i class="bi bi-inbox" aria-hidden="true"></i><div>Tidak ada pasien yang menunggu.</div></div>
                     @else
-                        <ol class="pt-list">
+                        <ol class="pt-list" id="daftarMenunggu">
                             @foreach ($daftarMenunggu as $antrian)
                                 <li class="pt-case {{ $loop->first ? 'is-next' : '' }}">
                                     <div class="pt-case-main">
@@ -221,6 +225,20 @@
         }
         segar();
         setInterval(segar, 30000);
+
+        // Pencarian cepat di daftar menunggu (disaring di halaman, tanpa memuat ulang)
+        var cari = document.getElementById('cariPasien'), daftar = document.getElementById('daftarMenunggu');
+        if (cari && daftar) {
+            cari.addEventListener('input', function () {
+                var q = cari.value.trim().toLowerCase(), ada = 0;
+                daftar.querySelectorAll('li').forEach(function (li) {
+                    var cocok = !q || li.textContent.toLowerCase().indexOf(q) !== -1;
+                    li.hidden = !cocok;
+                    if (cocok) ada++;
+                });
+                document.getElementById('cariKosong').hidden = ada > 0;
+            });
+        }
 
         // Cegah klik ganda pada tombol aksi
         document.querySelectorAll('form.pt-guard').forEach(function (f) {

@@ -73,6 +73,9 @@ it('layanan berjalan sampai sebelum jam layanan selesai', function () {
 
 it('tidak ada pembatasan jam kalau OPERASIONAL_AKTIF dimatikan', function () {
     config(['operasional.aktif' => false]);
+    // migrasi menyalakan saklar di database; hapus supaya yang berlaku config
+    \App\Models\Pengaturan::query()->delete();
+    JamOperasional::lupakan();
     Carbon::setTestNow('2026-10-20 23:30:00');
 
     expect(JamOperasional::pendaftaranDibuka())->toBeTrue();

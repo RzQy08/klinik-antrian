@@ -4,7 +4,7 @@
 //  - Latar putih adalah lapisan ::before yang hanya berganti opacity.
 //  - Warna navbar memakai variabel --nv-* yang berubah bersamaan,
 //    dengan satu durasi dan satu kurva yang sama.
-//  - Menu penuh tampil mulai 992px (lg); di bawahnya dipakai hamburger.
+//  - Menu penuh tampil mulai 1200px; di bawahnya dipakai hamburger.
 //  - Desain datar: warna solid, tanpa gradien, tanpa bayangan berat.
 // =====================================================================
 
@@ -116,11 +116,19 @@ html { scroll-padding-top: calc(var(--nv-h) + .5rem); }
     display: inline-flex; align-items: center; gap: .5rem; min-height: 2.5rem; padding: 0 .75rem; border-radius: .6rem;
     color: var(--nv-fg); font-size: .95rem; font-weight: 600; white-space: nowrap; text-decoration: none;
     transition: color $nv-t $ease-soft, background-color $nv-t $ease-soft;
-    .bi { display: none; font-size: 1.05rem; }
+    .bi { font-size: 1.1rem; opacity: .8; }
     &:hover { color: var(--nv-strong); background: var(--nv-hover-bg); }
-    &.is-on { color: var(--nv-on-fg); background: var(--nv-on-bg); }
+    &.is-on { color: var(--nv-on-fg); background: var(--nv-on-bg); .bi { opacity: 1; } }
 }
-@include media-breakpoint-up(xl) { .nv-link { padding: 0 .9rem; .bi { display: inline-block; } } }
+@include media-breakpoint-up(xxl) { .nv-link { padding: 0 .9rem; } }
+
+// Masuk staf: tautan tenang dengan sekat tipis, supaya tombol utama "Ambil nomor" tetap yang paling menonjol
+.nv-staf {
+    display: inline-flex; align-items: center; gap: .45rem; min-height: 2.5rem; margin-right: .35rem; padding: 0 .85rem 0 .5rem;
+    border-right: 1px solid var(--nv-line); color: var(--nv-fg); font-size: .9rem; font-weight: 600; white-space: nowrap; text-decoration: none;
+    .bi { font-size: 1.05rem; color: $primary; }
+    &:hover { color: var(--nv-strong); .bi { color: var(--nv-strong); } }
+}
 
 .nv-actions { display: none; flex-shrink: 0; align-items: center; gap: .5rem; margin-left: auto; }
 
@@ -128,8 +136,7 @@ html { scroll-padding-top: calc(var(--nv-h) + .5rem); }
 .nv-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.5rem; padding: 0 1rem;
     border-radius: .6rem; font-size: .95rem; font-weight: 600; white-space: nowrap; text-decoration: none; border: 1px solid transparent;
-    transition: background-color $nv-t $ease-soft, border-color $nv-t $ease-soft, color $nv-t $ease-soft, transform .15s $ease-soft;
-    &:active { transform: scale(.97); }
+    transition: background-color $nv-t $ease-soft, border-color $nv-t $ease-soft, color $nv-t $ease-soft;
 }
 .nv-btn-icon { width: 2.5rem; padding: 0; }
 .nv-btn-ghost {
@@ -154,9 +161,8 @@ html { scroll-padding-top: calc(var(--nv-h) + .5rem); }
 .nv-burger {
     display: grid; place-content: center; flex-shrink: 0; margin-left: auto; width: 2.6rem; height: 2.6rem; padding: 0;
     border: 0; border-radius: .6rem; background: var(--nv-burger-bg);
-    transition: background-color $nv-t $ease-soft, transform .15s $ease-soft;
+    transition: background-color $nv-t $ease-soft;
     &:hover { background: var(--nv-burger-hover); }
-    &:active { transform: scale(.94); }
     span {
         display: block; width: 1.15rem; height: 2px; border-radius: 2px; background: var(--nv-strong);
         transition: transform $nv-t $ease-soft, opacity .2s $ease-soft, background-color $nv-t $ease-soft;
@@ -170,15 +176,6 @@ html { scroll-padding-top: calc(var(--nv-h) + .5rem); }
 @include media-breakpoint-up(lg) {
     .nv-links, .nv-actions { display: flex; }
     .nv-burger { display: none; }
-}
-// lg (992-1199px): tombol dirampingkan supaya pil tidak sesak
-@include media-breakpoint-between(lg, xl) {
-    .nv { gap: .5rem; padding-left: .85rem; }
-    .nv-links { margin-left: .5rem; }
-    .nv-link { padding: 0 .6rem; font-size: .92rem; }
-    .nv-actions { gap: .4rem; }
-    .nv-actions .nv-btn { padding: 0 .8rem; font-size: .92rem; }
-    .nv-actions .nv-btn-ghost .bi { display: none; }
 }
 
 // ---------- menu pengguna (staf) ----------
@@ -203,9 +200,6 @@ html { scroll-padding-top: calc(var(--nv-h) + .5rem); }
 
 // ---------- lembar menu di HP ----------
 .nv-sheet { width: min(24rem, 92vw) !important; border: 0; border-radius: 1.25rem 0 0 1.25rem; }
-.nv-sheet .offcanvas-body { overscroll-behavior: contain; }
-// jika layar membesar saat lembar terbuka, lembar disembunyikan (skrip menutupnya dengan rapi)
-@include media-breakpoint-up(lg) { .nv-sheet { display: none !important; } }
 .nv-sheet .offcanvas-header { padding: 1rem 1.25rem; border-bottom: 1px solid $border-color; }
 .nv-sheet .offcanvas-body { display: flex; flex-direction: column; gap: 1rem; padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)); }
 .nv-sheet-status { display: flex; align-items: center; gap: .65rem; padding: .75rem 1rem; border-radius: .8rem; background: rgba($success, .1); color: darken($success, 10%); font-weight: 600; font-size: .92rem; }
@@ -256,6 +250,7 @@ body.has-bottomnav { padding-bottom: calc(5.6rem + env(safe-area-inset-bottom));
     span { display: inline-flex; align-items: center; gap: .55rem; min-width: 0; line-height: 1.25; }
     .nv-btn-cta { background: $glow; color: $navy; &:hover { background: darken($glow, 8%); color: $navy; } }
 }
+.nv-ctabar-tel { flex: none; margin-left: auto; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid rgba(#fff, .25); color: #fff; &:hover { color: $glow; } }
 @include media-breakpoint-up(lg) { .nv-ctabar { display: none; } }
 
 // ---------- footer staf ----------
@@ -267,53 +262,86 @@ body.has-bottomnav { padding-bottom: calc(5.6rem + env(safe-area-inset-bottom));
 .nv-foot nav { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
 
 // ---------- footer publik ----------
-.ft { position: relative; margin-top: 0; padding-top: clamp(1.75rem, 4vw, 3rem); color: $on-navy; background: #0A1F26; }
+// Gelap dengan satu garis cahaya di tepi atas. Isinya: ajakan (halaman selain beranda), empat kolom,
+// baris bawah, dan tulisan nama rumah sakit raksasa yang samar sebagai penutup.
+.ft { position: relative; overflow: hidden; padding-top: clamp(2rem, 5vw, 3.5rem); color: $on-navy; background: radial-gradient(60rem 22rem at 85% -8%, rgba($primary, .22), transparent 70%), #0A1F26;
+    &::before { content: ''; position: absolute; inset: 0 0 auto; height: 1px; background: linear-gradient(90deg, transparent, rgba($glow, .6) 30%, rgba($glow, .6) 70%, transparent); } }
 .ft a { color: $on-navy-muted; text-decoration: none; &:hover { color: #fff; text-decoration: none; } }
 body.has-ctabar .ft { padding-bottom: calc(4.8rem + env(safe-area-inset-bottom)); }
 @include media-breakpoint-up(lg) { body.has-ctabar .ft { padding-bottom: 0; } }
 
 .ft-cta {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem 2rem;
-    margin-bottom: clamp(2rem, 5vw, 3.5rem); padding: clamp(1.25rem, 3vw, 2rem); border-radius: 1.1rem;
-    background: $primary;
-    h2 { margin: 0 0 .3rem; color: #fff; font-size: clamp(1.3rem, 3vw, 1.8rem); line-height: 1.15; }
-    p { margin: 0; max-width: 34rem; color: #D6EFF3; }
-    .btn { min-height: 3rem; font-weight: 700; color: $navy; &:hover { color: $navy; text-decoration: none; } }
+    position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem 2rem;
+    margin-bottom: clamp(2.25rem, 5vw, 3.75rem); padding: clamp(1.4rem, 3.2vw, 2.2rem) clamp(1.4rem, 3.5vw, 2.6rem); border-radius: 1.75rem;
+    background: linear-gradient(120deg, $primary 0%, #0B7F90 55%, #0E9FAB 100%); isolation: isolate;
+    &::after { content: ''; position: absolute; z-index: -1; right: -4rem; top: -6rem; width: 18rem; height: 18rem; border-radius: 50%; background: rgba(#fff, .12); }
+    h2 { margin: 0 0 .35rem; color: #fff; font-size: clamp(1.35rem, 3vw, 1.9rem); line-height: 1.15; }
+    p { margin: 0; max-width: 34rem; color: #DDF3F6; }
+    .btn { min-height: 3.1rem; padding-inline: 1.6rem; border-radius: 999px; font-weight: 700; color: $navy; &:hover { color: $navy; text-decoration: none; transform: translateY(-2px); } transition: transform .25s $ease-soft; }
 }
-@include media-breakpoint-down(sm) { .ft-cta { .btn { width: 100%; } } }
-.ft-grid { display: grid; gap: 2rem 2.5rem; grid-template-columns: minmax(0, 1fr); padding-bottom: clamp(1.75rem, 4vw, 2.75rem); }
-@media (min-width: 576px) { .ft-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 992px) { .ft-grid { grid-template-columns: 1.3fr .8fr .8fr 1.6fr; } }
-.ft-desc { max-width: 24rem; margin: 1rem 0 0; color: $on-navy-muted; }
-.ft-h { margin: 0 0 .9rem; color: #fff; font-family: $font-family-sans-serif; font-size: .95rem; font-weight: 700; letter-spacing: 0; }
-.ft-list { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
-.ft-list a { display: inline-flex; align-items: center; gap: .55rem; min-height: 2rem; }
-.ft-list .bi { color: $glow; opacity: .85; }
-.ft-status { display: inline-flex; align-items: center; gap: .55rem; margin-bottom: .8rem; padding: .3rem .8rem; border-radius: 999px; background: rgba(255, 255, 255, .08); font-size: .88rem; font-weight: 600; color: $on-navy; }
-.ft-jam { display: grid; gap: .45rem; margin: 0; }
-.ft-jam div { display: flex; justify-content: space-between; gap: 1rem; padding-bottom: .45rem; border-bottom: 1px solid rgba(255, 255, 255, .12); }
-.ft-jam dt { font-weight: 500; color: $on-navy-muted; }
-.ft-jam dd { margin: 0; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; text-align: right; }
-.ft-minggu { display: grid; gap: .15rem; margin: 0; padding: 0; list-style: none; }
-.ft-minggu li {
-    display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; padding: .55rem .7rem; border-radius: .8rem; border: 1px solid transparent;
-    &:not(:last-child):not(.is-today) { border-bottom-color: rgba(255, 255, 255, .08); border-radius: 0; }
-    &.is-today { background: rgba($glow, .1); border-color: rgba($glow, .28); .ft-hari { color: #fff; } }
+@include media-breakpoint-down(sm) { .ft-cta { border-radius: 1.4rem; .btn { width: 100%; } } }
+
+.ft-main { display: grid; gap: 2.25rem 2.5rem; grid-template-columns: minmax(0, 1fr); padding-bottom: clamp(2rem, 4.5vw, 3.25rem); }
+@media (min-width: 640px) { .ft-main { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ft-brand { grid-column: 1 / -1; } }
+@media (min-width: 1100px) { .ft-main { grid-template-columns: 1.35fr .75fr 1.2fr 1.5fr; } .ft-brand { grid-column: auto; } }
+@media (min-width: 640px) and (max-width: 1099.98px) {
+    .ft-main > div:last-child { grid-column: 1 / -1; .ft-minggu { grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr)); } }
 }
-.ft-hari { font-weight: 600; color: $on-navy-muted; small { margin-left: .45rem; padding: .05rem .45rem; border-radius: 999px; background: $glow; color: $navy-deep; font-size: .64rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; } }
-.ft-jm { display: grid; text-align: right; line-height: 1.3; font-variant-numeric: tabular-nums; b { color: #fff; font-weight: 700; } small { font-size: .74rem; color: $on-navy-muted; } }
+.ft-desc { max-width: 22rem; margin: 1.1rem 0 0; color: $on-navy-muted; line-height: 1.6; }
+.ft-h { margin: 0 0 1.1rem; font-family: $font-family-sans-serif; font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: $glow; }
+.ft-note { margin: 0; color: $on-navy-muted; font-size: .92rem; line-height: 1.55; }
+
+.ft-sosial { display: flex; gap: .55rem; margin: 1.25rem 0 0; padding: 0; list-style: none;
+    a { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 1px solid rgba(#fff, .18); font-size: 1.05rem; color: $on-navy;
+        &:hover { color: $navy; background: $glow; border-color: $glow; transform: translateY(-2px); } transition: transform .25s $ease-soft, background-color .25s, color .25s, border-color .25s; } }
+
+.ft-links { display: grid; gap: .15rem; margin: 0; padding: 0; list-style: none;
+    a { display: inline-flex; align-items: center; min-height: 2.2rem; font-size: .96rem; font-weight: 500;
+        &::before { content: ''; width: 0; height: 1px; margin-right: 0; background: $glow; transition: width .3s $ease-soft, margin .3s $ease-soft; }
+        &:hover::before { width: .85rem; margin-right: .5rem; } } }
+
+.ft-call { display: flex; align-items: center; gap: .9rem; margin-bottom: 1.1rem; padding: .85rem 1rem; border-radius: 1.1rem; background: $glow; color: $navy-deep !important; transition: transform .25s $ease-soft;
+    > i { flex: none; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: $navy-deep; color: $glow; font-size: 1.05rem; }
+    small { display: block; font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: $navy-deep; opacity: .75; }
+    b { display: block; color: $navy-deep; font-family: $headings-font-family; font-size: 1.3rem; line-height: 1.15; letter-spacing: -.01em; }
+    &:hover { color: $navy-deep; transform: translateY(-2px); } }
+.ft-arah { display: inline-flex; align-items: center; gap: .55rem; margin-top: 1.1rem; padding: .6rem 1.1rem; border-radius: 999px; border: 1px solid rgba(#fff, .28); font-size: .9rem; font-weight: 700; color: #fff; transition: background-color .25s, color .25s, border-color .25s;
+    i { color: $glow; transition: color .25s; } &:hover { background: #fff; color: $navy-deep; border-color: #fff; i { color: $navy-deep; } } }
+.ft-kontak { display: grid; gap: .95rem; margin: 0; padding: 0; list-style: none;
+    li { display: flex; align-items: flex-start; gap: .85rem; }
+    > li > i { flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: .8rem; font-size: 1rem; color: $glow; background: rgba($glow, .1); border: 1px solid rgba($glow, .18); }
+    span { min-width: 0; }
+    small { display: block; margin-bottom: .1rem; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba($on-navy-muted, .75); }
+    a, b { display: block; font-size: .95rem; font-weight: 600; line-height: 1.4; color: $on-navy; overflow-wrap: anywhere; }
+    a:hover { color: $glow; } }
+
+.ft-status { display: inline-flex; align-items: center; gap: .55rem; margin-bottom: 1rem; padding: .32rem .85rem; border-radius: 999px; background: rgba(#fff, .07); border: 1px solid rgba(#fff, .12); font-size: .84rem; font-weight: 600; color: $on-navy; }
+.ft-minggu { display: grid; gap: .3rem; margin: 0; padding: 0; list-style: none;
+    li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem .8rem; border-radius: .9rem; border: 1px solid transparent; transition: background-color .25s;
+        &.is-today { background: rgba($glow, .1); border-color: rgba($glow, .3); .ft-hari { color: #fff; } }
+        &:not(.is-today) { background: rgba(#fff, .035); } } }
+.ft-hari { font-size: .9rem; font-weight: 600; color: $on-navy-muted; small { display: table; margin: .25rem 0 0; padding: .08rem .5rem; border-radius: 999px; background: $glow; color: $navy-deep; font-size: .62rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; vertical-align: .1em; } }
+.ft-jm { display: grid; text-align: right; line-height: 1.3; font-variant-numeric: tabular-nums; b { color: #fff; font-size: .92rem; font-weight: 700; } small { font-size: .72rem; color: $on-navy-muted; white-space: nowrap; } }
 .is-tutup .ft-jm b { color: #FF9C93; }
-.ft-libur { display: flex; gap: .55rem; margin: .8rem 0 0; font-size: .84rem; color: $on-navy-muted; i { margin-top: .12rem; color: #FFC76B; } }
+.ft-libur { display: flex; gap: .55rem; margin: .9rem 0 0; font-size: .84rem; line-height: 1.45; color: $on-navy-muted; i { margin-top: .12rem; color: #FFC76B; } }
+
 .ft-bottom {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem;
-    padding: 1.15rem 0 1.4rem; border-top: 1px solid rgba(255, 255, 255, .1); color: $on-navy-muted; font-size: .88rem;
-}
-@include media-breakpoint-down(sm) { .ft-bottom { flex-direction: column; align-items: flex-start; } }
+    position: relative; z-index: 1; display: grid; grid-template-columns: 1fr; gap: .75rem 1.5rem; align-items: center;
+    padding: 1.2rem 0 1.4rem; border-top: 1px solid rgba(#fff, .1); color: $on-navy-muted; font-size: .86rem;
+    p { margin: 0; }
+    .ft-aman { display: flex; align-items: center; gap: .5rem; i { color: $glow; } } }
+@media (min-width: 900px) { .ft-bottom { grid-template-columns: auto 1fr auto; .ft-aman { justify-content: center; } } }
+.ft-aksi { display: flex; align-items: center; gap: 1rem; a { font-weight: 600; } }
 .ft-top {
-    display: inline-flex; align-items: center; gap: .5rem; min-height: 2.5rem; padding: 0 1rem; border: 1px solid rgba(255, 255, 255, .2); border-radius: 999px;
-    background: none; color: $on-navy; font-weight: 600; font-size: .88rem;
-    &:hover { background: rgba(255, 255, 255, .1); }
+    display: inline-flex; align-items: center; gap: .5rem; min-height: 2.4rem; padding: 0 1.1rem; border: 1px solid rgba(#fff, .2); border-radius: 999px;
+    background: none; color: $on-navy; font-weight: 600; font-size: .86rem;
+    &:hover { background: rgba(#fff, .1); }
 }
+// nama rumah sakit raksasa sebagai penutup, samar dan terpotong di dasar
+.ft-mark { position: relative; z-index: 0; height: clamp(3.2rem, 11vw, 9.5rem); overflow: hidden; margin-top: -.5rem; text-align: center; white-space: nowrap; user-select: none; pointer-events: none;
+    font-family: $headings-font-family; font-weight: 800; font-size: clamp(4.5rem, 17vw, 15rem); line-height: .86; letter-spacing: -.045em; color: transparent; -webkit-text-stroke: 1px rgba(#fff, .09);
+    -webkit-mask: linear-gradient(180deg, #000 20%, transparent 95%); mask: linear-gradient(180deg, #000 20%, transparent 95%); }
+body.has-ctabar .ft-mark { margin-bottom: -.5rem; }
 
 // ---------- fokus keyboard ----------
 .nv a:focus-visible, .nv button:focus-visible { outline: 3px solid var(--nv-focus); outline-offset: 2px; }
@@ -321,7 +349,7 @@ body.has-ctabar .ft { padding-bottom: calc(4.8rem + env(safe-area-inset-bottom))
 .ft a:focus-visible, .ft button:focus-visible { outline: 3px solid $glow; outline-offset: 2px; }
 
 // ---------- transisi untuk elemen sisanya ----------
-.nv-sheet-link, .nv-sheet-link .ic, .nv-menu .dropdown-item, .nv-foot a, .ft a, .ft-top {
+.nv-sheet-link, .nv-sheet-link .ic, .nv-menu .dropdown-item, .nv-foot a, .ft a, .ft-top, .ft-minggu li {
     transition: color $nv-t $ease-soft, background-color $nv-t $ease-soft, border-color $nv-t $ease-soft;
 }
 
@@ -334,5 +362,4 @@ body.has-ctabar .ft { padding-bottom: calc(4.8rem + env(safe-area-inset-bottom))
     .nv-wrap::before, .nv-link, .nv-btn, .nv-burger, .nv-burger span, .nv-user, .nv-user .avatar,
     .nv-brand .brand-name, .nv-brand .brand-sub,
     .nv-sheet-link, .nv-sheet-link .ic, .nv-menu .dropdown-item, .nv-dock a, .nv-dock button, .nv-foot a, .ft a, .ft-top { transition: none; }
-    .nv-btn:active, .nv-burger:active { transform: none; }
 }

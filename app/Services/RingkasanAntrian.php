@@ -110,7 +110,7 @@ class RingkasanAntrian
                 'selesai' => $jumlahSelesai,
                 'persen' => $total > 0 ? (int) round(($jumlahSelesai + $jumlahTidakHadir) / $total * 100) : 0,
                 'estimasi_menit' => $jumlahMenunggu > 0 ? max(1, (int) round($jumlahMenunggu * $rataDetik / 60)) : 0,
-                'berikutnya' => $menunggu->get($poli->id, collect())->take(4)->pluck('nomor_antrian')->values()->all(),
+                'berikutnya' => $menunggu->get($poli->id, collect())->take(1)->pluck('nomor_antrian')->values()->all(),
                 'url_layar' => route('antrian.display', $poli->id),
             ];
         })->values();

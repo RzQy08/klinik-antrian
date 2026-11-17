@@ -9,45 +9,11 @@ use App\Services\PemeriksaKeamanan;
 use App\Support\AksesLokal;
 use Illuminate\Support\Facades\Hash;
 
-function masukCepat($uji, array $header = [], array $server = [])
-{
-    app()->detectEnvironment(fn () => 'local');
-
-    return $uji->withServerVariables($server)->withHeaders($header)
-        ->withSession(['_token' => 'token-uji'])
-        ->post(route('demo.masuk', 'admin'), ['_token' => 'token-uji']);
-}
-
-it('masuk cepat DEV ditolak bila lewat tunnel atau proxy walau APP_ENV=local', function () {
-    masukCepat($this, ['X-Forwarded-For' => '203.0.113.9', 'X-Forwarded-Proto' => 'https'])->assertNotFound();
-    $this->assertGuest();
-});
-
-it('masuk cepat DEV ditolak dari alamat jaringan atau host publik', function () {
-    masukCepat($this, [], ['REMOTE_ADDR' => '203.0.113.9'])->assertNotFound();
-    $this->assertGuest();
-
-    app()->detectEnvironment(fn () => 'local');
-    $this->withServerVariables(['HTTP_HOST' => 'abc.ngrok-free.app'])
-        ->withSession(['_token' => 'token-uji'])
-        ->post('http://abc.ngrok-free.app/demo/masuk/admin', ['_token' => 'token-uji'])
-        ->assertNotFound();
-    $this->assertGuest();
-});
-
 it('AksesLokal mengenali host Laragon dan menolak host publik', function () {
     expect(AksesLokal::hostLokal('klinik-antrian.test'))->toBeTrue()
         ->and(AksesLokal::hostLokal('localhost'))->toBeTrue()
         ->and(AksesLokal::hostLokal('abc.ngrok-free.app'))->toBeFalse()
         ->and(AksesLokal::hostLokal('192.168.1.5'))->toBeFalse();
-});
-
-it('panel DEV tidak dirender untuk permintaan lewat tunnel', function () {
-    app()->detectEnvironment(fn () => 'local');
-
-    $this->get(route('beranda'))->assertOk()->assertSee('data-dev', false);
-
-    $this->withHeaders(['X-Forwarded-For' => '203.0.113.9'])->get(route('beranda'))->assertOk()->assertDontSee('data-dev', false);
 });
 
 it('halaman staf dan tiket tidak boleh disimpan cache browser dan tidak diindeks', function () {

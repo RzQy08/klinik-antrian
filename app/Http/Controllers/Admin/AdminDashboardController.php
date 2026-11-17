@@ -116,6 +116,22 @@ class AdminDashboardController extends Controller
             ];
         }
 
+        // Percobaan masuk yang mencurigakan dalam 24 jam terakhir
+        $login = \App\Models\AuditLog::where('created_at', '>=', now()->subDay())
+            ->whereIn('aksi', ['login_gagal', 'login_terkunci'])
+            ->selectRaw('aksi, COUNT(*) as n')->groupBy('aksi')->pluck('n', 'aksi');
+
+        if (($login['login_terkunci'] ?? 0) > 0 || ($login['login_gagal'] ?? 0) >= 10) {
+            $daftar[] = [
+                'tone' => 'warning', 'ikon' => 'shield-exclamation',
+                'judul' => ($login['login_gagal'] ?? 0).' percobaan masuk gagal dalam 24 jam',
+                'teks' => ($login['login_terkunci'] ?? 0) > 0
+                    ? $login['login_terkunci'].' kali dikunci sementara. Periksa jejak audit dan ganti password bila ada akun yang dicurigai.'
+                    : 'Periksa jejak audit untuk memastikan itu bukan upaya menebak password.',
+                'url' => route('admin.audit', ['aksi' => 'login_gagal']), 'aksi' => 'Lihat jejak audit',
+            ];
+        }
+
         $poliTanpaDokter = Poli::where('aktif', true)
             ->whereDoesntHave('dokters', fn ($q) => $q->where('aktif', true))
             ->pluck('nama_poli');
@@ -144,7 +160,7 @@ class AdminDashboardController extends Controller
             $daftar[] = [
                 'tone' => 'info', 'ikon' => 'whatsapp',
                 'judul' => 'Notifikasi WhatsApp belum aktif',
-                'teks' => 'WA_DRIVER masih "'.config('whatsapp.driver').'", jadi pesan hanya dicatat di log dan tidak sampai ke pasien.',
+                'teks' => 'Pesan pengingat belum terkirim ke pasien. Isi pengaturan WhatsApp (WA_DRIVER dan token) di file .env untuk mengaktifkannya.',
                 'url' => null, 'aksi' => null,
             ];
         }
@@ -153,8 +169,8 @@ class AdminDashboardController extends Controller
             $daftar[] = [
                 'tone' => 'info', 'ikon' => 'clock-history',
                 'judul' => 'Pembatasan jam operasional nonaktif',
-                'teks' => 'Pendaftaran dan pemanggilan bisa dilakukan kapan saja. Atur OPERASIONAL_AKTIF=true bila ingin dibatasi.',
-                'url' => null, 'aksi' => null,
+                'teks' => 'Pendaftaran dan pemanggilan bisa dilakukan kapan saja. Aktifkan pembatasan jam di menu Jadwal bila perlu.',
+                'url' => route('admin.penjadwalan'), 'aksi' => 'Buka jadwal',
             ];
         }
 

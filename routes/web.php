@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AkunStafController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\DokterController;
 use App\Http\Controllers\Admin\JadwalPraktikController;
@@ -9,7 +10,6 @@ use App\Http\Controllers\AnalitikController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DemoLoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RiwayatController;
 use Illuminate\Support\Facades\Route;
@@ -25,10 +25,6 @@ Route::get('/', [BerandaController::class, 'index'])->name('beranda');
 Route::get('/antrian/hari-ini', [BerandaController::class, 'antrianHariIni'])
     ->middleware('throttle:60,1')
     ->name('antrian.hari-ini');
-
-Route::post('/demo/masuk/{role}', DemoLoginController::class)
-    ->whereIn('role', ['admin', 'petugas', 'dokter'])
-    ->name('demo.masuk');
 
 /*
 |--------------------------------------------------------------------------
@@ -121,6 +117,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin/dashboard')->name('admi
         ->name('penjadwalan');
 
     Route::get('audit', AuditController::class)->name('audit');
+
+    Route::get('akun', [AkunStafController::class, 'index'])->name('akun.index');
+    Route::post('akun', [AkunStafController::class, 'store'])->middleware('throttle:20,1')->name('akun.store');
+    Route::patch('akun/{user}', [AkunStafController::class, 'update'])->middleware('throttle:20,1')->name('akun.update');
 
     Route::resource('poli', PoliController::class);
     Route::resource('dokter', DokterController::class)->except(['show']);

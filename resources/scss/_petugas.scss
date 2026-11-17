@@ -175,3 +175,10 @@ $pt-aksen: (#0B7A8F, #B5791B, #C4553F, #6A50D3, #1F6FB5, #4E8A22);
     .pt-poli, .pt-call, .pt-load span { transition: none; }
     .pt-poli:hover { transform: none; }
 }
+
+// ---------- pencarian di daftar menunggu ----------
+.pt-cari { position: relative; padding: .75rem 1.25rem 0;
+    i { position: absolute; left: 2rem; top: 1.45rem; color: $text-muted; pointer-events: none; }
+    input { padding-left: 2.4rem; } }
+.pt-cari-kosong { margin: 0; padding: 1rem 1.25rem; color: $text-muted; font-size: .9rem; }
+.pt-list li[hidden] { display: none; }

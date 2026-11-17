@@ -49,7 +49,7 @@
             <h2>Pilih poli untuk dikelola</h2>
             <div class="pt-live" id="ptLive" role="group" aria-label="Penyegaran otomatis">
                 <span class="pt-live-dot" aria-hidden="true"></span>
-                <span id="ptLiveTeks">Diperbarui otomatis tiap 30 detik</span>
+                <span id="ptLiveTeks">Diperbarui otomatis</span>
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="ptJeda" aria-pressed="false">Jeda</button>
             </div>
         </div>
@@ -114,11 +114,27 @@
             tombol.setAttribute('aria-pressed', jeda ? 'true' : 'false');
             tombol.textContent = jeda ? 'Lanjutkan' : 'Jeda';
             box.classList.toggle('is-jeda', jeda);
-            teks.textContent = jeda ? 'Pembaruan dijeda' : 'Diperbarui otomatis tiap 30 detik';
+            teks.textContent = jeda ? 'Pembaruan dijeda' : 'Diperbarui otomatis';
         });
-        setInterval(function () {
-            if (!jeda && document.visibilityState === 'visible') location.reload();
-        }, 30000);
+        // Pembaruan senyap: ambil halaman, tukar hanya bagian angka. Tanpa muat ulang, tanpa berkedip.
+        var sedangMuat = false;
+        function segarkan() {
+            if (jeda || sedangMuat || document.visibilityState !== 'visible') return;
+            sedangMuat = true;
+            fetch(location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+                .then(function (r) { if (r.redirected || !r.ok) { location.reload(); throw 0; } return r.text(); })
+                .then(function (html) {
+                    var baru = new DOMParser().parseFromString(html, 'text/html');
+                    ['[aria-label="Ringkasan hari ini"]', '[aria-label="Daftar poli"]'].forEach(function (q) {
+                        var lama = document.querySelector(q), isi = baru.querySelector(q);
+                        if (lama && isi && lama.innerHTML !== isi.innerHTML) lama.innerHTML = isi.innerHTML;
+                    });
+                })
+                .catch(function () {})
+                .then(function () { sedangMuat = false; });
+        }
+        setInterval(segarkan, 10000);
+        document.addEventListener('visibilitychange', segarkan);
     })();
     </script>
 </x-app-layout>

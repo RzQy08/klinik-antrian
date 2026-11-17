@@ -11,6 +11,7 @@
         $nav[] = ['Poli', route('admin.poli.index'), request()->routeIs('admin.poli.*'), 'building', 'Kelola'];
         $nav[] = ['Dokter', route('admin.dokter.index'), request()->routeIs('admin.dokter.*', 'admin.jadwal.*'), 'person-badge', 'Kelola'];
         $nav[] = ['Jadwal', route('admin.penjadwalan'), request()->routeIs('admin.penjadwalan'), 'calendar-week', 'Kelola'];
+        $nav[] = ['Akun staf', route('admin.akun.index'), request()->routeIs('admin.akun.*'), 'people-fill', 'Kelola'];
         $nav[] = ['Jejak audit', route('admin.audit'), request()->routeIs('admin.audit'), 'shield-check', 'Kelola'];
     }
 
