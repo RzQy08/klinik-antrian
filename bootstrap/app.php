@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
-            'audit' => CatatAkses::class,
+            'aktivitas' => CatatAkses::class,
         ]);
         // AuthenticateSession: ganti password otomatis mengeluarkan sesi di perangkat lain (laptop yang lupa logout)
         $middleware->web(append: [PastikanAkunAktif::class, AuthenticateSession::class, SecurityHeaders::class]);

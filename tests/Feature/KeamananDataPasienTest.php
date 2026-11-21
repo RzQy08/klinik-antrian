@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\AuditLog;
+use App\Models\LogAktivitas;
 use App\Models\Antrian;
 use App\Models\Pasien;
 use App\Models\Poli;
@@ -74,17 +74,17 @@ it('password akun dokter yang dibuat admin harus kuat', function () {
     expect(User::where('email', 'lemah@klinik.test')->exists())->toBeFalse();
 });
 
-it('login, kegagalan login, dan unduhan CSV tercatat di jejak audit tanpa membocorkan NIK', function () {
+it('login, kegagalan login, dan unduhan CSV tercatat di log aktivitas tanpa membocorkan NIK', function () {
     $petugas = User::factory()->create(['role' => 'petugas', 'password' => 'Petugas-Kuat#2026']);
 
     $this->post('/login', ['email' => $petugas->email, 'password' => 'salah'])->assertSessionHasErrors('email');
-    expect(AuditLog::where('aksi', 'login_gagal')->exists())->toBeTrue();
+    expect(LogAktivitas::where('aksi', 'login_gagal')->exists())->toBeTrue();
 
     $this->post('/login', ['email' => $petugas->email, 'password' => 'Petugas-Kuat#2026']);
-    expect(AuditLog::where('aksi', 'login')->where('user_id', $petugas->id)->exists())->toBeTrue();
+    expect(LogAktivitas::where('aksi', 'login')->where('user_id', $petugas->id)->exists())->toBeTrue();
 
     $this->get(route('antrian.riwayat.csv', ['q' => '3201234567890001']))->assertOk();
-    $log = AuditLog::where('aksi', 'ekspor_csv')->firstOrFail();
+    $log = LogAktivitas::where('aksi', 'ekspor_csv')->firstOrFail();
 
     expect($log->nama_pengguna)->toBe($petugas->name)
         ->and($log->keterangan)->toContain('3201********0001')
@@ -93,19 +93,19 @@ it('login, kegagalan login, dan unduhan CSV tercatat di jejak audit tanpa memboc
 
 it('perubahan akun dan password tercatat', function () {
     $user = User::factory()->create(['role' => 'petugas']);
-    expect(AuditLog::where('aksi', 'akun_dibuat')->exists())->toBeTrue();
+    expect(LogAktivitas::where('aksi', 'akun_dibuat')->exists())->toBeTrue();
 
     $user->update(['password' => 'Sandi-Baru-Kuat#1']);
     $user->update(['role' => 'admin']);
 
-    expect(AuditLog::where('aksi', 'password_diubah')->exists())->toBeTrue()
-        ->and(AuditLog::where('aksi', 'peran_diubah')->exists())->toBeTrue();
+    expect(LogAktivitas::where('aksi', 'password_diubah')->exists())->toBeTrue()
+        ->and(LogAktivitas::where('aksi', 'peran_diubah')->exists())->toBeTrue();
 });
 
-it('jejak audit hanya bisa dibuka admin', function () {
-    $this->actingAs(User::factory()->create(['role' => 'petugas']))->get(route('admin.audit'))->assertForbidden();
+it('log aktivitas hanya bisa dibuka admin', function () {
+    $this->actingAs(User::factory()->create(['role' => 'petugas']))->get(route('admin.log-aktivitas'))->assertForbidden();
     $this->flushSession();
-    $this->actingAs(User::factory()->create(['role' => 'admin']))->get(route('admin.audit'))->assertOk()->assertSee('Jejak audit');
+    $this->actingAs(User::factory()->create(['role' => 'admin']))->get(route('admin.log-aktivitas'))->assertOk()->assertSee('Log aktivitas');
 });
 
 it('pemeriksa keamanan menandai akun yang masih memakai password bawaan seeder', function () {
@@ -126,4 +126,38 @@ it('perintah keamanan:periksa gagal bila ada berkas sensitif di folder public', 
     } finally {
         @unlink($berkas);
     }
+});
+
+function masukCepat($uji, array $header = [], array $server = [])
+{
+    app()->detectEnvironment(fn () => 'local');
+
+    return $uji->withServerVariables($server)->withHeaders($header)
+        ->withSession(['_token' => 'token-uji'])
+        ->post(route('demo.masuk', 'admin'), ['_token' => 'token-uji']);
+}
+
+it('masuk cepat DEV ditolak bila lewat tunnel atau proxy walau APP_ENV=local', function () {
+    masukCepat($this, ['X-Forwarded-For' => '203.0.113.9', 'X-Forwarded-Proto' => 'https'])->assertNotFound();
+    $this->assertGuest();
+});
+
+it('masuk cepat DEV ditolak dari alamat jaringan atau host publik', function () {
+    masukCepat($this, [], ['REMOTE_ADDR' => '203.0.113.9'])->assertNotFound();
+    $this->assertGuest();
+
+    app()->detectEnvironment(fn () => 'local');
+    $this->withServerVariables(['HTTP_HOST' => 'abc.ngrok-free.app'])
+        ->withSession(['_token' => 'token-uji'])
+        ->post('http://abc.ngrok-free.app/demo/masuk/admin', ['_token' => 'token-uji'])
+        ->assertNotFound();
+    $this->assertGuest();
+});
+
+it('panel DEV tidak dirender untuk permintaan lewat tunnel', function () {
+    app()->detectEnvironment(fn () => 'local');
+
+    $this->get(route('beranda'))->assertOk()->assertSee('data-dev', false);
+
+    $this->withHeaders(['X-Forwarded-For' => '203.0.113.9'])->get(route('beranda'))->assertOk()->assertDontSee('data-dev', false);
 });

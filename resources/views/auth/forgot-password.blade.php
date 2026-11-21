@@ -1,6 +1,6 @@
 <x-guest-layout>
-    <h1 class="h3 mb-1">Lupa password</h1>
-    <p class="text-body-secondary mb-4">Masukkan email akun Anda. Kami kirim tautan untuk membuat password baru.</p>
+    <h1 class="lg-title">Lupa password</h1>
+    <p class="lg-sub">Masukkan email akun Anda. Kami kirim tautan untuk membuat password baru.</p>
 
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>

@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AkunStafController;
-use App\Http\Controllers\Admin\AuditController;
+use App\Http\Controllers\Admin\LogAktivitasController;
 use App\Http\Controllers\Admin\DokterController;
 use App\Http\Controllers\Admin\JadwalPraktikController;
 use App\Http\Controllers\Admin\PoliController;
@@ -10,6 +10,7 @@ use App\Http\Controllers\AnalitikController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DemoLoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RiwayatController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,10 @@ Route::get('/', [BerandaController::class, 'index'])->name('beranda');
 Route::get('/antrian/hari-ini', [BerandaController::class, 'antrianHariIni'])
     ->middleware('throttle:60,1')
     ->name('antrian.hari-ini');
+
+Route::post('/demo/masuk/{role}', DemoLoginController::class)
+    ->whereIn('role', ['admin', 'petugas', 'dokter'])
+    ->name('demo.masuk');
 
 /*
 |--------------------------------------------------------------------------
@@ -70,11 +75,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('antrian.analitik');
 
     Route::get('/antrian/riwayat', [RiwayatController::class, 'index'])
-        ->middleware(['role:admin,petugas', 'audit:lihat_riwayat'])
+        ->middleware(['role:admin,petugas', 'aktivitas:lihat_riwayat'])
         ->name('antrian.riwayat');
 
     Route::get('/antrian/riwayat/csv', [RiwayatController::class, 'csv'])
-        ->middleware(['role:admin,petugas', 'throttle:10,1', 'audit:ekspor_csv'])
+        ->middleware(['role:admin,petugas', 'throttle:10,1', 'aktivitas:ekspor_csv'])
         ->name('antrian.riwayat.csv');
 
     Route::get('/antrian/dokter', [AntrianController::class, 'dokterDashboard'])
@@ -116,7 +121,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin/dashboard')->name('admi
         ->whereIn('tab', ['rumah-sakit', 'dokter'])
         ->name('penjadwalan');
 
-    Route::get('audit', AuditController::class)->name('audit');
+    Route::get('log-aktivitas', LogAktivitasController::class)->name('log-aktivitas');
 
     Route::get('akun', [AkunStafController::class, 'index'])->name('akun.index');
     Route::post('akun', [AkunStafController::class, 'store'])->middleware('throttle:20,1')->name('akun.store');

@@ -84,3 +84,22 @@ it('beranda menyertakan data awal panel antrian dan tetap rapi tanpa poli', func
         ->assertSee('data-hero-antrian', false)
         ->assertSee('Belum ada dokter dengan jadwal praktik hari ini.');
 });
+
+it('endpoint antrian hari ini ikut membawa status pendaftaran, tanggal, dan id dokter untuk pembaruan langsung', function () {
+    Poli::factory()->create(['aktif' => true]);
+
+    $json = $this->getJson(route('antrian.hari-ini'))->assertOk()->json();
+
+    expect($json)->toHaveKeys(['layanan', 'tanggal_label', 'dokter', 'poli'])
+        ->and($json['layanan'])->toHaveKeys(['aktif', 'buka', 'teks', 'pill', 'layanan_selesai']);
+});
+
+it('beranda memasang penanda bagian yang diperbarui langsung', function () {
+    Poli::factory()->create(['aktif' => true]);
+
+    $this->get(route('beranda'))
+        ->assertOk()
+        ->assertSee('data-live-pill', false)
+        ->assertSee('data-live-status', false)
+        ->assertSee('data-dokter-live', false);
+});

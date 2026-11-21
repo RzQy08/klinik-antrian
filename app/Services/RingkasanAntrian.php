@@ -118,6 +118,8 @@ class RingkasanAntrian
         return [
             'diperbarui' => $sekarang->toIso8601String(),
             'tanggal' => $sekarang->toDateString(),
+            'tanggal_label' => $sekarang->copy()->locale('id')->translatedFormat('l, j F Y'),
+            'layanan' => self::layanan(),
             'ringkasan' => [
                 'menunggu' => (int) $baris->sum('menunggu'),
                 'selesai' => (int) $baris->sum('selesai'),
@@ -127,6 +129,29 @@ class RingkasanAntrian
             ],
             'poli' => $baris->all(),
             'dokter' => self::dokterHariIni($jadwal, $polis, $jam),
+        ];
+    }
+
+    /**
+     * Status pendaftaran dan jam layanan. Dikirim bersama ringkasan supaya pita status, lencana di hero,
+     * dan kartu jam layanan di beranda ikut berubah tanpa memuat ulang halaman.
+     */
+    public static function layanan(): array
+    {
+        $aktif = JamOperasional::aktif();
+        $buka = JamOperasional::pendaftaranDibuka();
+        $jam = fn (string $kunci) => JamOperasional::tampil((string) JamOperasional::jam($kunci));
+
+        return [
+            'aktif' => $aktif,
+            'buka' => $buka,
+            'teks' => ! $aktif
+                ? 'Antrian online aktif'
+                : ($buka ? 'Pendaftaran dibuka sampai pukul '.$jam('pendaftaran_tutup') : 'Pendaftaran ditutup, dibuka lagi pukul '.$jam('pendaftaran_buka')),
+            'pill' => ! $aktif
+                ? 'Pendaftaran online dibuka'
+                : ($buka ? 'Pendaftaran buka sampai pukul '.$jam('pendaftaran_tutup') : 'Pendaftaran sedang tutup'),
+            'layanan_selesai' => $aktif ? $jam('layanan_selesai') : null,
         ];
     }
 
@@ -142,14 +167,16 @@ class RingkasanAntrian
                 $dokter = $js->first()->dokter;
 
                 return [
+                    'id' => $dokter->id,
                     'nama' => $dokter->nama,
                     'inisial' => self::inisial($dokter->nama),
                     'poli' => $namaPoli->get($dokter->poli_id),
+                    'poli_slug' => \Illuminate\Support\Str::slug($namaPoli->get($dokter->poli_id)),
                     'jam' => self::rentangJam($js),
                     'praktik' => self::statusPraktik($js, $jam),
                 ];
             })
-            ->sortBy('poli')
+            ->sortBy([['poli', 'asc'], ['nama', 'asc']])
             ->values()
             ->all();
     }

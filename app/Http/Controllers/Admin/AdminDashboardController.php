@@ -117,7 +117,7 @@ class AdminDashboardController extends Controller
         }
 
         // Percobaan masuk yang mencurigakan dalam 24 jam terakhir
-        $login = \App\Models\AuditLog::where('created_at', '>=', now()->subDay())
+        $login = \App\Models\LogAktivitas::where('created_at', '>=', now()->subDay())
             ->whereIn('aksi', ['login_gagal', 'login_terkunci'])
             ->selectRaw('aksi, COUNT(*) as n')->groupBy('aksi')->pluck('n', 'aksi');
 
@@ -126,9 +126,9 @@ class AdminDashboardController extends Controller
                 'tone' => 'warning', 'ikon' => 'shield-exclamation',
                 'judul' => ($login['login_gagal'] ?? 0).' percobaan masuk gagal dalam 24 jam',
                 'teks' => ($login['login_terkunci'] ?? 0) > 0
-                    ? $login['login_terkunci'].' kali dikunci sementara. Periksa jejak audit dan ganti password bila ada akun yang dicurigai.'
-                    : 'Periksa jejak audit untuk memastikan itu bukan upaya menebak password.',
-                'url' => route('admin.audit', ['aksi' => 'login_gagal']), 'aksi' => 'Lihat jejak audit',
+                    ? $login['login_terkunci'].' kali dikunci sementara. Periksa log aktivitas dan ganti password bila ada akun yang dicurigai.'
+                    : 'Periksa log aktivitas untuk memastikan itu bukan upaya menebak password.',
+                'url' => route('admin.log-aktivitas', ['aksi' => 'login_gagal']), 'aksi' => 'Lihat log aktivitas',
             ];
         }
 

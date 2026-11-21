@@ -76,15 +76,8 @@
         <div class="container-xxl position-relative">
             <div class="hm-hero-grid">
                 <div class="hm-hero-copy">
-                    @if (\App\Services\JamOperasional::aktif())
-                        @if (\App\Services\JamOperasional::pendaftaranDibuka())
-                            <span class="hm-pill"><span class="hm-dot"></span>Pendaftaran buka sampai pukul {{ \App\Services\JamOperasional::tampil(\App\Services\JamOperasional::jam('pendaftaran_tutup')) }}</span>
-                        @else
-                            <span class="hm-pill hm-pill-off"><span class="hm-dot"></span>Pendaftaran sedang tutup</span>
-                        @endif
-                    @else
-                        <span class="hm-pill"><span class="hm-dot"></span>Pendaftaran online dibuka</span>
-                    @endif
+                    @php $lay = \App\Services\RingkasanAntrian::layanan(); @endphp
+                    <span class="hm-pill {{ $lay['aktif'] && ! $lay['buka'] ? 'hm-pill-off' : '' }}" data-live-pill><span class="hm-dot"></span><span data-live-pill-teks>{{ $lay['pill'] }}</span></span>
 
                     <h1 class="hm-title">Ambil nomor dari rumah, <span class="hm-accent">datang saat giliran Anda dekat.</span></h1>
                     <p class="hm-lead">Pilih poli dan daftar lewat HP. Pantau nomor yang sedang dipanggil, lalu berangkat sekitar 30 menit sebelum giliran Anda.</p>
@@ -136,11 +129,11 @@
                     <li>
                         @if ($url)
                             <a class="hm-info-item" href="{{ $url }}" @if (str_starts_with($url, 'http')) target="_blank" rel="noopener" @endif>
-                                <i class="bi bi-{{ $ikon }}" aria-hidden="true"></i><span><small>{{ $label }}</small><b>{{ $isi }}</b></span>
+                                <i class="bi bi-{{ $ikon }}" aria-hidden="true"></i><span><small>{{ $label }}</small><b @if ($label === 'Jam layanan' && ! config('rumahsakit.jam_layanan')) data-live-jamlayanan @endif>{{ $isi }}</b></span>
                             </a>
                         @else
                             <div class="hm-info-item">
-                                <i class="bi bi-{{ $ikon }}" aria-hidden="true"></i><span><small>{{ $label }}</small><b>{{ $isi }}</b></span>
+                                <i class="bi bi-{{ $ikon }}" aria-hidden="true"></i><span><small>{{ $label }}</small><b @if ($label === 'Jam layanan' && ! config('rumahsakit.jam_layanan')) data-live-jamlayanan @endif>{{ $isi }}</b></span>
                             </div>
                         @endif
                     </li>
@@ -257,47 +250,41 @@
         $perPoli = collect($dokterHariIni)->groupBy('poli');
         $sedangPraktik = collect($dokterHariIni)->where('praktik', 'berlangsung')->count();
     @endphp
-    <section id="dokter" class="hm-section hm-fit hm-dokter">
+    {{-- Isi awal dari server; setelah itu diperbarui diam-diam oleh resources/js/beranda-antrian.js --}}
+    <section id="dokter" class="hm-section hm-fit hm-dokter" data-dokter-live>
         <div class="container-xxl">
             <div class="hm-head">
                 <div>
                     <h2 class="hm-h2">Dokter praktik hari ini</h2>
-                    <p class="hm-sub">{{ now()->locale('id')->translatedFormat('l, j F Y') }}</p>
+                    <p class="hm-sub" data-live-tanggal>{{ now()->locale('id')->translatedFormat('l, j F Y') }}</p>
                 </div>
-                @if ($dokterHariIni)
-                    <p class="hm-dk-sum"><span><b class="numeral">{{ count($dokterHariIni) }}</b>dokter</span><span class="is-ok"><b class="numeral">{{ $sedangPraktik }}</b>sedang praktik</span></p>
-                @endif
+                <p class="hm-dk-sum" data-dk-sum @if (! $dokterHariIni) hidden @endif><span><b class="numeral" data-dk-total>{{ count($dokterHariIni) }}</b>dokter</span><span class="is-ok"><b class="numeral" data-dk-aktif>{{ $sedangPraktik }}</b>sedang praktik</span></p>
             </div>
 
-            @if ($dokterHariIni)
-                <div class="hm-dk" data-dk>
-                    @if ($perPoli->count() > 1)
-                        <div class="hm-dk-tabs" role="group" aria-label="Saring menurut poli">
-                            <button type="button" class="hm-dk-tab" data-dk-tab="*" aria-pressed="true">Semua<b>{{ count($dokterHariIni) }}</b></button>
-                            @foreach ($perPoli as $namaPoli => $daftar)
-                                <button type="button" class="hm-dk-tab" data-w="{{ ($indeksPoli->get($namaPoli, 0)) % 6 }}" data-dk-tab="{{ \Illuminate\Support\Str::slug($namaPoli) }}" aria-pressed="false"><i aria-hidden="true"></i>{{ $namaPoli }}<b>{{ $daftar->count() }}</b></button>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    <div class="hm-dk-grid">
-                        @foreach (collect($dokterHariIni)->sortBy(fn ($d) => $d['praktik'] === 'berlangsung' ? 0 : 1)->values() as $d)
-                            @php [$kelas, $teks] = $praktikLabel[$d['praktik']] ?? $praktikLabel['libur']; @endphp
-                            <article class="hm-dkc is-{{ $kelas }}" data-dk-kartu data-poli="{{ \Illuminate\Support\Str::slug($d['poli']) }}" data-w="{{ ($indeksPoli->get($d['poli'], 0)) % 6 }}">
-                                <span class="hm-dkc-av" aria-hidden="true">{{ $d['inisial'] }}</span>
-                                <div class="hm-dkc-info">
-                                    <h3>{{ $d['nama'] }}</h3>
-                                    <p>{{ $d['poli'] }}</p>
-                                </div>
-                                @if ($d['praktik'] !== 'berlangsung')<span class="hm-badge hm-badge-{{ $kelas }}">{{ $teks }}</span>@endif
-                                @if ($d['jam'])<p class="hm-dkc-jam"><i class="bi bi-clock" aria-hidden="true"></i><span>{{ $d['jam'] }}</span></p>@endif
-                            </article>
-                        @endforeach
-                    </div>
+            <div class="hm-dk" data-dk @if (! $dokterHariIni) hidden @endif>
+                <div class="hm-dk-tabs" role="group" aria-label="Saring menurut poli" data-dk-tabs @if ($perPoli->count() < 2) hidden @endif>
+                    <button type="button" class="hm-dk-tab" data-dk-tab="*" aria-pressed="true">Semua<b>{{ count($dokterHariIni) }}</b></button>
+                    @foreach ($perPoli as $namaPoli => $daftar)
+                        <button type="button" class="hm-dk-tab" data-w="{{ ($indeksPoli->get($namaPoli, 0)) % 6 }}" data-dk-tab="{{ \Illuminate\Support\Str::slug($namaPoli) }}" aria-pressed="false"><i aria-hidden="true"></i>{{ $namaPoli }}<b>{{ $daftar->count() }}</b></button>
+                    @endforeach
                 </div>
-            @else
-                <p class="hm-empty">Belum ada dokter dengan jadwal praktik hari ini.</p>
-            @endif
+
+                <div class="hm-dk-grid" data-dk-grid>
+                    @foreach ($dokterHariIni as $d)
+                        @php [$kelas, $teks] = $praktikLabel[$d['praktik']] ?? $praktikLabel['libur']; @endphp
+                        <article class="hm-dkc is-{{ $kelas }}" data-dk-kartu data-id="{{ $d['id'] }}" data-poli="{{ \Illuminate\Support\Str::slug($d['poli']) }}" data-w="{{ ($indeksPoli->get($d['poli'], 0)) % 6 }}">
+                            <span class="hm-dkc-av" aria-hidden="true">{{ $d['inisial'] }}</span>
+                            <div class="hm-dkc-info">
+                                <h3>{{ $d['nama'] }}</h3>
+                                <p>{{ $d['poli'] }}</p>
+                            </div>
+                            <span class="hm-badge hm-badge-{{ $kelas }}" data-k="badge" @if ($d['praktik'] === 'berlangsung') hidden @endif>{{ $teks }}</span>
+                            <p class="hm-dkc-jam" data-k="jam" @if (! $d['jam']) hidden @endif><i class="bi bi-clock" aria-hidden="true"></i><span>{{ $d['jam'] }}</span></p>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+            <p class="hm-empty" data-dk-kosong @if ($dokterHariIni) hidden @endif>Belum ada dokter dengan jadwal praktik hari ini.</p>
         </div>
     </section>
 
@@ -330,7 +317,7 @@
                     @endif
                     @php
                         $maps = config('rumahsakit.maps');
-                        $lokasi = '<span><small>Datang langsung</small><b>'.e($alamat ?: 'Loket informasi rumah sakit').'</b>'.($jamLayanan ? '<em>'.e($jamLayanan).'</em>' : '').'</span>';
+                        $lokasi = '<span><small>Datang langsung</small><b>'.e($alamat ?: 'Loket informasi rumah sakit').'</b>'.($jamLayanan ? '<em'.(config('rumahsakit.jam_layanan') ? '' : ' data-live-jamlayanan').'>'.e($jamLayanan).'</em>' : '').'</span>';
                     @endphp
                     @if ($maps)
                         <a class="hm-help-row" href="{{ $maps }}" target="_blank" rel="noopener">

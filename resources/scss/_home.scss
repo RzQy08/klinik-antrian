@@ -534,3 +534,6 @@ $hm-gelombang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
     .hm-hero-copy, .hm-panel { animation: none; }
     .hm-bump, .hm-dot, .hm-live i { animation: none; }
 }
+
+// Bagian yang diperbarui langsung (beranda): atribut hidden harus menang atas display bawaan komponen
+[data-dokter-live] [hidden], [data-live-layanan][hidden] { display: none !important; }

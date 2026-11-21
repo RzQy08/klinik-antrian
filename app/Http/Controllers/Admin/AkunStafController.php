@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Support\Audit;
+use App\Support\Aktivitas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -85,14 +85,14 @@ class AkunStafController extends Controller
             }
 
             $user->forceFill(['nonaktif_at' => now()])->save();
-            Audit::catat('akun_nonaktif', $user->email);
+            Aktivitas::catat('akun_nonaktif', $user->email);
 
             return back()->with('success', $user->name.' dinonaktifkan dan langsung dikeluarkan.');
         }
 
         if ($data['aksi'] === 'aktifkan') {
             $user->forceFill(['nonaktif_at' => null])->save();
-            Audit::catat('akun_aktif', $user->email);
+            Aktivitas::catat('akun_aktif', $user->email);
 
             return back()->with('success', $user->name.' diaktifkan kembali.');
         }

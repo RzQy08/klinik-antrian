@@ -330,20 +330,62 @@
         }
     }
 
+    // Tanda isi data tanpa cap waktunya: kalau sama dengan yang terakhir, layar tidak perlu digambar ulang.
+    const tanda = (d) => { const { diperbarui, ...sisa } = d; return JSON.stringify(sisa); };
+    let tandaAkhir = data ? tanda(data) : '';
+    let gagal = 0;
+    let sedangMuat = false;
+    let timer = null;
+
     async function muat() {
+        if (sedangMuat) {
+            return;
+        }
+
+        sedangMuat = true;
+        const batas = new AbortController();
+        const habis = setTimeout(() => batas.abort(), 8000);
+
         try {
-            const res = await fetch(endpoint, { headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'same-origin' });
+            const res = await fetch(endpoint, { headers: { Accept: 'application/json' }, cache: 'no-store', credentials: 'same-origin', signal: batas.signal });
 
             if (! res.ok) {
                 throw new Error(res.status);
             }
 
-            data = await res.json();
+            const baru = await res.json();
+            gagal = 0;
             setTersambung(true);
-            gambar();
+
+            const t = tanda(baru);
+
+            if (t !== tandaAkhir) {
+                tandaAkhir = t;
+                data = baru;
+                gambar();
+                langsung(baru);
+            }
         } catch (e) {
+            gagal++;
             setTersambung(false);
+        } finally {
+            clearTimeout(habis);
+            sedangMuat = false;
         }
+    }
+
+    // Satu permintaan pada satu waktu. Gagal berturut-turut memperlambat sendiri (maksimal 30 detik).
+    function jadwalkan() {
+        clearTimeout(timer);
+        const jeda = gagal ? Math.min(30000, jedaPoll * 2 ** gagal) : jedaPoll;
+
+        timer = setTimeout(async () => {
+            if (! document.hidden) {
+                await muat();
+            }
+
+            jadwalkan();
+        }, jeda + Math.random() * 400);
     }
 
     // data awal ikut halaman, jadi panel langsung terisi tanpa menunggu jaringan
@@ -352,39 +394,170 @@
         gambar();
     }
 
-    setInterval(() => { if (! document.hidden) muat(); }, jedaPoll);
-    document.addEventListener('visibilitychange', () => { if (! document.hidden) muat(); });
+    jadwalkan();
+    document.addEventListener('visibilitychange', () => {
+        if (! document.hidden) {
+            muat().then(jadwalkan);
+        }
+    });
+    window.addEventListener('online', () => { gagal = 0; muat().then(jadwalkan); });
 
-    // ---------- saringan poli di jadwal dokter ----------
-    const jadwal = document.querySelector('[data-dk]');
+    // ---------- status pendaftaran, jam layanan, dan jadwal dokter ----------
+    // Hanya menyentuh DOM bila nilainya berubah, jadi tidak ada kedipan atau kerja berlebih.
+    const setTeks = (el, t) => { if (el && el.textContent !== t) el.textContent = t; };
+    const setHidden = (el, h) => { if (el && el.hidden !== h) el.hidden = h; };
 
-    if (jadwal) {
-        const tombol = [...jadwal.querySelectorAll('[data-dk-tab]')];
-        const kartu = [...jadwal.querySelectorAll('[data-dk-kartu]')];
+    function langsungLayanan(l) {
+        if (! l) {
+            return;
+        }
 
-        const tampilkan = (poli) => {
-            let urut = 0;
+        const tutup = l.aktif && ! l.buka;
 
-            kartu.forEach((k) => {
-                const cocok = poli === '*' || k.dataset.poli === poli;
-                k.hidden = ! cocok;
-                k.classList.remove('is-masuk');
+        document.querySelectorAll('[data-live-status]').forEach((el) => setTeks(el, l.teks));
+        document.querySelectorAll('[data-live-dot]').forEach((el) => el.classList.toggle('off', tutup));
+        document.querySelectorAll('[data-live-sheet]').forEach((el) => el.classList.toggle('off', tutup));
+        document.querySelectorAll('[data-live-layanan]').forEach((el) => setHidden(el, ! l.aktif));
+        document.querySelectorAll('[data-live-selesai]').forEach((el) => setTeks(el, l.layanan_selesai || ''));
+        document.querySelectorAll('[data-live-jamlayanan]').forEach((el) => { if (l.layanan_selesai) setTeks(el, 'Sampai pukul ' + l.layanan_selesai); });
 
-                if (cocok && ! kurangiGerak) {
-                    k.style.setProperty('--i', urut++);
-                    void k.offsetWidth; // mulai ulang animasi
-                    k.classList.add('is-masuk');
+        const pill = document.querySelector('[data-live-pill]');
+
+        if (pill) {
+            pill.classList.toggle('hm-pill-off', tutup);
+            setTeks(pill.querySelector('[data-live-pill-teks]'), l.pill);
+        }
+    }
+
+    const dokterRoot = document.querySelector('[data-dokter-live]');
+    const dkGrid = dokterRoot && dokterRoot.querySelector('[data-dk-grid]');
+    const dkTabs = dokterRoot && dokterRoot.querySelector('[data-dk-tabs]');
+    const dkSig = (daftar) => daftar.map((d) => d.id + ':' + d.nama + ':' + d.poli).join('|');
+    let dkSigAkhir = data && Array.isArray(data.dokter) ? dkSig(data.dokter) : '';
+    let dkFilter = '*';
+
+    function terapkanSaringan(poli, animasi) {
+        dkFilter = poli;
+        let urut = 0;
+
+        dkGrid.querySelectorAll('[data-dk-kartu]').forEach((k) => {
+            const cocok = poli === '*' || k.dataset.poli === poli;
+            k.hidden = ! cocok;
+            k.classList.remove('is-masuk');
+
+            if (cocok && animasi && ! kurangiGerak) {
+                k.style.setProperty('--i', urut++);
+                void k.offsetWidth; // mulai ulang animasi
+                k.classList.add('is-masuk');
+            }
+        });
+
+        dkTabs.querySelectorAll('[data-dk-tab]').forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.dkTab === poli)));
+    }
+
+    function bangunDokter(daftar, semuaPoli) {
+        const urutPoli = [...new Set(daftar.map((d) => d.poli))];
+        const warna = (nama) => Math.max(0, semuaPoli.indexOf(nama)) % 6;
+
+        dkGrid.innerHTML = daftar.map((d) => {
+            const [kelas, teks] = PRAKTIK[d.praktik] || PRAKTIK.libur;
+
+            return `<article class="hm-dkc is-${kelas}" data-dk-kartu data-id="${d.id}" data-poli="${esc(d.poli_slug)}" data-w="${warna(d.poli)}">
+  <span class="hm-dkc-av" aria-hidden="true">${esc(d.inisial)}</span>
+  <div class="hm-dkc-info"><h3>${esc(d.nama)}</h3><p>${esc(d.poli)}</p></div>
+  <span class="hm-badge hm-badge-${kelas}" data-k="badge"${d.praktik === 'berlangsung' ? ' hidden' : ''}>${teks}</span>
+  <p class="hm-dkc-jam" data-k="jam"${d.jam ? '' : ' hidden'}><i class="bi bi-clock" aria-hidden="true"></i><span>${esc(d.jam || '')}</span></p>
+</article>`;
+        }).join('');
+
+        dkTabs.innerHTML = '<button type="button" class="hm-dk-tab" data-dk-tab="*" aria-pressed="true">Semua<b></b></button>'
+            + urutPoli.map((nama) => {
+                const slug = daftar.find((d) => d.poli === nama).poli_slug;
+
+                return `<button type="button" class="hm-dk-tab" data-w="${warna(nama)}" data-dk-tab="${esc(slug)}" aria-pressed="false"><i aria-hidden="true"></i>${esc(nama)}<b></b></button>`;
+            }).join('');
+
+        // pilihan saringan tetap dipertahankan bila poli-nya masih ada
+        const masih = dkFilter === '*' || daftar.some((d) => d.poli_slug === dkFilter);
+        terapkanSaringan(masih ? dkFilter : '*', false);
+    }
+
+    function langsungDokter(d) {
+        if (! dokterRoot) {
+            return;
+        }
+
+        const daftar = Array.isArray(d.dokter) ? d.dokter : [];
+        const semuaPoli = (d.poli || []).map((p) => p.nama);
+
+        setTeks(dokterRoot.querySelector('[data-live-tanggal]'), d.tanggal_label || '');
+
+        const ada = daftar.length > 0;
+        setHidden(dokterRoot.querySelector('[data-dk]'), ! ada);
+        setHidden(dokterRoot.querySelector('[data-dk-sum]'), ! ada);
+        setHidden(dokterRoot.querySelector('[data-dk-kosong]'), ada);
+
+        if (! ada) {
+            dkSigAkhir = '';
+            dkGrid.innerHTML = '';
+            return;
+        }
+
+        const sig = dkSig(daftar);
+
+        if (sig !== dkSigAkhir) {
+            dkSigAkhir = sig;
+            bangunDokter(daftar, semuaPoli);
+        } else {
+            daftar.forEach((x) => {
+                const k = dkGrid.querySelector('[data-id="' + x.id + '"]');
+
+                if (! k) {
+                    return;
                 }
+
+                const [kelas, teks] = PRAKTIK[x.praktik] || PRAKTIK.libur;
+                k.classList.remove('is-ok', 'is-warn', 'is-off');
+                k.classList.add('is-' + kelas);
+
+                const badge = k.querySelector('[data-k="badge"]');
+                badge.className = 'hm-badge hm-badge-' + kelas;
+                setTeks(badge, teks);
+                setHidden(badge, x.praktik === 'berlangsung');
+
+                const jam = k.querySelector('[data-k="jam"]');
+                setTeks(jam.querySelector('span'), x.jam || '');
+                setHidden(jam, ! x.jam);
             });
+        }
 
-            tombol.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.dkTab === poli)));
-        };
+        // angka di ringkasan dan di tab poli
+        setTeks(dokterRoot.querySelector('[data-dk-total]'), String(daftar.length));
+        setTeks(dokterRoot.querySelector('[data-dk-aktif]'), String(daftar.filter((x) => x.praktik === 'berlangsung').length));
+        setHidden(dkTabs, new Set(daftar.map((x) => x.poli)).size < 2);
 
-        tombol.forEach((t) => t.addEventListener('click', () => {
-            tampilkan(t.dataset.dkTab);
-            t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: kurangiGerak ? 'auto' : 'smooth' });
-        }));
+        dkTabs.querySelectorAll('[data-dk-tab]').forEach((t) => {
+            const kunci = t.dataset.dkTab;
+            setTeks(t.querySelector('b'), String(kunci === '*' ? daftar.length : daftar.filter((x) => x.poli_slug === kunci).length));
+        });
+    }
 
-        jadwal.classList.add('is-js');
+    function langsung(d) {
+        langsungLayanan(d.layanan);
+        langsungDokter(d);
+    }
+
+    if (dokterRoot) {
+        dokterRoot.querySelector('[data-dk]').classList.add('is-js');
+
+        // delegasi klik: tab ikut bekerja setelah dibangun ulang
+        dkTabs.addEventListener('click', (e) => {
+            const t = e.target.closest('[data-dk-tab]');
+
+            if (t) {
+                terapkanSaringan(t.dataset.dkTab, true);
+                t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: kurangiGerak ? 'auto' : 'smooth' });
+            }
+        });
     }
 })();

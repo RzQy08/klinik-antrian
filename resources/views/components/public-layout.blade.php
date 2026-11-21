@@ -45,8 +45,8 @@
 <a class="nv-skip" href="#konten">Lewati ke konten</a>
 
 <div class="nv-strip" role="status">
-    <span><span class="nv-dot {{ $jamAktif && ! $buka ? 'off' : '' }}" aria-hidden="true"></span>{{ $statusTeks }}</span>
-    @if ($jamAktif)<span><i class="bi bi-clock" aria-hidden="true"></i>Layanan sampai pukul {{ $jam('layanan_selesai') }}</span>@endif
+    <span><span class="nv-dot {{ $jamAktif && ! $buka ? 'off' : '' }}" data-live-dot aria-hidden="true"></span><span data-live-status>{{ $statusTeks }}</span></span>
+    <span data-live-layanan @if (! $jamAktif) hidden @endif><i class="bi bi-clock" aria-hidden="true"></i>Layanan sampai pukul <span data-live-selesai>{{ $jamAktif ? $jam('layanan_selesai') : '' }}</span></span>
 </div>
 
 <header class="nv-wrap" id="nvWrap">
@@ -66,7 +66,6 @@
             @auth
                 <a href="{{ route('dashboard') }}" class="nv-btn nv-btn-cta"><i class="bi bi-speedometer2" aria-hidden="true"></i>Buka dashboard</a>
             @else
-                <a href="{{ route('login') }}" class="nv-staf"><i class="bi bi-person-lock" aria-hidden="true"></i>Masuk staf</a>
                 <a href="{{ route('antrian.create') }}" class="nv-btn nv-btn-cta">Ambil nomor<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             @endauth
         </div>
@@ -84,7 +83,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Tutup menu"></button>
     </div>
     <div class="offcanvas-body">
-        <div class="nv-sheet-status {{ $jamAktif && ! $buka ? 'off' : '' }}"><span class="nv-dot" aria-hidden="true"></span>{{ $statusTeks }}</div>
+        <div class="nv-sheet-status {{ $jamAktif && ! $buka ? 'off' : '' }}" data-live-sheet><span class="nv-dot" aria-hidden="true"></span><span data-live-status>{{ $statusTeks }}</span></div>
 
         <ul class="nv-sheet-links">
             @foreach ($menu as [$label, $url, $aktif, $ikon])
@@ -97,7 +96,6 @@
                 <a href="{{ route('dashboard') }}" class="nv-btn nv-btn-cta"><i class="bi bi-speedometer2" aria-hidden="true"></i>Buka dashboard</a>
             @else
                 <a href="{{ route('antrian.create') }}" class="nv-btn nv-btn-cta">Ambil nomor antrian<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-                <a href="{{ route('login') }}" class="nv-btn nv-btn-ghost"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Masuk staf</a>
             @endauth
         </div>
     </div>
@@ -203,8 +201,6 @@
             <div class="ft-aksi">
                 @auth
                     <a href="{{ route('dashboard') }}">Dashboard</a>
-                @else
-                    <a href="{{ route('login') }}">Masuk staf</a>
                 @endauth
                 <button type="button" class="ft-top" id="ftTop"><i class="bi bi-arrow-up" aria-hidden="true"></i>Ke atas</button>
             </div>
@@ -255,5 +251,6 @@
 })();
 </script>
 
+@include('partials.dev-masuk')
 </body>
 </html>

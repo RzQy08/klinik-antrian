@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Support\AksesLokal;
-use App\Support\Audit;
+use App\Support\Aktivitas;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Lockout;
@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
         $this->kuncikanDebug();
         $this->pakaiAsetBuildLewatTunnel();
         $this->aturPassword();
-        $this->catatJejakAudit();
+        $this->catatLogAktivitas();
     }
 
     /**
@@ -82,24 +82,24 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
-    /** Jejak audit: siapa masuk, siapa membuat atau mengubah akun. */
-    private function catatJejakAudit(): void
+    /** Log aktivitas: siapa masuk, siapa membuat atau mengubah akun. */
+    private function catatLogAktivitas(): void
     {
-        Event::listen(Login::class, fn (Login $e) => Audit::catat('login', null, $e->user));
-        Event::listen(Logout::class, fn (Logout $e) => $e->user ? Audit::catat('logout', null, $e->user) : null);
-        Event::listen(Failed::class, fn (Failed $e) => Audit::catat('login_gagal', 'email: '.mb_strtolower((string) ($e->credentials['email'] ?? '-'))));
-        Event::listen(Lockout::class, fn (Lockout $e) => Audit::catat('login_terkunci', 'email: '.mb_strtolower((string) $e->request->input('email', '-'))));
-        Event::listen(PasswordReset::class, fn (PasswordReset $e) => Audit::catat('password_reset', null, $e->user));
+        Event::listen(Login::class, fn (Login $e) => Aktivitas::catat('login', null, $e->user));
+        Event::listen(Logout::class, fn (Logout $e) => $e->user ? Aktivitas::catat('logout', null, $e->user) : null);
+        Event::listen(Failed::class, fn (Failed $e) => Aktivitas::catat('login_gagal', 'email: '.mb_strtolower((string) ($e->credentials['email'] ?? '-'))));
+        Event::listen(Lockout::class, fn (Lockout $e) => Aktivitas::catat('login_terkunci', 'email: '.mb_strtolower((string) $e->request->input('email', '-'))));
+        Event::listen(PasswordReset::class, fn (PasswordReset $e) => Aktivitas::catat('password_reset', null, $e->user));
 
-        User::created(fn (User $u) => Audit::catat('akun_dibuat', "{$u->email} ({$u->role})"));
-        User::deleted(fn (User $u) => Audit::catat('akun_dihapus', "{$u->email} ({$u->role})"));
+        User::created(fn (User $u) => Aktivitas::catat('akun_dibuat', "{$u->email} ({$u->role})"));
+        User::deleted(fn (User $u) => Aktivitas::catat('akun_dihapus', "{$u->email} ({$u->role})"));
         User::updated(function (User $u) {
             if ($u->wasChanged('password')) {
-                Audit::catat('password_diubah', $u->email);
+                Aktivitas::catat('password_diubah', $u->email);
             }
 
             if ($u->wasChanged('role')) {
-                Audit::catat('peran_diubah', "{$u->email}: {$u->getOriginal('role')} menjadi {$u->role}");
+                Aktivitas::catat('peran_diubah', "{$u->email}: {$u->getOriginal('role')} menjadi {$u->role}");
             }
         });
     }

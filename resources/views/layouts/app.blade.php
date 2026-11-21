@@ -12,7 +12,7 @@
         $nav[] = ['Dokter', route('admin.dokter.index'), request()->routeIs('admin.dokter.*', 'admin.jadwal.*'), 'person-badge', 'Kelola'];
         $nav[] = ['Jadwal', route('admin.penjadwalan'), request()->routeIs('admin.penjadwalan'), 'calendar-week', 'Kelola'];
         $nav[] = ['Akun staf', route('admin.akun.index'), request()->routeIs('admin.akun.*'), 'people-fill', 'Kelola'];
-        $nav[] = ['Jejak audit', route('admin.audit'), request()->routeIs('admin.audit'), 'shield-check', 'Kelola'];
+        $nav[] = ['Log aktivitas', route('admin.log-aktivitas'), request()->routeIs('admin.log-aktivitas'), 'shield-check', 'Kelola'];
     }
 
     if (in_array($role, ['admin', 'petugas'], true)) {
@@ -178,5 +178,6 @@
 })();
 </script>
 
+@include('partials.dev-masuk', ['kanan' => true])
 </body>
 </html>

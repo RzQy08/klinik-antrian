@@ -1,0 +1,104 @@
+// Halaman masuk staf (juga lupa password dan atur ulang password). Awalan lg-.
+
+$lg-ease: cubic-bezier(.22, 1, .36, 1);
+
+.lg-body {
+    background:
+        radial-gradient(40rem 28rem at 85% 0%, rgba($glow, .22), transparent 65%),
+        radial-gradient(36rem 26rem at 0% 100%, rgba($primary, .6), transparent 65%),
+        linear-gradient(160deg, $navy-deep 0%, $navy 55%, #0A5568 100%);
+    background-attachment: fixed;
+}
+.lg-shell {
+    min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.25rem; padding: clamp(1rem, 4vh, 2.5rem) clamp(1rem, 4vw, 2rem);
+}
+
+// ---------- kartu dua sisi ----------
+.lg-card {
+    width: 100%; max-width: 58rem; display: grid; grid-template-columns: minmax(0, 1fr); overflow: hidden;
+    background: #fff; border-radius: 1.5rem; box-shadow: 0 30px 60px -30px rgba(0, 0, 0, .55);
+    animation: lg-naik .55s $lg-ease both;
+}
+@include media-breakpoint-up(md) { .lg-card { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); min-height: min(32rem, calc(100dvh - 7rem)); } }
+
+// sisi berwarna: lingkaran bertumpuk dan lengkung putih ke arah form
+.lg-side {
+    position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; gap: 1.5rem;
+    padding: clamp(1.25rem, 3vw, 2rem); color: $on-navy;
+    background: linear-gradient(155deg, $primary 0%, #0A5F72 55%, $navy 100%);
+}
+.lg-side-brand { align-self: flex-start; position: relative; z-index: 2; }
+
+.lg-bola { position: absolute; border-radius: 50%; z-index: 0; pointer-events: none; }
+.lg-bola-a { width: 20rem; height: 20rem; left: -7rem; bottom: -8rem; background: rgba(#fff, .1); }
+.lg-bola-b {
+    width: 7.5rem; height: 7.5rem; right: 18%; bottom: 8%; z-index: 1;
+    background: radial-gradient(circle at 32% 30%, #3FB6CB, $primary 62%, #0A5F72);
+    box-shadow: 0 14px 24px -10px rgba(0, 0, 0, .4);
+}
+@include media-breakpoint-up(md) {
+    // lengkung putih milik sisi form masuk ke sisi berwarna
+    .lg-side::after { content: ''; position: absolute; z-index: 0; top: -12%; bottom: -12%; right: -42%; width: 70%; border-radius: 50%; background: #fff; }
+    .lg-bola-b { width: 9rem; height: 9rem; right: 36%; bottom: auto; top: 40%; }
+    .lg-side::after { right: -46%; width: 66%; }
+}
+@include media-breakpoint-down(md) {
+    .lg-side { flex-direction: row; align-items: center; padding-block: 1rem; }
+    .lg-bola-a { width: 9rem; height: 9rem; left: auto; right: -2.5rem; bottom: -4rem; }
+    .lg-bola-b { width: 3.5rem; height: 3.5rem; right: 3.5rem; bottom: auto; top: -1rem; }
+}
+
+// ---------- form ----------
+.lg-main { display: flex; align-items: center; justify-content: center; padding: clamp(1.5rem, 4vw, 2.75rem); }
+.lg-form-wrap { width: 100%; max-width: 20.5rem; }
+.lg-title { margin: 0 0 clamp(1rem, 3vh, 1.5rem); font-size: clamp(1.7rem, 1.3rem + 1vw, 2.1rem); letter-spacing: -.02em; }
+
+.lg-alert { padding: .65rem .85rem; font-size: .9rem; }
+.lg-form { display: grid; gap: clamp(.85rem, 2.2vh, 1.1rem); }
+.lg-form .form-label { margin-bottom: .3rem; font-weight: 600; font-size: .88rem; }
+.lg-link { font-size: .84rem; font-weight: 600; &:hover { text-decoration: underline; } }
+
+.lg-input { position: relative; }
+.lg-ikon { position: absolute; left: .95rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: $body-secondary-color; pointer-events: none; transition: color .15s; }
+.lg-input .form-control {
+    padding: .72rem .9rem .72rem 2.7rem; background: #F1F6F7; border-color: transparent; border-radius: .75rem;
+    transition: background .15s, border-color .15s, box-shadow .15s;
+    &:focus { background: #fff; border-color: $primary; box-shadow: 0 0 0 .2rem rgba($primary, .16); }
+    &.is-invalid { background-image: none; background: #fff; }
+}
+.lg-input:focus-within .lg-ikon { color: $primary; }
+.lg-input:has(.lg-eye) .form-control { padding-right: 3rem; }
+.lg-eye {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 3rem; display: grid; place-items: center;
+    border: 0; background: transparent; font-size: 1.15rem; color: $body-secondary-color; border-radius: 0 .75rem .75rem 0; transition: color .15s;
+    &:hover { color: $primary; }
+    &:focus-visible { outline: 2px solid $primary; outline-offset: -3px; }
+}
+.lg-caps { margin: .4rem 0 0; font-size: .82rem; font-weight: 600; color: #8A5A00; }
+
+.lg-submit {
+    margin-top: .25rem; border-radius: .75rem; box-shadow: 0 14px 24px -14px rgba($primary, .9);
+    transition: transform .2s $lg-ease, box-shadow .2s;
+    &:hover { transform: translateY(-1px); box-shadow: 0 18px 26px -14px rgba($primary, .95); }
+    .lg-spin { display: none; margin-left: .55rem; }
+    &.is-loading { pointer-events: none; .lg-spin { display: inline-block; } }
+}
+
+.lg-kembali { font-size: .88rem; font-weight: 600; color: $on-navy-muted; &:hover { color: #fff; } }
+
+// ponsel mendatar: tetap dua kolom supaya muat satu layar
+@media (max-height: 520px) and (min-width: 560px) and (max-width: 767.98px) {
+    .lg-card { grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); min-height: 0; }
+    .lg-side { flex-direction: column; align-items: stretch; padding: 1rem; }
+    .lg-side::after { content: ''; position: absolute; z-index: 0; top: -12%; bottom: -12%; right: -50%; width: 66%; border-radius: 50%; background: #fff; }
+    .lg-bola-a { width: 9rem; height: 9rem; left: -3rem; bottom: -4rem; right: auto; }
+    .lg-bola-b { width: 4rem; height: 4rem; right: 36%; top: 40%; bottom: auto; }
+    .lg-main { padding: 1rem 1.25rem; }
+    .lg-title { margin-bottom: .6rem; font-size: 1.4rem; }
+    .lg-form { gap: .6rem; }
+}
+
+@keyframes lg-naik { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (max-height: 620px) { .lg-shell { padding-block: .75rem; gap: .75rem; } .lg-form .form-control { padding-block: .55rem; } }
+@media (prefers-reduced-motion: reduce) { .lg-card { animation: none; } .lg-submit, .lg-input .form-control { transition: none; } }

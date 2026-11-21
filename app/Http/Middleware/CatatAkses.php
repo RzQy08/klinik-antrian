@@ -2,13 +2,13 @@
 
 namespace App\Http\Middleware;
 
-use App\Support\Audit;
+use App\Support\Aktivitas;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Mencatat siapa yang membuka atau mengunduh data pasien: ->middleware('audit:ekspor_csv')
+ * Mencatat siapa yang membuka atau mengunduh data pasien: ->middleware('aktivitas:ekspor_csv')
  */
 class CatatAkses
 {
@@ -18,9 +18,9 @@ class CatatAkses
 
         if ($response->getStatusCode() < 400) {
             $filter = collect($request->only(['dari', 'sampai', 'poli_id', 'status', 'q']))->filter()
-                ->map(fn ($v, $k) => $k.'='.Audit::samarkan((string) $v))->implode(', ');
+                ->map(fn ($v, $k) => $k.'='.Aktivitas::samarkan((string) $v))->implode(', ');
 
-            Audit::catat($aksi, $filter !== '' ? $filter : null);
+            Aktivitas::catat($aksi, $filter !== '' ? $filter : null);
         }
 
         return $response;

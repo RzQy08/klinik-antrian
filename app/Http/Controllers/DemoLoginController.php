@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Dokter;
 use App\Models\User;
 use App\Support\AksesLokal;
-use App\Support\Audit;
+use App\Support\Aktivitas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -55,7 +55,7 @@ class DemoLoginController extends Controller
         }
 
         Auth::login($user);
-        Audit::catat('login_demo', $user->email, $user);
+        Aktivitas::catat('login_demo', $user->email, $user);
         $request->session()->regenerate();
 
         return redirect()->route('dashboard');

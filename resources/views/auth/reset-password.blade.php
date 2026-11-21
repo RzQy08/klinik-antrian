@@ -1,6 +1,6 @@
 <x-guest-layout>
-    <h1 class="h3 mb-1">Password baru</h1>
-    <p class="text-body-secondary mb-4">Buat password baru untuk akun Anda.</p>
+    <h1 class="lg-title">Password baru</h1>
+    <p class="lg-sub">Buat password baru untuk akun Anda.</p>
 
     <form method="POST" action="{{ route('password.store') }}" class="d-grid gap-3">
         @csrf
