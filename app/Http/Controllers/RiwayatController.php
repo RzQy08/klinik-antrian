@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class RiwayatController extends Controller
 {
-    private const STATUS = ['menunggu', 'dipanggil', 'dilayani', 'selesai', 'tidak_hadir', 'batal'];
+    private const STATUS = ['menunggu', 'dipanggil', 'telat', 'dilayani', 'selesai', 'tidak_hadir', 'batal'];
 
     // Rentang dibatasi supaya satu permintaan tidak membaca data bertahun-tahun
     private const MAKS_HARI = 92;
@@ -56,7 +56,7 @@ class RiwayatController extends Controller
             // Pemisah titik koma: Excel dengan pengaturan regional Indonesia memakai ini
             $tulis = fn (array $baris) => fputcsv($out, array_map([$this, 'aman'], $baris), ';');
 
-            $tulis(['Tanggal', 'Nomor', 'Poli', 'Pasien', 'No RM', 'NIK (disamarkan)', 'Dokter', 'Status',
+            $tulis(['Tanggal', 'Nomor', 'Poli', 'Pasien', 'No RM', 'No HP (disensor)', 'Dokter', 'Status',
                 'Waktu daftar', 'Dipanggil', 'Mulai dilayani', 'Selesai', 'Tunggu (menit)', 'Layanan (menit)', 'Limpahan dari']);
 
             $query->chunk(500, function ($baris) use ($tulis) {
@@ -67,7 +67,7 @@ class RiwayatController extends Controller
                         $a->poli?->nama_poli,
                         $a->pasien?->nama,
                         $a->pasien?->no_rm,
-                        self::samarkanNik($a->pasien?->nik),
+                        filled($a->pasien?->no_hp) ? \App\Models\Pasien::sensorHp($a->pasien->no_hp) : null,
                         $a->dokter?->nama,
                         $a->status,
                         $a->waktu_daftar?->format('Y-m-d H:i:s'),
@@ -121,7 +121,7 @@ class RiwayatController extends Controller
     private function query(array $filter): Builder
     {
         $query = Antrian::query()
-            ->with('pasien:id,nama,nik,no_rm', 'poli:id,kode_poli,nama_poli', 'dokter:id,nama')
+            ->with('pasien:id,nama,no_hp,no_rm', 'poli:id,kode_poli,nama_poli', 'dokter:id,nama')
             ->antaraTanggal($filter['dari'], $filter['sampai'])
             ->orderByDesc('tanggal')
             ->orderByDesc('waktu_daftar')
@@ -138,26 +138,23 @@ class RiwayatController extends Controller
         if ($filter['q']) {
             // Karakter khusus LIKE dinetralkan supaya "%" atau "_" dicari apa adanya
             $kata = addcslashes($filter['q'], '%_\\');
+            $angka = preg_replace('/\D+/', '', $filter['q']);
 
-            $query->where(function (Builder $q) use ($kata) {
+            $query->where(function (Builder $q) use ($kata, $angka, $filter) {
                 $q->where('nomor_antrian', 'like', $kata.'%')
-                    ->orWhereHas('pasien', fn (Builder $p) => $p
-                        ->where('nama', 'like', '%'.$kata.'%')
-                        ->orWhere('nik', 'like', $kata.'%')
-                        ->orWhere('no_rm', 'like', $kata.'%'));
+                    ->orWhereHas('pasien', function (Builder $p) use ($kata, $angka, $filter) {
+                        $p->where('nama', 'like', '%'.$kata.'%')
+                            ->orWhere('no_rm', 'like', $kata.'%');
+
+                        // NIK dan HP tampil disensor, tetapi tetap bisa dicari dengan mengetik angkanya
+                        if (strlen($angka) >= 6 && $angka === $filter['q']) {
+                            $p->orWhere('nik', 'like', $angka.'%')->orWhere('no_hp', 'like', '%'.$angka);
+                        }
+                    });
             });
         }
 
         return $query;
-    }
-
-    public static function samarkanNik(?string $nik): ?string
-    {
-        if ($nik === null || strlen($nik) < 9) {
-            return $nik;
-        }
-
-        return substr($nik, 0, 4).str_repeat('*', strlen($nik) - 8).substr($nik, -4);
     }
 
     /**

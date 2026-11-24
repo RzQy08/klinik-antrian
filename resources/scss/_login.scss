@@ -7,7 +7,7 @@ $lg-ease: cubic-bezier(.22, 1, .36, 1);
         radial-gradient(40rem 28rem at 85% 0%, rgba($glow, .22), transparent 65%),
         radial-gradient(36rem 26rem at 0% 100%, rgba($primary, .6), transparent 65%),
         linear-gradient(160deg, $navy-deep 0%, $navy 55%, #0A5568 100%);
-    background-attachment: fixed;
+    min-height: 100vh; min-height: 100dvh;
 }
 .lg-shell {
     min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center;

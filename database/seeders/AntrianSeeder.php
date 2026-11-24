@@ -43,6 +43,10 @@ class AntrianSeeder extends Seeder
         'B' => 4,   // Poli Gigi
         'C' => 5,   // Poli Anak
         'D' => 6,   // Poli KIA
+        'E' => 3,   // Poli THT
+        'F' => 5,   // Poli Penyakit Dalam
+        'G' => 2.5, // Poli Mata
+        'H' => 3,   // Poli Kulit dan Kelamin
     ];
 
     /**
@@ -53,6 +57,10 @@ class AntrianSeeder extends Seeder
         'B' => 15,
         'C' => 10,
         'D' => 12,
+        'E' => 15,
+        'F' => 15,
+        'G' => 18,
+        'H' => 12,
     ];
 
     private Collection $pasienIds;

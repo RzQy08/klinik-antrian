@@ -24,6 +24,7 @@ class LogAktivitas extends Model
     public const AKSI = [
         'login' => ['Masuk', 'ok'],
         'logout' => ['Keluar', 'muted'],
+        'login_demo' => ['Masuk cepat', 'muted'],
         'login_gagal' => ['Gagal masuk', 'warn'],
         'login_terkunci' => ['Dikunci sementara', 'bad'],
         'password_reset' => ['Reset password', 'warn'],

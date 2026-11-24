@@ -48,6 +48,34 @@ class Pasien extends Model
         });
     }
 
+    /** NIK untuk tampilan staf: disensor penuh, identitas cukup lewat nomor RM. */
+    protected function nikSensor(): Attribute
+    {
+        return Attribute::get(fn () => self::sensorNik($this->nik));
+    }
+
+    /** Nomor HP untuk tampilan staf: hanya 3 digit terakhir. */
+    protected function hpSensor(): Attribute
+    {
+        return Attribute::get(fn () => self::sensorHp($this->no_hp));
+    }
+
+    public static function sensorNik(?string $nik): string
+    {
+        return blank($nik) ? '-' : '•••• •••• •••• ••••';
+    }
+
+    public static function sensorHp(?string $hp): string
+    {
+        $angka = preg_replace('/\D+/', '', (string) $hp);
+
+        if ($angka === '') {
+            return '-';
+        }
+
+        return str_repeat('•', max(0, strlen($angka) - 3)).substr($angka, -3);
+    }
+
     public function antrians(): HasMany
     {
         return $this->hasMany(Antrian::class);

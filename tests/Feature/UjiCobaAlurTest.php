@@ -40,7 +40,7 @@ it('membuka semua halaman utama sesuai peran dan login akun uji berjalan', funct
     $this->post('/login', [
         'email' => DataUjiSeeder::EMAIL_ADMIN,
         'password' => DataUjiSeeder::PASSWORD_ADMIN,
-    ])->assertRedirect(route('dashboard'));
+    ])->assertRedirect(route('admin.dashboard'));
 
     $this->assertAuthenticatedAs($admin);
     $this->get(route('dashboard'))->assertRedirect(route('admin.dashboard'));

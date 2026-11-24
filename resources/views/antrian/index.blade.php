@@ -91,7 +91,7 @@
                         </div>
                     </article>
                 @empty
-                    <div class="pt-sec w-100"><div class="pt-empty"><i class="bi bi-building" aria-hidden="true"></i><div>Belum ada poli aktif. Minta admin menambahkan poli lewat menu Poli.</div></div></div>
+                    <div class="pt-sec w-100"><div class="pt-empty"><i class="bi bi-building" aria-hidden="true"></i><div>Belum ada poli aktif.</div></div></div>
                 @endforelse
             </div>
         </section>

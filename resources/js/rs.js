@@ -87,3 +87,78 @@ import './beranda-antrian';
 
     daftar.forEach(function (el) { pengamat.observe(el); });
 })();
+// Indikator memuat: garis tipis saat berpindah halaman, layar penuh saat masuk atau keluar
+(function () {
+    const layar = document.querySelector('[data-pm]');
+    const garis = document.querySelector('[data-pm-bar]');
+
+    if (! layar || ! garis) {
+        return;
+    }
+
+    let tunda = null;
+
+    const reset = () => {
+        clearTimeout(tunda);
+        garis.classList.remove('is-on');
+        layar.classList.remove('is-on');
+        layar.hidden = true;
+    };
+
+    const tampilLayar = (teks) => {
+        clearTimeout(tunda);
+        layar.querySelector('[data-pm-text]').textContent = teks || 'Memuat';
+        layar.hidden = false;
+        requestAnimationFrame(() => requestAnimationFrame(() => layar.classList.add('is-on')));
+    };
+
+    const tampilGaris = () => {
+        clearTimeout(tunda);
+        tunda = setTimeout(() => garis.classList.add('is-on'), 120);
+    };
+
+    document.addEventListener('submit', (e) => {
+        const f = e.target;
+
+        if (! (f instanceof HTMLFormElement) || e.defaultPrevented) {
+            return;
+        }
+
+        const aksi = f.getAttribute('action') || '';
+
+        if (f.hasAttribute('data-pemuat')) {
+            tampilLayar(f.getAttribute('data-pemuat'));
+        } else if (/\/demo\/masuk\//.test(aksi)) {
+            tampilLayar('Masuk');
+        } else if (/\/logout$/.test(aksi)) {
+            tampilLayar('Keluar');
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        const a = e.target instanceof Element ? e.target.closest('a[href]') : null;
+
+        if (! a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+            return;
+        }
+
+        if ((a.target && a.target !== '_self') || a.hasAttribute('download') || a.hasAttribute('data-bs-toggle') || a.hasAttribute('wire:click')) {
+            return;
+        }
+
+        const url = new URL(a.href, location.href);
+
+        if (url.origin !== location.origin || url.protocol.indexOf('http') !== 0) {
+            return;
+        }
+
+        if (url.pathname === location.pathname && url.search === location.search) {
+            return;
+        }
+
+        tampilGaris();
+    });
+
+    // Kembali lewat tombol back: pastikan indikator tidak tertinggal
+    window.addEventListener('pageshow', reset);
+})();

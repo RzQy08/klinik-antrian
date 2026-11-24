@@ -33,7 +33,7 @@
     </p>
 
     <div class="dp-bar">
-        <span class="dp-live"><span class="dp-live-dot"></span>Terhubung langsung, diperbarui tiap 5 detik</span>
+        <span class="dp-live"><span class="dp-live-dot"></span>Langsung</span>
         <button type="button" class="dp-sound" @click="ubah()" :aria-pressed="suara ? 'true' : 'false'">
             <i class="bi" :class="suara ? 'bi-volume-up-fill' : 'bi-volume-mute'"></i>
             <span x-text="suara ? 'Bunyi panggilan aktif' : 'Bunyi panggilan mati'"></span>
@@ -102,9 +102,31 @@
                 <article class="dp-idle">
                     <span class="dp-idle-ico"><i class="bi bi-cup-hot"></i></span>
                     <h2>Belum ada pasien untuk Anda</h2>
-                    <p>Petugas akan memanggil pasien berikutnya. Halaman ini otomatis menampilkannya, tidak perlu dimuat ulang.</p>
                     <span class="dp-idle-count"><b class="numeral">{{ $menungguDiPoli }}</b> pasien menunggu di {{ $dokter->poli?->nama_poli }}</span>
                 </article>
+            @endif
+
+            {{-- pasien telat sementara --}}
+            @if ($telat->isNotEmpty())
+                <section class="dp-card dp-card-telat">
+                    <header class="dp-card-head"><h3>Telat</h3><span class="dp-count">{{ $telat->count() }}</span></header>
+                    <ul class="dp-list">
+                        @foreach ($telat as $a)
+                            <li wire:key="telat-{{ $a->id }}" x-data="{ yakin: false }">
+                                <span class="numeral dp-list-no">{{ $a->nomor_antrian }}</span>
+                                <div class="dp-list-body">
+                                    <div class="fw-semibold text-truncate">{{ $a->pasien?->nama }}</div>
+                                    <div class="small text-body-secondary">Telat sejak {{ $a->waktu_telat?->format('H.i') }}</div>
+                                </div>
+                                <div class="dp-list-act">
+                                    <button type="button" class="btn btn-primary" wire:click="mulai({{ $a->id }})" @disabled($sedangSekarang)>Mulai</button>
+                                    <button type="button" class="btn btn-outline-secondary" x-show="! yakin" @click="yakin = true" aria-label="Tandai {{ $a->nomor_antrian }} tidak hadir"><i class="bi bi-person-x"></i></button>
+                                    <button type="button" class="btn btn-warning" x-show="yakin" x-cloak wire:click="tidakHadir({{ $a->id }})">Yakin tidak hadir</button>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
             @endif
 
             {{-- pasien lain yang sudah dipanggil --}}
@@ -143,7 +165,7 @@
                         <div class="dp-quota-time"><i class="bi bi-clock me-1"></i>Praktik {{ substr($jadwal->jam_mulai, 0, 5) }} sampai {{ substr($jadwal->jam_selesai, 0, 5) }}</div>
                     </div>
                 @else
-                    <p class="dp-muted mb-2">Tidak ada jadwal praktik hari ini. Pasien tetap bisa dilayani bila dipanggil petugas.</p>
+                    <p class="dp-muted mb-2">Tidak ada jadwal praktik hari ini.</p>
                     <div class="dp-quota-nums"><span class="numeral">{{ $selesaiHariIni }}</span><small>pasien selesai hari ini</small></div>
                 @endif
             </section>
@@ -163,10 +185,75 @@
                         @if ($a->tanggal_asal)<span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Limpahan</span>@endif
                     </div>
                 @empty
-                    <p class="dp-muted mb-0">Tidak ada pasien yang menunggu.</p>
+                    <p class="dp-muted mb-0">&mdash;</p>
                 @endforelse
                 @if ($menungguDiPoli > $berikutnya->count())
                     <p class="dp-muted small mt-2 mb-0">dan {{ $menungguDiPoli - $berikutnya->count() }} lainnya</p>
+                @endif
+            </section>
+
+            {{-- ============ JADWAL SAYA: lihat jadwal mingguan, ajukan perubahan ============ --}}
+            <section class="dp-card dp-jadwalku" x-data="{ ajukan: null }">
+                <header class="dp-card-head"><h3>Jadwal saya</h3></header>
+
+                <ul class="dp-jk-minggu">
+                    @foreach ($hariLabel as $kunci => $label)
+                        @php $j = $jadwalMingguan->get($kunci); $p = $permintaanMenunggu->get($kunci); @endphp
+                        <li class="{{ $kunci === $namaHariIni ? 'is-today' : '' }}">
+                            <span class="dp-jk-hari">{{ mb_substr($label, 0, 3) }}</span>
+                            @if ($j)
+                                <span class="dp-jk-jam numeral">{{ substr($j->jam_mulai, 0, 5) }}&ndash;{{ substr($j->jam_selesai, 0, 5) }}</span>
+                                <span class="dp-jk-kuota">{{ $j->kuota }} psn</span>
+                            @else
+                                <span class="dp-jk-libur">Libur</span>
+                            @endif
+
+                            @if ($p)
+                                <span class="dp-jk-pending" title="Menunggu persetujuan admin: {{ substr($p->jam_mulai_baru, 0, 5) }}&ndash;{{ substr($p->jam_selesai_baru, 0, 5) }}">
+                                    <i class="bi bi-hourglass-split"></i>Menunggu
+                                    <button type="button" class="dp-jk-batal" @click="if (confirm('Batalkan permintaan untuk {{ $label }}?')) document.getElementById('batal-{{ $p->id }}').submit()" aria-label="Batalkan permintaan {{ $label }}"><i class="bi bi-x"></i></button>
+                                </span>
+                                <form id="batal-{{ $p->id }}" method="POST" action="{{ route('permintaan-jadwal.batalkan', $p) }}" class="visually-hidden">@csrf @method('DELETE')</form>
+                            @else
+                                <button type="button" class="dp-jk-ajukan" @click="ajukan = ajukan === '{{ $kunci }}' ? null : '{{ $kunci }}'" :aria-expanded="ajukan === '{{ $kunci }}'">
+                                    <i class="bi bi-pencil-square"></i>Ajukan ganti
+                                </button>
+                            @endif
+                        </li>
+
+                        <li class="dp-jk-form" x-show="ajukan === '{{ $kunci }}'" x-collapse x-cloak>
+                            <form method="POST" action="{{ route('permintaan-jadwal.store') }}">
+                                @csrf
+                                <input type="hidden" name="hari" value="{{ $kunci }}">
+                                <p class="dp-jk-form-t">Ajukan jadwal {{ $label }}. Jadwal lama tetap berlaku sampai admin menyetujui.</p>
+                                <div class="dp-jk-form-row">
+                                    <label>Mulai<input type="time" name="jam_mulai_baru" value="{{ $j?->jam_mulai ? substr($j->jam_mulai, 0, 5) : '08:00' }}" required></label>
+                                    <label>Selesai<input type="time" name="jam_selesai_baru" value="{{ $j?->jam_selesai ? substr($j->jam_selesai, 0, 5) : '16:00' }}" required></label>
+                                    <label>Kuota<input type="number" name="kuota_baru" min="1" max="200" value="{{ $j?->kuota ?? 20 }}" required></label>
+                                </div>
+                                <label class="dp-jk-alasan">Alasan (opsional)<input type="text" name="alasan" maxlength="180" placeholder="Contoh: jadwal bentrok dengan praktik di tempat lain"></label>
+                                <div class="dp-jk-form-act">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-send me-1"></i>Kirim ke admin</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" @click="ajukan = null">Batal</button>
+                                </div>
+                            </form>
+                        </li>
+                    @endforeach
+                </ul>
+
+                @if ($permintaanRiwayat->isNotEmpty())
+                    <details class="dp-jk-riwayat">
+                        <summary>Riwayat permintaan</summary>
+                        <ul>
+                            @foreach ($permintaanRiwayat as $r)
+                                <li>
+                                    <span>{{ $hariLabel[$r->hari] ?? $r->hari }}, {{ substr($r->jam_mulai_baru, 0, 5) }}&ndash;{{ substr($r->jam_selesai_baru, 0, 5) }}</span>
+                                    <span class="dp-jk-status is-{{ $r->status }}">{{ $r->status === 'disetujui' ? 'Disetujui' : 'Ditolak' }}</span>
+                                    @if ($r->catatan_admin)<small>{{ $r->catatan_admin }}</small>@endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </details>
                 @endif
             </section>
 
@@ -179,7 +266,7 @@
                         <small>{{ $a->lama_layanan_detik !== null ? max(1, round($a->lama_layanan_detik / 60)).' mnt' : '-' }}</small>
                     </div>
                 @empty
-                    <p class="dp-muted mb-0">Belum ada pasien yang selesai.</p>
+                    <p class="dp-muted mb-0">&mdash;</p>
                 @endforelse
             </section>
         </aside>

@@ -28,7 +28,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+        $beranda = $user->isAdmin() ? 'admin.dashboard' : ($user->isDokter() ? 'antrian.dokter' : 'antrian.index');
+
+        // Langsung ke beranda sesuai peran supaya tidak ada pengalihan berantai
+        return redirect()->intended(route($beranda, absolute: false));
     }
 
     /**

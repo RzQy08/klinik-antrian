@@ -51,6 +51,15 @@ class Dokter extends Model
         return $query->whereDoesntHave('cutis', fn ($q) => $q->whereDate('tanggal_mulai', '<=', $tanggal)->whereDate('tanggal_selesai', '>=', $tanggal));
     }
 
+    /** Dokter yang jadwal praktik hari ini sedang berjalan (hari dan jam sekarang). */
+    public function scopeBertugasSekarang($query)
+    {
+        $hari = [1 => 'senin', 2 => 'selasa', 3 => 'rabu', 4 => 'kamis', 5 => 'jumat', 6 => 'sabtu', 7 => 'minggu'][now()->dayOfWeekIso];
+        $jam = now()->format('H:i:s');
+
+        return $query->whereHas('jadwalPraktiks', fn ($q) => $q->where('hari', $hari)->where('jam_mulai', '<=', $jam)->where('jam_selesai', '>=', $jam));
+    }
+
     public function sedangCuti($tanggal = null): bool
     {
         $tanggal = ($tanggal ? \Illuminate\Support\Carbon::parse($tanggal) : now())->toDateString();

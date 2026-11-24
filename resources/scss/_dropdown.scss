@@ -1,0 +1,43 @@
+// =====================================================================
+// Daftar pilihan (<select>) di dashboard staf
+// Chrome dan Edge terbaru: daftarnya ikut membulat dan sewarna dengan tombolnya.
+// Peramban lain tetap memakai daftar bawaan tanpa gangguan fungsi.
+// =====================================================================
+@supports (appearance: base-select) {
+    .sh-body select:not([multiple]):not([size]) {
+        &, &::picker(select) { appearance: base-select; }
+
+        display: flex; align-items: center; justify-content: space-between; gap: .6rem; background-image: none; cursor: pointer;
+
+        &::picker-icon {
+            content: ''; flex: none; width: .5rem; height: .5rem; margin-top: -.2rem; border: solid currentColor; border-width: 0 2px 2px 0; opacity: .6;
+            transform: rotate(45deg); transition: transform .2s $sh-ease;
+        }
+        &:open::picker-icon { transform: rotate(225deg) translate(-.1rem, -.1rem); }
+
+        &::picker(select) {
+            box-sizing: border-box; min-width: anchor-size(width); max-height: min(20rem, 60vh); margin-top: .4rem; padding: .4rem;
+            background: #fff; border: 1px solid $border-color; border-radius: 1.1rem; box-shadow: 0 24px 48px -22px rgba($navy, .45), 0 2px 6px rgba($navy, .06);
+            opacity: 0; transform: translateY(-.3rem); transition: opacity .16s ease, transform .16s ease, display .16s allow-discrete, overlay .16s allow-discrete;
+        }
+        &:open::picker(select) { opacity: 1; transform: none; }
+
+        option {
+            display: flex; align-items: center; gap: .6rem; padding: .6rem .8rem; border-radius: .75rem; font-size: .92rem; font-weight: 600; color: $dark; cursor: pointer;
+            transition: background .12s;
+            &::checkmark { order: 2; margin-left: auto; color: $primary; font-weight: 800; }
+            &:hover, &:focus-visible { background: rgba($primary, .09); outline: 0; }
+            &:checked { background: #E9F7F9; color: $navy; }
+            &:disabled { opacity: .45; cursor: not-allowed; }
+        }
+    }
+}
+
+@starting-style {
+    @supports (appearance: base-select) {
+        .sh-body select:open::picker(select) { opacity: 0; transform: translateY(-.3rem); }
+    }
+}
+
+// Pilihan di dalam kapsul ".ap-sort": ikon di kiri, panah di kanan
+.ap-sort select { flex: 1; min-width: 0; }

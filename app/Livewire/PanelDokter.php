@@ -5,6 +5,9 @@ namespace App\Livewire;
 use App\Models\Antrian;
 use App\Models\Dokter;
 use App\Models\JadwalPraktik;
+use App\Models\JadwalRumahSakit;
+use App\Models\PermintaanJadwal;
+use App\Services\PemanggilOtomatis;
 use Livewire\Component;
 
 /**
@@ -31,6 +34,9 @@ class PanelDokter extends Component
     /** Dipanggil polling. Bila ada pasien baru dipanggil, browser diberi tahu supaya membunyikan nada. */
     public function segarkan(): void
     {
+        // Pasien yang terlambat atau tidak hadir ditandai otomatis, dan dokter kosong mendapat pasien berikutnya
+        PemanggilOtomatis::tick();
+
         $sekarang = $this->hitungDipanggil();
 
         if ($sekarang > $this->terakhirDipanggil) {
@@ -58,8 +64,8 @@ class PanelDokter extends Component
             return;
         }
 
-        $diubah = Antrian::whereKey($antrian->id)->where('dokter_id', $dokter->id)->where('status', 'dipanggil')
-            ->update(['status' => 'dilayani', 'waktu_mulai_dilayani' => now()]);
+        $diubah = Antrian::whereKey($antrian->id)->where('dokter_id', $dokter->id)->whereIn('status', ['dipanggil', 'telat'])
+            ->update(['status' => 'dilayani', 'waktu_mulai_dilayani' => now(), 'waktu_telat' => null]);
 
         $diubah
             ? $this->toast('success', "Pelayanan {$antrian->nomor_antrian} dimulai.")
@@ -82,6 +88,10 @@ class PanelDokter extends Component
         $diubah = Antrian::whereKey($antrian->id)->where('dokter_id', $dokter->id)->where('status', 'dilayani')
             ->update(['status' => 'selesai', 'waktu_selesai' => now()]);
 
+        if ($diubah) {
+            PemanggilOtomatis::jalankan($dokter->poli_id);
+        }
+
         $diubah
             ? $this->toast('success', "Pelayanan {$antrian->nomor_antrian} selesai. Terima kasih, dok.")
             : $this->toast('error', "{$antrian->nomor_antrian} tidak sedang dilayani.");
@@ -98,8 +108,12 @@ class PanelDokter extends Component
             return;
         }
 
-        $diubah = Antrian::whereKey($antrian->id)->where('dokter_id', $dokter->id)->where('status', 'dipanggil')
-            ->update(['status' => 'tidak_hadir']);
+        $diubah = Antrian::whereKey($antrian->id)->where('dokter_id', $dokter->id)->whereIn('status', ['dipanggil', 'telat'])
+            ->update(['status' => 'tidak_hadir', 'waktu_telat' => null]);
+
+        if ($diubah) {
+            PemanggilOtomatis::jalankan($dokter->poli_id);
+        }
 
         $diubah
             ? $this->toast('success', "{$antrian->nomor_antrian} ditandai tidak hadir. Petugas bisa memanggilnya ulang.")
@@ -116,6 +130,7 @@ class PanelDokter extends Component
 
         $sedang = $milikSaya()->where('status', 'dilayani')->with('pasien')->orderBy('waktu_mulai_dilayani')->get();
         $dipanggil = $milikSaya()->where('status', 'dipanggil')->with('pasien')->orderBy('waktu_dipanggil')->get();
+        $telat = $milikSaya()->where('status', 'telat')->with('pasien')->orderBy('waktu_telat')->get();
 
         // Yang dikerjakan lebih dulu: pasien yang sedang dilayani, kalau tidak ada maka yang pertama dipanggil
         $fokus = $sedang->first() ?? $dipanggil->first();
@@ -132,6 +147,7 @@ class PanelDokter extends Component
             'fokus' => $fokus,
             'fokusDilayani' => (bool) $sedang->first(),
             'sedangSekarang' => $sedang->isNotEmpty(),
+            'telat' => $telat,
             'lainnya' => $dipanggil->reject(fn ($a) => $fokus && $a->id === $fokus->id)->values(),
             'berikutnya' => Antrian::untukPoli($dokter->poli_id)->hariIni()->menunggu()
                 ->with('pasien:id,nama')->orderBy('waktu_daftar')->limit(4)
@@ -143,6 +159,12 @@ class PanelDokter extends Component
             'rataMenit' => $rata !== null ? (int) round($rata / 60) : null,
             'jadwal' => $jadwal,
             'kuotaPersen' => $jadwal && $jadwal->kuota > 0 ? min(100, (int) round($selesaiHariIni / $jadwal->kuota * 100)) : 0,
+            'namaHariIni' => $namaHari,
+            'hariLabel' => JadwalRumahSakit::HARI,
+            'jadwalMingguan' => JadwalPraktik::where('dokter_id', $dokter->id)->get()->keyBy('hari'),
+            'permintaanMenunggu' => PermintaanJadwal::where('dokter_id', $dokter->id)->menunggu()->get()->keyBy('hari'),
+            'permintaanRiwayat' => PermintaanJadwal::where('dokter_id', $dokter->id)->whereIn('status', ['disetujui', 'ditolak'])
+                ->latest('ditinjau_pada')->limit(5)->get(),
         ]);
     }
 

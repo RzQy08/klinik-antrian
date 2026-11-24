@@ -7,6 +7,7 @@ use App\Models\Poli;
 use App\Models\User;
 use App\Services\PemeriksaKeamanan;
 use App\Support\AksesLokal;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 it('AksesLokal mengenali host Laragon dan menolak host publik', function () {
@@ -160,4 +161,34 @@ it('panel DEV tidak dirender untuk permintaan lewat tunnel', function () {
     $this->get(route('beranda'))->assertOk()->assertSee('data-dev', false);
 
     $this->withHeaders(['X-Forwarded-For' => '203.0.113.9'])->get(route('beranda'))->assertOk()->assertDontSee('data-dev', false);
+});
+
+it('masuk cepat lewat ngrok hanya menyala dengan DEV_MASUK_NGROK, dan debug tetap terkunci', function () {
+    app()->detectEnvironment(fn () => 'local');
+    $header = ['X-Forwarded-For' => '203.0.113.9', 'X-Forwarded-Proto' => 'https'];
+    $server = ['HTTP_HOST' => 'abc.ngrok-free.app'];
+
+    $coba = fn () => $this->withServerVariables($server)->withHeaders($header)
+        ->withSession(['_token' => 'token-uji'])
+        ->post('http://abc.ngrok-free.app/demo/masuk/admin', ['_token' => 'token-uji']);
+
+    // tanpa flag: ditolak
+    putenv('DEV_MASUK_NGROK');
+    unset($_ENV['DEV_MASUK_NGROK'], $_SERVER['DEV_MASUK_NGROK']);
+    $coba()->assertNotFound();
+
+    // dengan flag: host ngrok diizinkan, host lain tetap ditolak
+    putenv('DEV_MASUK_NGROK=true');
+    $_ENV['DEV_MASUK_NGROK'] = $_SERVER['DEV_MASUK_NGROK'] = 'true';
+
+    try {
+        expect(AksesLokal::masukCepatDiizinkan(Request::create('http://abc.ngrok-free.app', 'GET', [], [], [], ['REMOTE_ADDR' => '127.0.0.1', 'HTTP_X_FORWARDED_FOR' => '203.0.113.9'])))->toBeTrue()
+            ->and(AksesLokal::masukCepatDiizinkan(Request::create('http://situs-lain.example', 'GET', [], [], [], ['REMOTE_ADDR' => '127.0.0.1', 'HTTP_X_FORWARDED_FOR' => '203.0.113.9'])))->toBeFalse()
+            ->and(AksesLokal::masukCepatDiizinkan(Request::create('http://abc.ngrok-free.app', 'GET', [], [], [], ['REMOTE_ADDR' => '203.0.113.9'])))->toBeFalse()
+            // kunci debug memakai diizinkan(), yang tetap menolak tunnel
+            ->and(AksesLokal::diizinkan(Request::create('http://abc.ngrok-free.app', 'GET', [], [], [], ['REMOTE_ADDR' => '127.0.0.1', 'HTTP_X_FORWARDED_FOR' => '203.0.113.9'])))->toBeFalse();
+    } finally {
+        putenv('DEV_MASUK_NGROK');
+        unset($_ENV['DEV_MASUK_NGROK'], $_SERVER['DEV_MASUK_NGROK']);
+    }
 });

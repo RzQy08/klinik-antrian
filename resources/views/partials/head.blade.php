@@ -9,3 +9,11 @@
 @else
     @vite(['resources/scss/rs.scss'])
 @endif
+
+@php
+    // Muat font ikon lebih awal supaya ikon tidak muncul belakangan setelah halaman tampil
+    try { $fontIkon = \Illuminate\Support\Facades\Vite::asset('node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2'); } catch (\Throwable) { $fontIkon = null; }
+@endphp
+@if ($fontIkon)
+    <link rel="preload" href="{{ $fontIkon }}" as="font" type="font/woff2" crossorigin>
+@endif

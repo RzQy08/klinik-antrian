@@ -1,7 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         <h1 class="h2 mt-2 mb-1">Jadwal</h1>
-        <p class="text-body-secondary mb-0">Atur jam buka rumah sakit dan hari libur, serta lihat dan atur jadwal praktik seluruh dokter.</p>
     </x-slot>
 
     @include('partials.flash')

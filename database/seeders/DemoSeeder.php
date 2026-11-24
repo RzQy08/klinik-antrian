@@ -46,10 +46,8 @@ class DemoSeeder extends Seeder
             return;
         }
 
-        // Poli, dokter, dan jadwal dibutuhkan; siapkan dulu kalau database masih kosong
-        if (Poli::count() === 0) {
-            $this->call([PoliSeeder::class, DokterSeeder::class, JadwalPraktikSeeder::class]);
-        }
+        // Poli, dokter, dan jadwal dibutuhkan; yang belum ada dilengkapi (yang sudah ada tidak diubah)
+        $this->call([PoliSeeder::class, DokterSeeder::class, JadwalPraktikSeeder::class]);
 
         DB::transaction(function () {
             Antrian::query()->delete();
@@ -126,32 +124,14 @@ class DemoSeeder extends Seeder
     /**
      * Delapan pasien dengan NIK tetap (16 digit), sehingga pasien lama
      * dikenali otomatis saat ambil antrian dengan NIK yang sama.
+     * Datanya dari DataPasienRealistis, bagian yang tidak dipakai DataUjiSeeder.
      */
     private function buatPasien()
     {
-        $data = [
-            ['3201011503900001', 'Budi Hartono', '1990-03-15', 'L', '081234560001', 'Jl. Melati No. 12, Bandung'],
-            ['3201015206850002', 'Siti Rahmawati', '1985-06-12', 'P', '081234560002', 'Jl. Kenanga No. 4, Bandung'],
-            ['3201010108010003', 'Ahmad Fauzan', '2001-08-01', 'L', '081234560003', 'Jl. Anggrek No. 27, Cimahi'],
-            ['3201014412780004', 'Dewi Lestari', '1978-12-04', 'P', '081234560004', 'Jl. Dahlia No. 9, Bandung'],
-            ['3201012009150005', 'Rizky Pratama', '2015-09-20', 'L', '081234560005', 'Jl. Mawar No. 31, Lembang'],
-            ['3201011010600006', 'Aminah', '1960-10-10', 'P', '081234560006', 'Jl. Cempaka No. 18, Bandung'],
-            ['3201010505950007', 'Andi Saputra', '1995-05-05', 'L', '081234560007', 'Jl. Flamboyan No. 6, Cimahi'],
-            ['3201012807880008', 'Maya Anggraini', '1988-07-28', 'P', '081234560008', 'Jl. Seruni No. 15, Bandung'],
-        ];
-
         $pasiens = collect();
 
-        foreach ($data as $i => [$nik, $nama, $lahir, $jk, $hp, $alamat]) {
-            $pasiens->push(Pasien::create([
-                'no_rm' => sprintf('RM-DEMO-%03d', $i + 1),
-                'nama' => $nama,
-                'nik' => $nik,
-                'tanggal_lahir' => $lahir,
-                'jenis_kelamin' => $jk,
-                'no_hp' => $hp,
-                'alamat' => $alamat,
-            ]));
+        foreach (DataPasienRealistis::untukDemo() as $i => $data) {
+            $pasiens->push(Pasien::create(['no_rm' => sprintf('RM-DEMO-%03d', $i + 1)] + $data));
         }
 
         return $pasiens;

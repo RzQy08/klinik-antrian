@@ -58,6 +58,6 @@ class DemoLoginController extends Controller
         Aktivitas::catat('login_demo', $user->email, $user);
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        return redirect()->route($user->isAdmin() ? 'admin.dashboard' : ($user->isDokter() ? 'antrian.dokter' : 'antrian.index'));
     }
 }

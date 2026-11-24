@@ -27,7 +27,6 @@
                 <div>
                     <p class="ad-eyebrow"><i class="bi bi-calendar3"></i>{{ now()->locale('id')->translatedFormat('l, j F Y') }}</p>
                     <h1>Selamat {{ $sapaan }}, {{ $namaDepan }}</h1>
-                    <p class="ad-lead">Ini kondisi klinik hari ini, dari antrian yang menunggu sampai pasien yang sudah selesai.</p>
                 </div>
                 <div class="ad-chips">
                     @if (\App\Services\JamOperasional::aktif())
@@ -111,33 +110,34 @@
                         </div>
                     </li>
                 @empty
-                    <li class="ad-empty">Belum ada poli aktif. <a href="{{ route('admin.poli.create') }}">Tambahkan poli pertama</a>.</li>
+                    <li class="ad-empty">Belum ada poli aktif.</li>
                 @endforelse
             </ul>
         </section>
 
-        {{-- Perlu perhatian --}}
+        {{-- Informasi --}}
         <section class="ad-card ad-area-attn">
             <header class="ad-card-head">
-                <h2>Perlu perhatian</h2>
+                <h2>Informasi</h2>
                 @if (count($perhatian) > 0)<span class="ad-count">{{ count($perhatian) }}</span>@endif
             </header>
 
-            @forelse ($perhatian as $p)
-                <div class="ad-note ad-note-{{ $p['tone'] }}">
-                    <i class="bi bi-{{ $p['ikon'] }}"></i>
-                    <div>
-                        <div class="fw-semibold">{{ $p['judul'] }}</div>
-                        <div class="small text-body-secondary">{{ $p['teks'] }}</div>
-                        @if ($p['url'])<a href="{{ $p['url'] }}" class="ad-more mt-1 d-inline-block">{{ $p['aksi'] }} <i class="bi bi-arrow-right"></i></a>@endif
-                    </div>
-                </div>
-            @empty
-                <div class="ad-note ad-note-ok">
-                    <i class="bi bi-patch-check"></i>
-                    <div><div class="fw-semibold">Semuanya beres</div><div class="small text-body-secondary">Tidak ada yang perlu ditindaklanjuti saat ini.</div></div>
-                </div>
-            @endforelse
+            @if (count($perhatian) > 0)
+                <ul class="ad-alerts">
+                    @foreach ($perhatian as $p)
+                        <li class="ad-alert ad-alert-{{ $p['tone'] }}">
+                            <span class="ad-alert-ic" aria-hidden="true"><i class="bi bi-{{ $p['ikon'] }}"></i></span>
+                            <span class="ad-alert-t">
+                                <strong>{{ $p['judul'] }}</strong>
+                                @if ($p['teks'])<small>{{ $p['teks'] }}</small>@endif
+                            </span>
+                            @if ($p['url'])<a href="{{ $p['url'] }}" class="ad-alert-go">{{ $p['aksi'] }}<i class="bi bi-chevron-right" aria-hidden="true"></i></a>@endif
+                        </li>
+                    @endforeach
+                </ul>
+            @else
+                <div class="ad-alert-ok"><i class="bi bi-check-circle" aria-hidden="true"></i>Tidak ada informasi baru</div>
+            @endif
         </section>
 
         {{-- Tren 7 hari --}}
@@ -175,7 +175,7 @@
                         @include('partials.status', ['status' => $a->status])
                     </li>
                 @empty
-                    <li class="ad-empty">Belum ada pendaftaran hari ini.</li>
+                    <li class="ad-empty">&mdash;</li>
                 @endforelse
             </ul>
 

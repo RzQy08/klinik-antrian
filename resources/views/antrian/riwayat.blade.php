@@ -5,7 +5,7 @@
     $rentang = ['Hari ini' => 0, '7 hari' => 6, '30 hari' => 29, '90 hari' => 90];
     $adaFilter = $filter['poli_id'] || $filter['status'] || $filter['q'];
     $poliTerpilih = $filter['poli_id'] ? $polis->firstWhere('id', $filter['poli_id']) : null;
-    $belum = ($ringkasan['menunggu'] ?? 0) + ($ringkasan['dipanggil'] ?? 0) + ($ringkasan['dilayani'] ?? 0);
+    $belum = ($ringkasan['menunggu'] ?? 0) + ($ringkasan['dipanggil'] ?? 0) + ($ringkasan['telat'] ?? 0) + ($ringkasan['dilayani'] ?? 0);
 @endphp
 <x-app-layout>
     <x-slot name="header">
@@ -32,10 +32,16 @@
             </div>
         </div>
 
-        {{-- Filter --}}
-        <form method="GET" action="{{ route('antrian.riwayat') }}" class="lp-filter">
+        {{-- Pencarian dan filter --}}
+        <form method="GET" action="{{ route('antrian.riwayat') }}" class="lp-filter" id="formRiwayat">
+            <div class="lp-search">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <label for="q" class="visually-hidden">Cari antrian</label>
+                <input type="search" id="q" name="q" value="{{ $filter['q'] }}" maxlength="50" placeholder="Cari nama, nomor antrian, NIK, atau no HP" autocomplete="off" enterkeyhint="search">
+                <span class="lp-search-spin" aria-hidden="true"></span>
+            </div>
             <button class="btn btn-outline-secondary lp-filter-toggle d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#panelFilter" aria-expanded="false" aria-controls="panelFilter">
-                <span><i class="bi bi-funnel me-2" aria-hidden="true"></i>Filter dan pencarian</span><i class="bi bi-chevron-down" aria-hidden="true"></i>
+                <span><i class="bi bi-funnel me-2" aria-hidden="true"></i>Filter</span><i class="bi bi-chevron-down" aria-hidden="true"></i>
             </button>
             <div class="collapse d-md-block mt-3 mt-md-0" id="panelFilter">
                 <div class="row g-3 align-items-end">
@@ -59,12 +65,12 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12 col-lg-2"><label for="q" class="form-label">Cari</label><input type="search" id="q" name="q" value="{{ $filter['q'] }}" maxlength="50" placeholder="Nama, nomor, NIK" class="form-control"></div>
                     <div class="col-12 col-lg-2 d-grid"><button type="submit" class="btn btn-primary" style="min-height: 2.9rem">Terapkan</button></div>
                 </div>
             </div>
         </form>
 
+        <div id="hasilRiwayat">
         @if ($adaFilter)
             <ul class="lp-chips" aria-label="Filter aktif">
                 @if ($poliTerpilih)<li class="lp-chip">Poli: {{ $poliTerpilih->nama_poli }}<a href="{{ route('antrian.riwayat', $tanpa(['poli_id'])) }}" aria-label="Hapus filter poli"><i class="bi bi-x-lg" aria-hidden="true"></i></a></li>@endif
@@ -101,7 +107,7 @@
                                 <td data-label="Tanggal" class="lp-td-tgl text-nowrap">{{ $a->tanggal->translatedFormat('j M Y') }}<div class="small text-body-secondary">{{ $a->waktu_daftar?->format('H:i') }}</div></td>
                                 <td data-label="Nomor" class="lp-td-no text-nowrap"><span class="lp-no">{{ $a->nomor_antrian }}</span>@if ($a->limpahan)<span class="lp-lim">Limpahan</span>@endif</td>
                                 <td data-label="Poli" class="lp-td-poli"><span class="lp-poli {{ $warna($a->poli?->kode_poli) }}"><span class="lp-kode" aria-hidden="true">{{ $a->poli?->kode_poli }}</span>{{ $a->poli?->nama_poli }}</span></td>
-                                <td data-label="Pasien" class="lp-td-pasien">{{ $a->pasien?->nama }}<div class="small text-body-secondary">{{ \App\Http\Controllers\RiwayatController::samarkanNik($a->pasien?->nik) }}</div></td>
+                                <td data-label="Pasien" class="lp-td-pasien">{{ $a->pasien?->nama }}<div class="small text-body-secondary">{{ $a->pasien?->no_rm }} &middot; HP {{ $a->pasien?->hp_sensor }}</div></td>
                                 <td data-label="Dokter" class="lp-td-dokter">{{ $a->dokter?->nama ?? '-' }}</td>
                                 <td data-label="Status" class="lp-td-status">@include('partials.status', ['status' => $a->status])</td>
                                 <td data-label="Tunggu" class="lp-td-tunggu text-end text-nowrap">@if ($tunggu !== null)<span class="lp-dur {{ $tunggu > 30 ? 'bad' : ($tunggu > 15 ? 'warn' : '') }}">{{ $tunggu }} mnt</span>@else - @endif</td>
@@ -123,9 +129,38 @@
         </div>
 
         <div class="lp-pager">
-            <span class="lp-pager-info">Halaman {{ $data->currentPage() }}, {{ $data->count() }} data ditampilkan. NIK disamarkan demi privasi pasien.</span>
+            <span class="lp-pager-info">Halaman {{ $data->currentPage() }}, {{ $data->count() }} data ditampilkan.</span>
             {{ $data->links('pagination::simple-bootstrap-5') }}
         </div>
-        <p class="small text-body-secondary mt-2" style="max-width: 44rem">Berkas CSV memakai pemisah titik koma dan bisa langsung dibuka di Excel.</p>
+        </div>
     </div>
+
+    <script>
+    (function () {
+        // Pencarian langsung: hasil diganti di tempat sambil mengetik, tanpa memuat ulang halaman
+        var form = document.getElementById('formRiwayat'), q = document.getElementById('q'), hasil = document.getElementById('hasilRiwayat');
+        if (!form || !q || !hasil || !window.fetch) return;
+        var tunda = null, batal = null;
+
+        function cari() {
+            var p = new URLSearchParams();
+            new FormData(form).forEach(function (v, k) { if (String(v).trim() !== '') p.append(k, v); });
+            var url = form.action + (p.toString() ? '?' + p.toString() : '');
+            if (batal) batal.abort();
+            batal = new AbortController();
+            form.classList.add('is-memuat');
+            fetch(url, { signal: batal.signal, credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.text(); })
+                .then(function (html) {
+                    var baru = new DOMParser().parseFromString(html, 'text/html').getElementById('hasilRiwayat');
+                    if (baru) { hasil.innerHTML = baru.innerHTML; history.replaceState(null, '', url); }
+                    form.classList.remove('is-memuat');
+                })
+                .catch(function (e) { if (e.name !== 'AbortError') form.classList.remove('is-memuat'); });
+        }
+
+        q.addEventListener('input', function () { clearTimeout(tunda); tunda = setTimeout(cari, 280); });
+        form.addEventListener('submit', function (e) { e.preventDefault(); clearTimeout(tunda); cari(); });
+    })();
+    </script>
 </x-app-layout>

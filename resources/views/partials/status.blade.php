@@ -2,6 +2,7 @@
     $peta = [
         'menunggu' => ['secondary', 'Menunggu'],
         'dipanggil' => ['warning', 'Dipanggil'],
+        'telat' => ['warning', 'Telat'],
         'dilayani' => ['info', 'Dilayani'],
         'selesai' => ['success', 'Selesai'],
         'batal' => ['danger', 'Batal'],

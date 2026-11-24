@@ -91,7 +91,7 @@ class RingkasanAntrian
             $jumlahSelesai = (int) ($status['selesai'] ?? 0);
             $jumlahTidakHadir = (int) ($status['tidak_hadir'] ?? 0);
             $total = $jumlahMenunggu + $jumlahSelesai + $jumlahTidakHadir
-                + (int) ($status['dipanggil'] ?? 0) + (int) ($status['dilayani'] ?? 0); // yang batal tidak dihitung
+                + (int) ($status['dipanggil'] ?? 0) + (int) ($status['telat'] ?? 0) + (int) ($status['dilayani'] ?? 0); // yang batal tidak dihitung
 
             $rataDetik = (int) round((float) ($rata->get($poli->id) ?: self::RATA_DEFAULT_DETIK));
             $jadwalPoli = $jadwalPerPoli->get($poli->id, collect());

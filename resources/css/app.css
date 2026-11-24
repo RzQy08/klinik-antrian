@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+@source "../views";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views";
+
+@theme {
+    --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+}

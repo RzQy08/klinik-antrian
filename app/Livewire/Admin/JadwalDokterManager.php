@@ -5,6 +5,8 @@ namespace App\Livewire\Admin;
 use App\Models\CutiDokter;
 use App\Models\Dokter;
 use App\Models\JadwalPraktik;
+use App\Models\JadwalRumahSakit;
+use App\Models\PermintaanJadwal;
 use Livewire\Component;
 
 /**
@@ -69,6 +71,47 @@ class JadwalDokterManager extends Component
         $this->toast('success', 'Cuti dihapus.');
     }
 
+    public function setujuiPermintaan(int $id): void
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        $p = PermintaanJadwal::where('status', 'menunggu')->find($id);
+
+        if (! $p) {
+            $this->toast('error', 'Permintaan ini sudah ditinjau.');
+
+            return;
+        }
+
+        JadwalPraktik::updateOrCreate(
+            ['dokter_id' => $p->dokter_id, 'hari' => $p->hari],
+            ['jam_mulai' => $p->jam_mulai_baru, 'jam_selesai' => $p->jam_selesai_baru, 'kuota' => $p->kuota_baru]
+        );
+
+        $p->update(['status' => 'disetujui', 'ditinjau_oleh' => auth()->id(), 'ditinjau_pada' => now()]);
+
+        \App\Support\Aktivitas::catat('Menyetujui perubahan jadwal', "{$p->dokter?->nama}: {$p->hari}");
+        $this->toast('success', "Jadwal {$p->dokter?->nama} diperbarui sesuai permintaan.");
+    }
+
+    public function tolakPermintaan(int $id): void
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        $p = PermintaanJadwal::where('status', 'menunggu')->find($id);
+
+        if (! $p) {
+            $this->toast('error', 'Permintaan ini sudah ditinjau.');
+
+            return;
+        }
+
+        $p->update(['status' => 'ditolak', 'ditinjau_oleh' => auth()->id(), 'ditinjau_pada' => now()]);
+
+        \App\Support\Aktivitas::catat('Menolak perubahan jadwal', "{$p->dokter?->nama}: {$p->hari}");
+        $this->toast('success', 'Permintaan ditolak. Jadwal dokter tidak berubah.');
+    }
+
     public function render()
     {
         $dokters = Dokter::with('poli:id,nama_poli,kode_poli')->orderBy('poli_id')->orderBy('nama')->get(['id', 'poli_id', 'nama', 'aktif']);
@@ -78,7 +121,11 @@ class JadwalDokterManager extends Component
         $cuti = CutiDokter::with('dokter:id,nama')->whereDate('tanggal_selesai', '>=', $hariIni)->orderBy('tanggal_mulai')->get();
         $sedangCuti = $cuti->filter(fn ($c) => $c->tanggal_mulai->toDateString() <= $hariIni)->pluck('dokter_id')->all();
 
+        $permintaan = PermintaanJadwal::with('dokter:id,nama,poli_id')->menunggu()->oldest()->get();
+
         return view('livewire.admin.jadwal-dokter-manager', [
+            'permintaan' => $permintaan,
+            'hariLabel' => JadwalRumahSakit::HARI,
             'dokters' => $dokters,
             'jadwal' => $jadwal,
             'cuti' => $cuti,

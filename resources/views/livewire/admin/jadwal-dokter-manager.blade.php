@@ -11,12 +11,39 @@
         </div>
     @endif
 
+    {{-- ============ PERMINTAAN GANTI JADWAL DARI DOKTER ============ --}}
+    @if ($permintaan->isNotEmpty())
+        <section class="jp-card jp-permintaan" aria-labelledby="judulPermintaan">
+            <header class="jp-card-head">
+                <div><h2 id="judulPermintaan">Permintaan ganti jadwal</h2></div>
+                <span class="jp-badge-count">{{ $permintaan->count() }}</span>
+            </header>
+
+            <ul class="jp-permintaan-list">
+                @foreach ($permintaan as $p)
+                    <li wire:key="permintaan-{{ $p->id }}" x-data="{ tolak: false }">
+                        <div class="jp-permintaan-info">
+                            <strong>{{ $p->dokter?->nama }}</strong>
+                            <span class="jp-permintaan-hari">{{ $hariLabel[$p->hari] ?? $p->hari }}</span>
+                            <span class="jp-permintaan-jam numeral">{{ substr($p->jam_mulai_baru, 0, 5) }}&ndash;{{ substr($p->jam_selesai_baru, 0, 5) }}</span>
+                            <span class="jp-permintaan-kuota">{{ $p->kuota_baru }} pasien</span>
+                            @if ($p->alasan)<small class="jp-permintaan-alasan">{{ $p->alasan }}</small>@endif
+                        </div>
+                        <div class="jp-permintaan-act">
+                            <button type="button" class="btn btn-success btn-sm" wire:click="setujuiPermintaan({{ $p->id }})" wire:confirm="Setujui perubahan jadwal {{ $p->dokter?->nama }} untuk hari {{ $hariLabel[$p->hari] ?? $p->hari }}?"><i class="bi bi-check-lg me-1"></i>Setujui</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" wire:click="tolakPermintaan({{ $p->id }})" wire:confirm="Tolak permintaan ini?"><i class="bi bi-x-lg me-1"></i>Tolak</button>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
     {{-- ============ TABEL MINGGUAN ============ --}}
     <section class="jp-card" aria-labelledby="judulMatriks">
         <header class="jp-card-head">
             <div>
                 <h2 id="judulMatriks">Jadwal praktik mingguan</h2>
-                <p>Pilih dokter untuk mengubah hari, jam, dan kuotanya. Hari ini ditandai.</p>
             </div>
         </header>
 
@@ -52,7 +79,7 @@
                             <td class="jp-act"><a href="{{ route('admin.dokter.jadwal.index', $d) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Atur</a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="jp-empty">Belum ada dokter. Tambahkan dokter lebih dulu di menu Dokter.</td></tr>
+                        <tr><td colspan="9" class="jp-empty">Belum ada dokter.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -64,7 +91,6 @@
         <header class="jp-card-head">
             <div>
                 <h2 id="judulCuti">Cuti dan dokter berhalangan</h2>
-                <p>Selama rentang tanggal ini, dokter tidak tampil sebagai dokter bertugas dan tidak bisa dipilih saat memanggil pasien.</p>
             </div>
         </header>
 

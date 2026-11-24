@@ -12,9 +12,11 @@
 :root { --sh-w: 16.5rem; }
 @include media-breakpoint-up(lg) { html.sh-rail { --sh-w: 5.4rem; } }
 
+@keyframes sh-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes sh-masuk { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .sh-body { background: $sh-bg; }
+html:has(.sh-body) { scroll-behavior: auto; }
 @include media-breakpoint-down(lg) {
     html.sh-open { overflow: hidden; }
     .sh-body { padding-bottom: calc(5.8rem + env(safe-area-inset-bottom, 0px)); }
@@ -23,7 +25,7 @@
 // ---------- sidebar ----------
 .sh-side {
     position: fixed; z-index: 1060; top: $sh-gap; bottom: $sh-gap; left: $sh-gap; width: var(--sh-w);
-    display: flex; flex-direction: column; gap: 1rem; padding: .85rem .8rem .9rem; isolation: isolate; overflow: hidden;
+    display: flex; flex-direction: column; gap: 1rem; padding: .85rem .8rem 1.15rem; isolation: isolate; overflow: hidden;
     color: $on-navy; border-radius: 1.6rem;
     background:
         radial-gradient(17rem 13rem at 0% 0%, rgba($glow, .17), transparent 70%),
@@ -44,19 +46,19 @@
     .lh-1 { max-width: 12rem; overflow: hidden; white-space: nowrap; transition: max-width $sh-dur $sh-ease, opacity .25s; }
     &:hover { color: $navy; }
 }
-.sh-nav { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: .15rem; margin: 0 -.25rem; padding: 0 .25rem; overflow-y: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+.sh-nav { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: .2rem; margin: 0 -.25rem; padding: 0 .25rem .75rem; overflow-y: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
 .sh-label { height: 2.1rem; padding: 1.05rem .95rem 0; font-size: .66rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; white-space: nowrap; overflow: hidden; color: rgba($on-navy-muted, .8); transition: opacity .25s; }
 .sh-link {
-    position: relative; display: flex; align-items: center; gap: .85rem; flex: none; height: 2.9rem; padding: 0 .95rem; border: 0; border-radius: 999px; background: transparent;
+    position: relative; display: flex; align-items: center; gap: .85rem; flex: none; height: 2.9rem; padding: 0 .95rem; border: 0; border-radius: .85rem; background: transparent;
     color: rgba($on-navy, .86); font-size: .93rem; font-weight: 600; white-space: nowrap; transition: background .2s, color .2s, padding $sh-dur $sh-ease, gap $sh-dur $sh-ease, box-shadow .2s;
     > i { flex: none; width: 1.4rem; font-size: 1.2rem; text-align: center; transition: color .2s; }
     .t { max-width: 11rem; overflow: hidden; text-overflow: ellipsis; transition: max-width $sh-dur $sh-ease, opacity .25s; }
-    &:hover { color: #fff; background: rgba(#fff, .09); }
+    &:hover { color: #fff; background: rgba(#fff, .12); }
     &:focus-visible { outline: 2px solid $glow; outline-offset: 2px; }
     &.is-on { color: $navy; background: #E9F7F9; box-shadow: 0 14px 24px -14px rgba(0, 0, 0, .55); > i { color: $primary; } }
 }
 
-.sh-foot { display: grid; gap: .6rem; margin-top: auto; }
+.sh-foot { display: grid; gap: .65rem; margin-top: auto; padding-bottom: .25rem; }
 .sh-collapse { display: none; }
 .sh-user {
     display: flex; align-items: center; gap: .7rem; padding: .6rem .65rem; border-radius: 1.2rem; overflow: hidden;
@@ -88,7 +90,7 @@
     html.sh-open .sh-side { transform: none; visibility: visible; transition-delay: 0s; }
     .sh-scrim {
         display: block; position: fixed; inset: 0; z-index: 1055; border: 0; background: rgba($navy-deep, .5); opacity: 0; pointer-events: none;
-        -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); transition: opacity $sh-dur $sh-ease;
+        transition: opacity $sh-dur $sh-ease;
     }
     html.sh-open .sh-scrim { opacity: 1; pointer-events: auto; }
 }
@@ -100,7 +102,7 @@
 .sh-top {
     position: sticky; top: 0; z-index: 1030; display: flex; align-items: center; gap: .75rem; padding: .85rem clamp(1rem, 2.4vw, 2rem) .65rem;
     transition: background .25s, box-shadow .25s;
-    &.is-scrolled { background: rgba($sh-bg, .84); box-shadow: 0 1px 0 rgba($navy, .07); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); }
+    &.is-scrolled { background: rgba($sh-bg, .97); box-shadow: 0 1px 0 rgba($navy, .07); }
 }
 .sh-burger { display: grid; place-items: center; flex: none; width: 2.75rem; height: 2.75rem; padding: 0; font-size: 1.3rem; color: $navy; background: #fff; border: 0; border-radius: 1rem; box-shadow: $sh-card-shadow; transition: transform .2s; &:active { transform: scale(.94); } &:focus-visible { outline: 2px solid $primary; outline-offset: 2px; } }
 @include media-breakpoint-up(lg) { .sh-burger { display: none; } }
@@ -127,7 +129,7 @@
 }
 
 // ---------- isi halaman ----------
-.sh-content { flex: 1; padding: .35rem clamp(1rem, 2.4vw, 2rem) 2rem; animation: sh-masuk .55s $sh-ease both; }
+.sh-content { flex: 1; padding: .35rem clamp(1rem, 2.4vw, 2rem) clamp(2.5rem, 5vw, 3.5rem); animation: sh-fade .2s ease-out both; }
 .sh-head {
     margin: .25rem 0 1.5rem;
     h1, .h2 { margin: .45rem 0 .3rem; font-size: clamp(1.7rem, 3.2vw, 2.3rem); letter-spacing: -.025em; line-height: 1.1; color: $navy; text-wrap: balance; }
@@ -151,6 +153,7 @@
     }
 }
 @include media-breakpoint-up(lg) { .sh-dock { display: none; } }
+@include media-breakpoint-down(lg) { .sh-main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)); } }
 
 @media (prefers-reduced-motion: reduce) {
     .sh-side, .sh-main, .sh-scrim, .sh-link, .sh-link .t, .sh-brand .lh-1 { transition: none; }

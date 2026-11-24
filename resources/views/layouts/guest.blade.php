@@ -57,6 +57,7 @@
     });
 })();
 </script>
+@include('partials.pemuat')
 @include('partials.dev-masuk', ['kanan' => true])
 </body>
 </html>

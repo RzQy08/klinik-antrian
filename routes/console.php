@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('queue-metrics:generate')->dailyAt('00:05');
 Schedule::command('antrian:limpahkan')->dailyAt('00:05');
+Schedule::command('antrian:otomatis')->everyMinute()->withoutOverlapping();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

@@ -7,11 +7,11 @@
     $nav = [];
 
     if ($role === 'admin') {
-        $nav[] = ['Ringkasan', route('admin.dashboard'), request()->routeIs('admin.dashboard'), 'house', 'Kelola'];
+        $nav[] = ['Beranda', route('admin.dashboard'), request()->routeIs('admin.dashboard'), 'house', 'Kelola'];
         $nav[] = ['Poli', route('admin.poli.index'), request()->routeIs('admin.poli.*'), 'building', 'Kelola'];
         $nav[] = ['Dokter', route('admin.dokter.index'), request()->routeIs('admin.dokter.*', 'admin.jadwal.*'), 'person-badge', 'Kelola'];
         $nav[] = ['Jadwal', route('admin.penjadwalan'), request()->routeIs('admin.penjadwalan'), 'calendar-week', 'Kelola'];
-        $nav[] = ['Akun staf', route('admin.akun.index'), request()->routeIs('admin.akun.*'), 'people-fill', 'Kelola'];
+        $nav[] = ['Akun Staff', route('admin.akun.index'), request()->routeIs('admin.akun.*'), 'people-fill', 'Kelola'];
         $nav[] = ['Log aktivitas', route('admin.log-aktivitas'), request()->routeIs('admin.log-aktivitas'), 'shield-check', 'Kelola'];
     }
 
@@ -29,7 +29,7 @@
     }
 
     $inisial = mb_strtoupper(mb_substr(trim(preg_replace('/^(dr|drg)\.?\s+/i', '', (string) $user?->name)), 0, 1));
-    $pendek = ['Antrian hari ini' => 'Antrian', 'Ringkasan' => 'Ringkas'];
+    $pendek = ['Antrian hari ini' => 'Antrian', 'Beranda' => 'Beranda'];
 
     // Dock bawah memuat paling banyak 5 tombol; kalau menu lebih banyak, sisanya lewat tombol "Menu"
     $adaMenuLain = count($nav) > 5;
@@ -179,5 +179,6 @@
 </script>
 
 @include('partials.dev-masuk', ['kanan' => true])
+@include('partials.pemuat')
 </body>
 </html>

@@ -2,7 +2,6 @@
     <x-slot name="header">
         <a href="{{ route('admin.dokter.index') }}" class="small"><i class="bi bi-arrow-left me-1"></i>Kembali ke daftar dokter</a>
         <h1 class="h2 mt-2 mb-1">Tambah dokter</h1>
-        <p class="text-body-secondary mb-0">Isi data dokter. Akun login bisa dibuat sekarang atau nanti.</p>
     </x-slot>
 
     @include('partials.errors')

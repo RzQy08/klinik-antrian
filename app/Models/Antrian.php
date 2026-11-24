@@ -21,6 +21,9 @@ class Antrian extends Model
         });
     }
 
+    /** Status yang masih dihitung sebagai antrian berjalan (belum selesai, batal, atau tidak hadir). */
+    public const STATUS_BERJALAN = ['menunggu', 'dipanggil', 'telat', 'dilayani'];
+
     // ==== Relasi ====
     protected $fillable = [
         'pasien_id',
@@ -30,6 +33,7 @@ class Antrian extends Model
         'status',
         'waktu_daftar',
         'waktu_dipanggil',
+        'waktu_telat',
         'waktu_mulai_dilayani',
         'waktu_selesai',
         'estimasi_tunggu_detik',
@@ -43,6 +47,7 @@ class Antrian extends Model
     protected $casts = [
         'waktu_daftar' => 'datetime',
         'waktu_dipanggil' => 'datetime',
+        'waktu_telat' => 'datetime',
         'waktu_mulai_dilayani' => 'datetime',
         'waktu_selesai' => 'datetime',
         'dialihkan_at' => 'datetime',
@@ -103,6 +108,27 @@ class Antrian extends Model
     public function scopeMenunggu(Builder $query): Builder
     {
         return $query->where('status', 'menunggu');
+    }
+
+    public function scopeBerjalan(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::STATUS_BERJALAN);
+    }
+
+    /**
+     * Tidak hadir yang masih boleh dipanggil ulang: pasiennya belum mendaftar lagi
+     * (dengan nomor baru) di poli yang sama hari itu.
+     */
+    public function scopeBisaDipanggilUlang(Builder $query): Builder
+    {
+        return $query->where('status', 'tidak_hadir')->whereNotExists(function ($q) {
+            $q->selectRaw('1')->from('antrians as baru')
+                ->whereColumn('baru.pasien_id', 'antrians.pasien_id')
+                ->whereColumn('baru.poli_id', 'antrians.poli_id')
+                ->whereColumn('baru.tanggal', 'antrians.tanggal')
+                ->whereColumn('baru.id', '>', 'antrians.id')
+                ->whereIn('baru.status', self::STATUS_BERJALAN);
+        });
     }
 
     public function scopeSelesai(Builder $query): Builder

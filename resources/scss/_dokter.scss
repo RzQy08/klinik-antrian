@@ -66,3 +66,32 @@
 .dp-next, .dp-done { display: flex; align-items: center; gap: .75rem; padding: .55rem 0; border-top: 1px dashed $border-color; &:first-of-type { border-top: 0; } .numeral { min-width: 3.6rem; font-size: 1.15rem; color: $navy; } .text-truncate { flex: 1; min-width: 0; font-size: .92rem; } small { color: $body-secondary-color; } }
 
 @media (prefers-reduced-motion: reduce) { .dp-now.is-called, .dp-live-dot { animation: none; } .dp-btn { transition: none; } }
+
+// ---------- Jadwal saya: ringkasan mingguan + ajukan perubahan (panel dokter) ----------
+.dp-jk-minggu { display: grid; gap: .35rem; margin: 0 0 .5rem; padding: 0; list-style: none; }
+.dp-jk-minggu > li:not(.dp-jk-form) { display: flex; align-items: center; gap: .5rem; padding: .45rem .1rem; border-radius: .5rem; }
+.dp-jk-minggu > li.is-today:not(.dp-jk-form) { background: color-mix(in srgb, $primary 8%, transparent); }
+.dp-jk-hari { width: 2.6rem; flex-shrink: 0; font-weight: 700; font-size: .8rem; color: $body-secondary-color; }
+.dp-jk-jam { font-weight: 700; font-size: .88rem; }
+.dp-jk-kuota, .dp-jk-libur { font-size: .78rem; color: $body-secondary-color; }
+.dp-jk-ajukan, .dp-jk-batal { margin-left: auto; display: inline-flex; align-items: center; gap: .3rem; border: 0; background: transparent; font-size: .78rem; font-weight: 600; color: $primary; padding: .2rem .4rem; border-radius: .4rem; }
+.dp-jk-ajukan:hover { background: color-mix(in srgb, $primary 10%, transparent); }
+.dp-jk-pending { margin-left: auto; display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; font-weight: 600; color: #8A5A00; background: #FFF3CD; padding: .2rem .5rem; border-radius: 999px; }
+.dp-jk-batal { margin-left: 0; color: inherit; padding: 0 0 0 .2rem; }
+.dp-jk-form { padding: .6rem .7rem; margin: -.1rem 0 .3rem; border-radius: .6rem; background: $light; border: 1px solid $border-color; }
+.dp-jk-form-t { margin: 0 0 .5rem; font-size: .8rem; color: $body-secondary-color; }
+.dp-jk-form-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
+.dp-jk-form-row label, .dp-jk-alasan { display: flex; flex-direction: column; gap: .2rem; font-size: .76rem; font-weight: 600; color: $body-secondary-color; }
+.dp-jk-form-row input, .dp-jk-alasan input { border: 1px solid $border-color; border-radius: .45rem; padding: .35rem .5rem; font-size: .86rem; }
+.dp-jk-alasan { margin-bottom: .6rem; }
+.dp-jk-alasan input { width: 100%; }
+.dp-jk-form-act { display: flex; gap: .4rem; }
+.dp-jk-riwayat { margin-top: .4rem; font-size: .8rem; }
+.dp-jk-riwayat summary { cursor: pointer; font-weight: 600; color: $body-secondary-color; }
+.dp-jk-riwayat ul { list-style: none; padding: 0; margin: .4rem 0 0; display: grid; gap: .3rem; }
+.dp-jk-riwayat li { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.dp-jk-status { font-weight: 700; padding: .05rem .45rem; border-radius: 999px; font-size: .74rem; }
+.dp-jk-status.is-disetujui { background: #D1F2E0; color: #0F6B3C; }
+.dp-jk-status.is-ditolak { background: #FBE0E0; color: #9A2E2E; }
+
+.dp-card-telat { border-color: rgba($danger, .3); background: rgba($danger, .03); }

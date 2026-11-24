@@ -7,7 +7,6 @@ use App\Models\Antrian;
 use App\Models\Dokter;
 use App\Models\Poli;
 use App\Models\User;
-use App\Services\JamOperasional;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -99,7 +98,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Hal yang sebaiknya diperiksa admin. Daftar kosong berarti semuanya beres.
+     * Informasi penting untuk admin. Daftar kosong berarti tidak ada yang perlu ditindaklanjuti.
      *
      * @return array<int, array{tone: string, ikon: string, judul: string, teks: string, url: ?string, aksi: ?string}>
      */
@@ -107,12 +106,14 @@ class AdminDashboardController extends Controller
     {
         $daftar = [];
 
-        // Kesalahan konfigurasi yang membuka data pasien selalu paling atas
-        foreach (app(\App\Services\PemeriksaKeamanan::class)->untukDashboard() as $k) {
+        $permintaan = \App\Models\PermintaanJadwal::menunggu()->count();
+
+        if ($permintaan > 0) {
             $daftar[] = [
-                'tone' => $k['level'] === 'bahaya' ? 'danger' : 'warning', 'ikon' => 'shield-exclamation',
-                'judul' => $k['judul'], 'teks' => $k['teks'],
-                'url' => null, 'aksi' => null,
+                'tone' => 'info', 'ikon' => 'calendar2-check',
+                'judul' => $permintaan.' permintaan ganti jadwal dokter',
+                'teks' => null,
+                'url' => route('admin.penjadwalan', 'dokter'), 'aksi' => 'Tinjau',
             ];
         }
 
@@ -125,10 +126,8 @@ class AdminDashboardController extends Controller
             $daftar[] = [
                 'tone' => 'warning', 'ikon' => 'shield-exclamation',
                 'judul' => ($login['login_gagal'] ?? 0).' percobaan masuk gagal dalam 24 jam',
-                'teks' => ($login['login_terkunci'] ?? 0) > 0
-                    ? $login['login_terkunci'].' kali dikunci sementara. Periksa log aktivitas dan ganti password bila ada akun yang dicurigai.'
-                    : 'Periksa log aktivitas untuk memastikan itu bukan upaya menebak password.',
-                'url' => route('admin.log-aktivitas', ['aksi' => 'login_gagal']), 'aksi' => 'Lihat log aktivitas',
+                'teks' => ($login['login_terkunci'] ?? 0) > 0 ? $login['login_terkunci'].' kali dikunci sementara' : null,
+                'url' => route('admin.log-aktivitas', ['aksi' => 'login_gagal']), 'aksi' => 'Lihat log',
             ];
         }
 
@@ -140,7 +139,7 @@ class AdminDashboardController extends Controller
             $daftar[] = [
                 'tone' => 'danger', 'ikon' => 'exclamation-octagon',
                 'judul' => $poliTanpaDokter->count().' poli belum punya dokter aktif',
-                'teks' => $poliTanpaDokter->implode(', ').'. Pasien tidak bisa dipanggil sebelum ada dokter.',
+                'teks' => $poliTanpaDokter->implode(', '),
                 'url' => route('admin.dokter.create'), 'aksi' => 'Tambah dokter',
             ];
         }
@@ -151,26 +150,8 @@ class AdminDashboardController extends Controller
             $daftar[] = [
                 'tone' => 'warning', 'ikon' => 'person-exclamation',
                 'judul' => $dokterTanpaAkun.' dokter belum punya akun login',
-                'teks' => 'Dokter tanpa akun tidak bisa memulai dan menyelesaikan pelayanan sendiri.',
-                'url' => route('admin.dokter.index'), 'aksi' => 'Kelola dokter',
-            ];
-        }
-
-        if (config('whatsapp.driver') !== 'fonnte') {
-            $daftar[] = [
-                'tone' => 'info', 'ikon' => 'whatsapp',
-                'judul' => 'Notifikasi WhatsApp belum aktif',
-                'teks' => 'Pesan pengingat belum terkirim ke pasien. Isi pengaturan WhatsApp (WA_DRIVER dan token) di file .env untuk mengaktifkannya.',
-                'url' => null, 'aksi' => null,
-            ];
-        }
-
-        if (! JamOperasional::aktif()) {
-            $daftar[] = [
-                'tone' => 'info', 'ikon' => 'clock-history',
-                'judul' => 'Pembatasan jam operasional nonaktif',
-                'teks' => 'Pendaftaran dan pemanggilan bisa dilakukan kapan saja. Aktifkan pembatasan jam di menu Jadwal bila perlu.',
-                'url' => route('admin.penjadwalan'), 'aksi' => 'Buka jadwal',
+                'teks' => null,
+                'url' => route('admin.dokter.index'), 'aksi' => 'Kelola',
             ];
         }
 

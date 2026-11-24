@@ -9,7 +9,7 @@
         <div class="alert alert-danger lg-alert" role="alert">{{ $errors->first() }}</div>
     @endif
 
-    <form method="POST" action="{{ route('login') }}" class="lg-form" data-kirim novalidate>
+    <form method="POST" action="{{ route('login') }}" class="lg-form" data-kirim data-pemuat="Memeriksa akun" novalidate>
         @csrf
 
         <div>

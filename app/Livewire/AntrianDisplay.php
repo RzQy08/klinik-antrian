@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Antrian;
 use App\Models\Poli;
 use Livewire\Attributes\Lazy;
+use App\Services\PemanggilOtomatis;
 use Livewire\Component;
 
 class AntrianDisplay extends Component
@@ -18,6 +19,9 @@ class AntrianDisplay extends Component
 
     public function render()
     {
+        // Layar ruang tunggu selalu terbuka, jadi ikut menjalankan aturan waktu antrian (dibatasi tiap beberapa detik)
+        PemanggilOtomatis::tick();
+
         $poli = Poli::findOrFail($this->poliId);
 
         // antrian yang sedang aktif dipanggil/dilayani (paling baru)

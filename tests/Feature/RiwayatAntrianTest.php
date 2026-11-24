@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\RiwayatController;
 use App\Models\Antrian;
 use App\Models\Pasien;
 use App\Models\Poli;
@@ -64,15 +63,16 @@ it('riwayat menyaring berdasarkan rentang tanggal, poli, status, dan pencarian',
         ->assertDontSee('Budi Santoso');
 });
 
-it('riwayat menyamarkan NIK dan menolak status tidak dikenal', function () {
+it('riwayat menyensor NIK dan nomor HP serta menolak status tidak dikenal', function () {
     $poli = Poli::factory()->create();
-    riwayatAntrian($poli, '2026-10-10', 'A001', 'selesai', ['nik' => '3201010101990004']);
+    riwayatAntrian($poli, '2026-10-10', 'A001', 'selesai', ['nik' => '3201010101990004', 'no_hp' => '081234567890']);
 
     $petugas = User::factory()->create(['role' => 'petugas']);
 
     $this->actingAs($petugas)->get(route('antrian.riwayat', ['dari' => '2026-10-01', 'sampai' => '2026-10-31']))
-        ->assertSee('3201********0004')
-        ->assertDontSee('3201010101990004');
+        ->assertSee('HP •••••••••890', false)
+        ->assertDontSee('3201010101990004')
+        ->assertDontSee('081234567890');
 
     $this->actingAs($petugas)->get(route('antrian.riwayat', ['status' => 'ngawur']))
         ->assertSessionHasErrors('status');
@@ -91,9 +91,9 @@ it('riwayat membatasi rentang maksimal dan menukar tanggal terbalik', function (
         ->assertOk();
 });
 
-it('unduh CSV memuat data terfilter dengan NIK samar dan pemisah titik koma', function () {
+it('unduh CSV memuat data terfilter tanpa NIK dan dengan HP disensor', function () {
     $poli = Poli::factory()->create(['kode_poli' => 'A', 'nama_poli' => 'Poli Umum']);
-    riwayatAntrian($poli, '2026-10-10', 'A001', 'selesai', ['nama' => 'Budi Santoso', 'nik' => '3201010101990004']);
+    riwayatAntrian($poli, '2026-10-10', 'A001', 'selesai', ['nama' => 'Budi Santoso', 'nik' => '3201010101990004', 'no_hp' => '081234567890']);
     riwayatAntrian($poli, '2026-09-01', 'A002', 'selesai', ['nama' => 'Di Luar Rentang']);
 
     $petugas = User::factory()->create(['role' => 'petugas']);
@@ -109,9 +109,10 @@ it('unduh CSV memuat data terfilter dengan NIK samar dan pemisah titik koma', fu
     expect($isi)->toStartWith("\xEF\xBB\xBF")
         ->toContain('Tanggal;Nomor;Poli;Pasien')
         ->toContain('Budi Santoso')
-        ->toContain('3201********0004')
+        ->toContain('•••••••••890')
         ->toContain('12') // lama layanan 12 menit
         ->not->toContain('3201010101990004')
+        ->not->toContain('081234567890')
         ->not->toContain('Di Luar Rentang');
 });
 
@@ -128,8 +129,27 @@ it('CSV menetralkan sel yang diawali karakter rumus', function () {
     expect($isi)->toContain("'=HYPERLINK")->not->toContain(';=HYPERLINK');
 });
 
-it('samarkanNik menyisakan empat digit awal dan akhir', function () {
-    expect(RiwayatController::samarkanNik('3201010101990004'))->toBe('3201********0004');
-    expect(RiwayatController::samarkanNik(null))->toBeNull();
-    expect(RiwayatController::samarkanNik('123'))->toBe('123');
+it('NIK disensor penuh dan nomor HP hanya menyisakan tiga digit akhir', function () {
+    expect(Pasien::sensorNik('3201010101990004'))->toBe('•••• •••• •••• ••••');
+    expect(Pasien::sensorNik(null))->toBe('-');
+    expect(Pasien::sensorHp('081234567890'))->toBe('•••••••••890');
+    expect(Pasien::sensorHp('+62 812-3456-7890'))->toBe('••••••••••890');
+    expect(Pasien::sensorHp(null))->toBe('-');
+});
+
+it('pencarian riwayat menemukan lewat nama, nomor antrian, NIK, dan nomor HP', function () {
+    $poli = Poli::factory()->create(['nama_poli' => 'Poli Mata']);
+    riwayatAntrian($poli, '2026-10-10', 'A001', 'selesai', ['nama' => 'Budi Santoso', 'nik' => '3201010101990004', 'no_hp' => '081234567890']);
+    riwayatAntrian($poli, '2026-10-10', 'A002', 'selesai', ['nama' => 'Citra Dewi', 'nik' => '3201010101990005', 'no_hp' => '081299990000']);
+
+    $petugas = User::factory()->create(['role' => 'petugas']);
+    $dasar = ['dari' => '2026-10-01', 'sampai' => '2026-10-31'];
+    $cari = fn (string $q) => $this->actingAs($petugas)->get(route('antrian.riwayat', $dasar + ['q' => $q]));
+
+    $cari('budi')->assertSee('Budi Santoso')->assertDontSee('Citra Dewi');
+    $cari('320101010199000')->assertSee('Budi Santoso')->assertSee('Citra Dewi'); // awalan NIK
+    $cari('3201010101990005')->assertSee('Citra Dewi')->assertDontSee('Budi Santoso');
+    $cari('081234567890')->assertSee('Budi Santoso')->assertDontSee('Citra Dewi');
+    $cari('567890')->assertSee('Budi Santoso')->assertDontSee('Citra Dewi'); // akhiran HP
+    $cari('A002')->assertSee('Citra Dewi')->assertDontSee('Budi Santoso');
 });

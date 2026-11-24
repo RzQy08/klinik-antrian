@@ -39,6 +39,44 @@ final class AksesLokal
             && in_array((string) $request->server('REMOTE_ADDR'), self::LOOPBACK, true);
     }
 
+    /**
+     * Khusus tombol DEV dan masuk cepat. Selain syarat lokal biasa, boleh juga lewat tunnel ngrok,
+     * tetapi hanya bila DEV_MASUK_NGROK=true di .env, APP_ENV=local, hostnya domain ngrok, dan
+     * koneksi dari agen ngrok di komputer ini (loopback). Tanpa DEV_MASUK_NGROK perilakunya sama
+     * persis dengan diizinkan().
+     *
+     * Sengaja terpisah dari diizinkan(): kunci APP_DEBUG tetap memakai diizinkan(), jadi halaman
+     * error yang menampilkan isi .env tidak pernah ikut terbuka lewat tunnel.
+     */
+    public static function masukCepatDiizinkan(?Request $request = null): bool
+    {
+        $request ??= request();
+
+        if (self::diizinkan($request)) {
+            return true;
+        }
+
+        if (! app()->isLocal() || ! filter_var(env('DEV_MASUK_NGROK', false), FILTER_VALIDATE_BOOL)) {
+            return false;
+        }
+
+        return self::hostNgrok($request->getHost())
+            && in_array((string) $request->server('REMOTE_ADDR'), self::LOOPBACK, true);
+    }
+
+    public static function hostNgrok(string $host): bool
+    {
+        $host = strtolower(trim($host, '[]'));
+
+        foreach (['.ngrok-free.app', '.ngrok-free.dev', '.ngrok.app', '.ngrok.dev', '.ngrok.io'] as $akhiran) {
+            if (str_ends_with($host, $akhiran)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function hostLokal(string $host): bool
     {
         $host = strtolower(trim($host, '[]'));

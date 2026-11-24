@@ -22,7 +22,7 @@ function antrianDokter(Poli $poli, ?Dokter $dokter, string $status, string $nomo
     return Antrian::create([
         'pasien_id' => Pasien::factory()->create(['no_hp' => null])->id, 'poli_id' => $poli->id, 'dokter_id' => $dokter?->id,
         'nomor_antrian' => $nomor, 'status' => $status, 'waktu_daftar' => now()->subMinutes(20),
-        'waktu_dipanggil' => $status === 'menunggu' ? null : now()->subMinutes(5),
+        'waktu_dipanggil' => $status === 'menunggu' ? null : now()->subMinute(),
         'waktu_mulai_dilayani' => $status === 'dilayani' ? now()->subMinutes(2) : null,
         'tanggal' => now()->toDateString(),
     ]);

@@ -144,6 +144,9 @@ $pt-aksen: (#0B7A8F, #B5791B, #C4553F, #6A50D3, #1F6FB5, #4E8A22);
 .pt-list { margin: 0; padding: 0; list-style: none; }
 .pt-case { padding: 1rem 1.25rem; border-left: .3rem solid transparent; & + & { border-top: 1px solid $border-color; } }
 .pt-case.is-dipanggil { border-left-color: $warning; background: rgba($warning, .06); }
+.pt-case.is-telat { border-left-color: $danger; background: rgba($danger, .05); }
+.pt-sisa { display: inline-flex; align-items: center; gap: .3rem; font-weight: 700; color: #8A5A00; }
+.pt-case.is-telat .pt-sisa { color: $danger; }
 .pt-case.is-dilayani { border-left-color: $info; background: rgba($info, .05); }
 .pt-case.is-next { border-left-color: $primary; background: rgba($primary, .05); }
 .pt-case-main { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
@@ -182,3 +185,5 @@ $pt-aksen: (#0B7A8F, #B5791B, #C4553F, #6A50D3, #1F6FB5, #4E8A22);
     input { padding-left: 2.4rem; } }
 .pt-cari-kosong { margin: 0; padding: 1rem 1.25rem; color: $text-muted; font-size: .9rem; }
 .pt-list li[hidden] { display: none; }
+
+.pt-console .pt-lim { display: inline-flex; align-items: center; gap: .25rem; margin-left: .5rem; background: rgba(#fff, .16); color: #fff; }

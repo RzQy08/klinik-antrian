@@ -1,6 +1,6 @@
 {{-- Akses cepat untuk pengembangan: melayang di pojok, hanya saat APP_ENV=local.
          Tombol x menyembunyikannya sampai halaman dimuat ulang (sengaja tanpa penyimpanan, cocok untuk screenshot). --}}
-    @if (\App\Support\AksesLokal::diizinkan())
+    @if (\App\Support\AksesLokal::masukCepatDiizinkan())
         <div class="bn-dev {{ ($kanan ?? false) ? 'bn-dev-kanan' : '' }}" data-dev>
             <details class="bn-dev-menu">
                 <summary aria-label="Akses cepat pengembangan">

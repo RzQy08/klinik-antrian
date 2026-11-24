@@ -2,13 +2,26 @@
     @if ($antrian->status === 'dipanggil')
         <div class="alert alert-warning text-center fs-5" role="alert">
             <strong>Giliran Anda!</strong> Silakan menuju {{ $antrian->poli->nama_poli }}@if ($antrian->dokter), {{ $antrian->dokter->nama }}@endif.
+            @if ($antrian->waktu_dipanggil)
+                <div class="fs-6 mt-1">Harap hadir sebelum pukul {{ $antrian->waktu_dipanggil->copy()->addMinutes((int) config('antrian.batas_telat_menit'))->format('H.i') }}.</div>
+            @endif
+        </div>
+    @elseif ($antrian->status === 'telat')
+        <div class="alert alert-warning text-center" role="alert">
+            <strong>Anda terlambat.</strong> Segera menuju {{ $antrian->poli->nama_poli }} dan temui petugas.
+            @if ($antrian->waktu_telat)
+                <div class="small mt-1">Tanpa kabar sampai pukul {{ $antrian->waktu_telat->copy()->addMinutes((int) config('antrian.batas_tidak_hadir_menit'))->format('H.i') }}, nomor ini ditandai tidak hadir.</div>
+            @endif
         </div>
     @elseif ($antrian->status === 'dilayani')
         <div class="alert alert-info text-center" role="alert">Anda sedang dilayani.</div>
     @elseif ($antrian->status === 'selesai')
         <div class="alert alert-success text-center" role="alert">Pelayanan selesai. Terima kasih.</div>
     @elseif ($antrian->status === 'tidak_hadir')
-        <div class="alert alert-danger text-center" role="alert">Anda ditandai tidak hadir. Silakan hubungi petugas loket.</div>
+        <div class="alert alert-danger text-center" role="alert">
+            Anda ditandai tidak hadir.
+            <div class="mt-2"><a href="{{ route('antrian.create') }}" class="btn btn-sm btn-danger">Daftar lagi</a></div>
+        </div>
     @endif
 
     <article class="card overflow-hidden">

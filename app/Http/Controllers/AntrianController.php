@@ -8,6 +8,7 @@ use App\Models\Dokter;
 use App\Models\Pasien;
 use App\Models\Poli;
 use App\Services\JamOperasional;
+use App\Services\PemanggilOtomatis;
 use App\Services\QueueTheoryService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -55,18 +56,44 @@ class AntrianController extends Controller
             ->orderByDesc('waktu_dipanggil')
             ->get();
 
-        // Pasien yang dipanggil tetapi tidak hadir: masih bisa dipanggil ulang sampai jam layanan selesai
+        // Telat sementara: dipanggil tetapi belum datang. Berubah jadi tidak hadir kalau tidak ada kabar.
+        $telat = Antrian::untukPoli($poli->id)
+            ->hariIni()
+            ->where('status', 'telat')
+            ->with('pasien', 'dokter')
+            ->orderBy('waktu_telat')
+            ->get();
+
+        // Tidak hadir: masih bisa dipanggil ulang sampai jam layanan selesai, kecuali pasien sudah mendaftar lagi
         $tidakHadir = Antrian::untukPoli($poli->id)
             ->hariIni()
-            ->where('status', 'tidak_hadir')
+            ->bisaDipanggilUlang()
             ->with('pasien', 'dokter')
             ->orderBy('waktu_dipanggil')
             ->get();
 
+        PemanggilOtomatis::tick();
+
         $dokters = Dokter::where('poli_id', $poli->id)->where('aktif', true)->tidakCuti()->get();
         $layananBerjalan = JamOperasional::layananBerjalan();
 
-        return view('antrian.kelola', compact('poli', 'daftarMenunggu', 'sedangDilayani', 'tidakHadir', 'dokters', 'layananBerjalan'));
+        return view('antrian.kelola', compact('poli', 'daftarMenunggu', 'sedangDilayani', 'telat', 'tidakHadir', 'dokters', 'layananBerjalan'));
+    }
+
+    /**
+     * Penanda perubahan antrian satu poli. Dipoll halaman kelola: kalau penanda berubah
+     * (pasien baru, panggilan otomatis, telat), halaman memuat ulang isinya tanpa reload penuh.
+     * Pemanggilan dan pengecekan telat otomatis ikut dijalankan dari sini.
+     */
+    public function versi(Poli $poli): \Illuminate\Http\JsonResponse
+    {
+        PemanggilOtomatis::tick();
+
+        $baris = Antrian::untukPoli($poli->id)->hariIni()
+            ->selectRaw('status, COUNT(*) as n, MAX(id) as terakhir, MAX(jumlah_panggil) as panggil')
+            ->groupBy('status')->orderBy('status')->get();
+
+        return response()->json(['v' => md5($baris->toJson())])->header('Cache-Control', 'no-store');
     }
 
     /**
@@ -143,7 +170,7 @@ class AntrianController extends Controller
             $aktif = Antrian::where('pasien_id', $pasien->id)
                 ->where('poli_id', $poli->id)
                 ->padaTanggal(now())
-                ->whereIn('status', ['menunggu', 'dipanggil', 'dilayani'])
+                ->whereIn('status', Antrian::STATUS_BERJALAN)
                 ->first();
 
             if ($aktif) {
@@ -291,12 +318,17 @@ class AntrianController extends Controller
             return back()->with('error', 'Hanya antrian hari ini yang bisa dipanggil ulang.');
         }
 
-        if (! in_array($antrian->status, ['dipanggil', 'tidak_hadir'], true)) {
+        if (! in_array($antrian->status, ['dipanggil', 'telat', 'tidak_hadir'], true)) {
             return back()->with('error', 'Antrian ini tidak berada dalam status yang bisa dipanggil ulang.');
         }
 
         if (! JamOperasional::layananBerjalan()) {
             return back()->with('error', JamOperasional::pesanLayananSelesai());
+        }
+
+        // Pasien yang sudah mendaftar lagi sudah punya nomor baru; nomor lama tidak dipanggil lagi
+        if ($antrian->status === 'tidak_hadir' && ! Antrian::whereKey($antrian->id)->bisaDipanggilUlang()->exists()) {
+            return back()->with('error', 'Pasien ini sudah mendaftar ulang dengan nomor baru.');
         }
 
         $validated = $request->validate([
@@ -316,6 +348,7 @@ class AntrianController extends Controller
             'status' => 'dipanggil',
             'dokter_id' => $dokterId,
             'waktu_dipanggil' => now(),
+            'waktu_telat' => null,
             'waktu_mulai_dilayani' => null,
             'jumlah_panggil' => (int) $antrian->jumlah_panggil + 1,
         ]);
@@ -333,8 +366,8 @@ class AntrianController extends Controller
         $this->pastikanBolehMengelola($request, $antrian);
 
         $diubah = Antrian::whereKey($antrian->id)
-            ->where('status', 'dipanggil')
-            ->update(['status' => 'dilayani', 'waktu_mulai_dilayani' => now()]);
+            ->whereIn('status', ['dipanggil', 'telat'])
+            ->update(['status' => 'dilayani', 'waktu_mulai_dilayani' => now(), 'waktu_telat' => null]);
 
         if (! $diubah) {
             return back()->with('error', 'Hanya pasien yang sudah dipanggil yang bisa mulai dilayani.');
@@ -358,6 +391,9 @@ class AntrianController extends Controller
             return back()->with('error', 'Hanya pasien yang sedang dilayani yang bisa diselesaikan.');
         }
 
+        // Dokter kosong: pasien berikutnya langsung dipanggil
+        PemanggilOtomatis::jalankan($antrian->poli_id);
+
         return back()->with('success', 'Pelayanan selesai.');
     }
 
@@ -369,12 +405,14 @@ class AntrianController extends Controller
         $this->pastikanBolehMengelola($request, $antrian);
 
         $diubah = Antrian::whereKey($antrian->id)
-            ->where('status', 'dipanggil')
-            ->update(['status' => 'tidak_hadir']);
+            ->whereIn('status', ['dipanggil', 'telat'])
+            ->update(['status' => 'tidak_hadir', 'waktu_telat' => null]);
 
         if (! $diubah) {
             return back()->with('error', 'Hanya pasien yang sudah dipanggil yang bisa ditandai tidak hadir.');
         }
+
+        PemanggilOtomatis::jalankan($antrian->poli_id);
 
         return back()->with('success', "Antrian {$antrian->nomor_antrian} ditandai tidak hadir.");
     }

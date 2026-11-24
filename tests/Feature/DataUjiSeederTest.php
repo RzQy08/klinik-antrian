@@ -6,6 +6,7 @@ use App\Models\Poli;
 use App\Models\User;
 use App\Services\QueueTheoryService;
 use Carbon\Carbon;
+use Database\Seeders\DataPasienRealistis;
 use Database\Seeders\DataUjiSeeder;
 use Database\Seeders\HapusDataUjiSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,7 +32,7 @@ it('membuat akun, pasien, antrian hari ini, dan riwayat yang siap diuji', functi
     expect($akunDokter)->not->toBeEmpty();
     expect($akunDokter->every(fn (User $user) => $user->dokter()->exists()))->toBeTrue();
 
-    expect(Pasien::query()->where('no_rm', 'like', 'RM-UJI-%')->count())->toBe(12);
+    expect(Pasien::query()->where('no_rm', 'like', 'RM-UJI-%')->count())->toBe(count(DataPasienRealistis::untukUji()));
 
     $statusHariIni = Antrian::query()
         ->hariIni()
@@ -111,4 +112,48 @@ it('pembersih data uji hanya menghapus data uji', function () {
     expect(User::query()->where('email', 'like', '%.uji@klinik.test')->count())->toBe(0);
     expect(Pasien::query()->where('no_rm', 'not like', 'RM-UJI-%')->count())->toBe($jumlahPasienLain);
     expect(Poli::query()->find($poli->id))->not->toBeNull();
+});
+
+it('pasien contoh punya nama, NIK, dan nomor HP yang unik dan berstruktur benar', function () {
+    $semua = DataPasienRealistis::semua();
+
+    expect(collect($semua)->pluck('nik')->unique())->toHaveCount(count($semua));
+    expect(collect($semua)->pluck('nama')->unique())->toHaveCount(count($semua));
+    expect(collect($semua)->pluck('no_hp')->unique())->toHaveCount(count($semua));
+
+    foreach ($semua as $p) {
+        expect($p['nik'])->toMatch('/^\d{16}$/');
+
+        $tgl = (int) substr($p['nik'], 6, 2);
+        $lahir = Carbon::parse($p['tanggal_lahir']);
+
+        // Tanggal pada NIK perempuan ditambah 40
+        expect($tgl)->toBe($lahir->day + ($p['jenis_kelamin'] === 'P' ? 40 : 0));
+        expect(substr($p['nik'], 8, 4))->toBe($lahir->format('m').$lahir->format('y'));
+        expect($p['nama'])->toMatch('/^[A-Z][a-z]+( [A-Z][a-z]+)*$/');
+    }
+});
+
+it('seeder master melengkapi poli dan dokter spesialis dengan jadwal sendiri', function () {
+    $this->seed(\Database\Seeders\DatabaseSeeder::class);
+
+    expect(Poli::query()->pluck('nama_poli')->all())->toContain('Poli THT', 'Poli Penyakit Dalam', 'Poli Mata', 'Poli Kulit dan Kelamin');
+
+    $mata = \App\Models\Dokter::query()->where('nama', 'like', '%Sp.M')->firstOrFail();
+    expect($mata->jadwalPraktiks()->pluck('hari')->sort()->values()->all())->toBe(['kamis', 'sabtu', 'selasa']);
+});
+
+it('database menolak jadwal ganda dan akun yang dipakai dua dokter', function () {
+    $dokter = \App\Models\Dokter::factory()->create();
+
+    \App\Models\JadwalPraktik::create(['dokter_id' => $dokter->id, 'hari' => 'senin', 'jam_mulai' => '08:00', 'jam_selesai' => '12:00', 'kuota' => 10]);
+
+    expect(fn () => \App\Models\JadwalPraktik::create(['dokter_id' => $dokter->id, 'hari' => 'senin', 'jam_mulai' => '13:00', 'jam_selesai' => '15:00', 'kuota' => 10]))
+        ->toThrow(\Illuminate\Database\QueryException::class);
+
+    $user = User::factory()->create(['role' => 'dokter']);
+    $dokter->update(['user_id' => $user->id]);
+    $lain = \App\Models\Dokter::factory()->create();
+
+    expect(fn () => $lain->update(['user_id' => $user->id]))->toThrow(\Illuminate\Database\QueryException::class);
 });

@@ -45,123 +45,6 @@ class DataUjiSeeder extends Seeder
     private const HARI_RIWAYAT = 14;
 
     /**
-     * Pasien uji dengan NIK tetap. NIK sengaja 16 digit dan berbeda dari
-     * pasien DemoSeeder (320101...) supaya mudah dibedakan.
-     *
-     * @var array<int, array{no_rm: string, nik: string, nama: string, tanggal_lahir: string, jenis_kelamin: string, no_hp: string, alamat: string}>
-     */
-    private const PASIEN_UJI = [
-        [
-            'no_rm' => 'RM-UJI-001',
-            'nik' => '3273010101900001',
-            'nama' => 'Raka Pratama',
-            'tanggal_lahir' => '1990-01-01',
-            'jenis_kelamin' => 'L',
-            'no_hp' => '081230000001',
-            'alamat' => 'Jl. Cihampelas No. 10, Bandung',
-        ],
-        [
-            'no_rm' => 'RM-UJI-002',
-            'nik' => '3273015206850002',
-            'nama' => 'Sinta Maharani',
-            'tanggal_lahir' => '1985-06-12',
-            'jenis_kelamin' => 'P',
-            'no_hp' => '081230000002',
-            'alamat' => 'Jl. Dago No. 18, Bandung',
-        ],
-        [
-            'no_rm' => 'RM-UJI-003',
-            'nik' => '3273010108010003',
-            'nama' => 'Ahmad Fauzan',
-            'tanggal_lahir' => '2001-08-01',
-            'jenis_kelamin' => 'L',
-            'no_hp' => '081230000003',
-            'alamat' => 'Jl. Anggrek No. 27, Cimahi',
-        ],
-        [
-            'no_rm' => 'RM-UJI-004',
-            'nik' => '3273014412780004',
-            'nama' => 'Dewi Lestari',
-            'tanggal_lahir' => '1978-12-04',
-            'jenis_kelamin' => 'P',
-            'no_hp' => '081230000004',
-            'alamat' => 'Jl. Dahlia No. 9, Bandung',
-        ],
-        [
-            'no_rm' => 'RM-UJI-005',
-            'nik' => '3273012009150005',
-            'nama' => 'Rizky Pratama',
-            'tanggal_lahir' => '2015-09-20',
-            'jenis_kelamin' => 'L',
-            'no_hp' => '081230000005',
-            'alamat' => 'Jl. Mawar No. 31, Lembang',
-        ],
-        [
-            'no_rm' => 'RM-UJI-006',
-            'nik' => '3273011010600006',
-            'nama' => 'Aminah',
-            'tanggal_lahir' => '1960-10-10',
-            'jenis_kelamin' => 'P',
-            'no_hp' => '081230000006',
-            'alamat' => 'Jl. Cempaka No. 18, Bandung',
-        ],
-        [
-            'no_rm' => 'RM-UJI-007',
-            'nik' => '3273010505950007',
-            'nama' => 'Andi Saputra',
-            'tanggal_lahir' => '1995-05-05',
-            'jenis_kelamin' => 'L',
-            'no_hp' => '081230000007',
-            'alamat' => 'Jl. Flamboyan No. 6, Cimahi',
-        ],
-        [
-            'no_rm' => 'RM-UJI-008',
-            'nik' => '3273012807880008',
-            'nama' => 'Maya Anggraini',
-            'tanggal_lahir' => '1988-07-28',
-            'jenis_kelamin' => 'P',
-            'no_hp' => '081230000008',
-            'alamat' => 'Jl. Seruni No. 15, Bandung',
-        ],
-        [
-            'no_rm' => 'RM-UJI-009',
-            'nik' => '3273011204020009',
-            'nama' => 'Bagas Nugroho',
-            'tanggal_lahir' => '2002-04-12',
-            'jenis_kelamin' => 'L',
-            'no_hp' => '081230000009',
-            'alamat' => 'Jl. Sukajadi No. 21, Bandung',
-        ],
-        [
-            'no_rm' => 'RM-UJI-010',
-            'nik' => '3273016709990010',
-            'nama' => 'Nadia Putri',
-            'tanggal_lahir' => '1999-09-27',
-            'jenis_kelamin' => 'P',
-            'no_hp' => '081230000010',
-            'alamat' => 'Jl. Pasteur No. 8, Bandung',
-        ],
-        [
-            'no_rm' => 'RM-UJI-011',
-            'nik' => '3273011507930011',
-            'nama' => 'Fajar Hidayat',
-            'tanggal_lahir' => '1993-07-15',
-            'jenis_kelamin' => 'L',
-            'no_hp' => '081230000011',
-            'alamat' => 'Jl. Setiabudi No. 44, Bandung',
-        ],
-        [
-            'no_rm' => 'RM-UJI-012',
-            'nik' => '3273012103660012',
-            'nama' => 'Kartini',
-            'tanggal_lahir' => '1966-03-21',
-            'jenis_kelamin' => 'P',
-            'no_hp' => '081230000012',
-            'alamat' => 'Jl. Kopo No. 30, Bandung',
-        ],
-    ];
-
-    /**
      * Rata-rata lama layanan per poli (menit) untuk riwayat simulasi.
      *
      * @var array<string, int>
@@ -171,6 +54,10 @@ class DataUjiSeeder extends Seeder
         'B' => 20,
         'C' => 15,
         'D' => 15,
+        'E' => 15,
+        'F' => 18,
+        'G' => 20,
+        'H' => 12,
     ];
 
     /**
@@ -184,6 +71,10 @@ class DataUjiSeeder extends Seeder
         'B' => 16,
         'C' => 24,
         'D' => 32,
+        'E' => 18,
+        'F' => 36,
+        'G' => 14,
+        'H' => 20,
     ];
 
     /** @var Collection<int, Pasien> */
@@ -227,37 +118,30 @@ class DataUjiSeeder extends Seeder
      */
     private function siapkanMaster(): void
     {
-        if (Poli::query()->count() === 0) {
-            $this->call(PoliSeeder::class);
-        }
-
-        if (Dokter::query()->count() === 0) {
-            $this->call(DokterSeeder::class);
-        }
-
-        if (JadwalPraktik::query()->count() === 0) {
-            $this->call(JadwalPraktikSeeder::class);
-        }
+        // Seeder master bersifat idempoten (firstOrCreate): yang sudah ada tidak diubah, yang belum ada dilengkapi.
+        $this->call([PoliSeeder::class, DokterSeeder::class, JadwalPraktikSeeder::class]);
     }
 
     /**
+     * Pasien uji dibuat atau diperbarui menurut no. RM. Data lama (RM-UJI-xxx dan RM-DEMO-xxx versi
+     * sebelumnya) diganti di tempat, jadi riwayat antriannya tetap tersambung ke pasien yang sama.
+     *
      * @return Collection<int, Pasien>
      */
     private function siapkanPasien(): Collection
     {
+        // RM-DEMO-xxx hanya diperbarui kalau sudah ada; pembuatnya DemoSeeder.
+        foreach (DataPasienRealistis::untukDemo() as $i => $data) {
+            Pasien::query()->where('no_rm', sprintf('RM-DEMO-%03d', $i + 1))->first()?->update($data);
+        }
+
         $hasil = collect();
 
-        foreach (self::PASIEN_UJI as $data) {
-            $pasien = Pasien::query()->where('nik', $data['nik'])->first();
-
-            if (! $pasien) {
-                $pasien = Pasien::query()->firstOrCreate(
-                    ['no_rm' => $data['no_rm']],
-                    $data
-                );
-            }
-
-            $hasil->push($pasien);
+        foreach (DataPasienRealistis::untukUji() as $i => $data) {
+            $hasil->push(Pasien::query()->updateOrCreate(
+                ['no_rm' => sprintf('RM-UJI-%03d', $i + 1)],
+                $data
+            ));
         }
 
         return $hasil->unique('id')->values();
@@ -418,7 +302,11 @@ class DataUjiSeeder extends Seeder
      */
     private function buatRiwayatSatuHari(Poli $poli, Carbon $hari): int
     {
-        $dokters = $poli->dokters;
+        // Hanya dokter yang punya jadwal pada hari itu, supaya riwayat cocok dengan jadwal praktik
+        $namaHari = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'][$hari->dayOfWeek];
+        $dokters = $poli->dokters
+            ->filter(fn (Dokter $d) => JadwalPraktik::query()->where('dokter_id', $d->id)->where('hari', $namaHari)->exists())
+            ->values();
 
         if ($dokters->isEmpty()) {
             return 0;

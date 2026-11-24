@@ -34,7 +34,7 @@ class TiketAntrian extends Component
         return view('livewire.tiket-antrian', [
             'antrian' => $antrian,
             'posisiDidepan' => $posisiDidepan,
-            'masihBerjalan' => in_array($antrian->status, ['menunggu', 'dipanggil', 'dilayani'], true),
+            'masihBerjalan' => in_array($antrian->status, ['menunggu', 'dipanggil', 'telat', 'dilayani'], true),
         ]);
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemoLoginController;
+use App\Http\Controllers\PermintaanJadwalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RiwayatController;
 use Illuminate\Support\Facades\Route;
@@ -86,6 +87,17 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:dokter')
         ->name('antrian.dokter');
 
+    Route::post('/jadwal/permintaan', [PermintaanJadwalController::class, 'store'])
+        ->middleware('role:dokter')
+        ->name('permintaan-jadwal.store');
+    Route::delete('/jadwal/permintaan/{permintaan}', [PermintaanJadwalController::class, 'batalkan'])
+        ->middleware('role:dokter')
+        ->name('permintaan-jadwal.batalkan');
+
+    Route::get('/antrian/kelola/{poli}/versi', [AntrianController::class, 'versi'])
+        ->middleware(['role:admin,petugas', 'throttle:30,1'])
+        ->name('antrian.versi');
+
     Route::get('/antrian/kelola/{poli}', [AntrianController::class, 'kelola'])
         ->middleware('role:admin,petugas')
         ->name('antrian.kelola');
@@ -136,6 +148,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin/dashboard')->name('admi
         ->name('dokter.jadwal.store');
     Route::delete('jadwal/{jadwal}', [JadwalPraktikController::class, 'destroy'])
         ->name('jadwal.destroy');
+
+    Route::post('permintaan-jadwal/{permintaan}/setujui', [PermintaanJadwalController::class, 'setujui'])
+        ->name('permintaan-jadwal.setujui');
+    Route::post('permintaan-jadwal/{permintaan}/tolak', [PermintaanJadwalController::class, 'tolak'])
+        ->name('permintaan-jadwal.tolak');
 });
 
 require __DIR__.'/auth.php';
