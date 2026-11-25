@@ -1,10 +1,10 @@
 // =====================================================================
 // Layar antrian untuk TV ruang tunggu dan semua perangkat (kelas ly-)
 //
-// Satu kartu terang sebagai pusat perhatian (nomor yang sedang dipanggil), bergantian
-// menyorot tiap poli, ditemani kartu-kartu horizontal gelap per poli. Semua jarak memakai
-// kelipatan 8 (0,5em, 1em, 1,5em, 2em) dan satu ukuran dasar mengikuti lebar dan tinggi
-// layar. Jumlah poli menentukan kepadatan daftar: 1 kolom lega, 2 kolom, sampai 3 kolom ringkas.
+// Satu kartu terang sebagai pusat perhatian (nomor yang sedang dipanggil), ditemani
+// kartu-kartu horizontal gelap per poli. Semua jarak memakai kelipatan 8 (0,5em, 1em,
+// 1,5em, 2em) dan satu ukuran dasar mengikuti lebar dan tinggi layar. Jumlah poli
+// menentukan kepadatan daftar: 1 kolom lega, 2 kolom, sampai 3 kolom ringkas.
 // =====================================================================
 
 $ly-bg-1: #06202A;
@@ -91,7 +91,6 @@ html.no-fs .ly-fs { display: none; }
 }
 .ly-label { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .5em 1em; align-self: flex-start; margin: 0; padding: .5em 1em; font-size: .9em; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: $ly-ink; background: rgba($ly-ink, .07); border-radius: 999px; .ly-dot { background: #0B9E8D; } }
 .ly-badge { padding: .1em .75em; font-size: .85em; letter-spacing: 0; text-transform: none; color: #4A3300; background: #F4C85E; border-radius: 999px; }
-.ly-badge-baru { color: $ly-ink; background: $ly-glow; animation: ly-badge 2s ease-in-out infinite; }
 
 .ly-who { display: flex; align-items: center; gap: 1em; min-width: 0; animation: ly-geser .9s $ly-ease both; }
 .ly-kode { display: inline-grid; place-items: center; flex: none; min-width: 2.5em; height: 2.5em; padding: 0 .5em; font-family: $headings-font-family; font-weight: 800; font-size: 1.25em; line-height: 1; border-radius: .75em; color: $ly-glow; background: $ly-ink; }
@@ -116,12 +115,6 @@ html.no-fs .ly-fs { display: none; }
 .ly-side-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1em; padding-inline: .5em; }
 .ly-side-title { margin: 0; font-size: 1.15em; font-weight: 700; color: $ly-teks; }
 .ly-side-sub { font-size: .8em; color: $ly-muted; }
-.ly-side-tools { display: flex; align-items: center; gap: .75em; }
-.ly-jeda {
-    display: grid; place-items: center; width: 2em; height: 2em; padding: 0; font-size: .9em; color: $ly-teks; background: $ly-kartu; border: 1px solid $ly-garis; border-radius: 50%; transition: background .25s, transform .3s $ly-ease, border-color .25s;
-    &:hover { background: rgba(#fff, .14); border-color: rgba(#fff, .3); transform: scale(1.08); }
-    &:focus-visible { outline: 2px solid $ly-glow; outline-offset: 2px; }
-}
 
 .ly-list { display: grid; gap: 1em; grid-template-columns: minmax(0, 1fr); grid-auto-rows: minmax(5em, auto); margin: 0; padding: 0; list-style: none; }
 @media (min-width: 640px) and (orientation: portrait) { .ly-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ly-list[data-n="4"] { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -135,10 +128,9 @@ html.no-fs .ly-fs { display: none; }
 // kartu horizontal: ubin kode, teks bertingkat, nomor di kanan
 .ly-card {
     position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1em; min-width: 0; padding: 1em 1.5em 1em 1em;
-    background: $ly-kartu; border: 1px solid $ly-garis; border-radius: 1.5em; cursor: pointer; transition: background .4s, border-color .4s, transform .7s $ly-ease, box-shadow .7s;
+    background: $ly-kartu; border: 1px solid $ly-garis; border-radius: 1.5em; transition: background .4s, border-color .4s, transform .7s $ly-ease, box-shadow .7s;
     animation: ly-naik .9s $ly-ease both; animation-delay: calc(var(--k, 0) * 60ms + 250ms);
     &.is-active { background: var(--a-soft); border-color: transparent; box-shadow: 0 1.5em 3em -1.5em var(--a); transform: translateX(-.5em); }
-    &:focus-visible { outline: 2px solid var(--a); outline-offset: 3px; }
     // cincin cahaya yang berputar di kartu aktif
     &.is-active::before {
         content: ''; position: absolute; inset: -1px; padding: 2px; border-radius: inherit; pointer-events: none; animation: ly-putar 5s linear infinite;
@@ -146,7 +138,6 @@ html.no-fs .ly-fs { display: none; }
         -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
     }
 }
-.ly.is-jeda .ly-card.is-active::before { animation-play-state: paused; }
 .ly-card .ly-kode { min-width: 3em; height: 3em; font-size: 1.15em; color: var(--a); background: var(--a-soft); box-shadow: inset 0 0 0 1px rgba(#fff, .06); border-radius: 1em; transition: background .4s, color .4s; }
 .ly-card.is-active .ly-kode { color: $ly-ink; background: var(--a); }
 .ly-card-body { min-width: 0; display: grid; gap: .25em; }
@@ -161,13 +152,21 @@ html.no-fs .ly-fs { display: none; }
 .ly-kosong { padding: 2em; text-align: center; color: $ly-muted; border: 1px dashed $ly-garis; border-radius: 1.5em; }
 
 // makin banyak poli, makin ringkas isi kartunya
-.ly-list[data-n="2"] .ly-next:nth-of-type(n+3) { display: none; }
-.ly-list[data-n="3"], .ly-list[data-n="4"] {
+.ly-card-info .ly-nx { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0 .5em; b { font-weight: 700; color: $ly-teks; font-variant-numeric: tabular-nums; } }
+.ly-card-info .ly-tl { display: inline-flex; align-items: center; gap: .3em; padding: .05em .6em; font-weight: 700; color: #FFD7A0; background: rgba(#F4C85E, .16); border-radius: 999px; }
+.ly-plus { display: block; margin-top: .3em; font-size: .7em; font-style: normal; font-weight: 700; color: $ly-muted; white-space: nowrap; }
+.ly-list[data-n="2"] .ly-nx b:nth-of-type(n+3) { display: none; }
+.ly-list[data-n="3"] {
     .ly-card { gap: .75em; padding: .75em 1em .75em .75em; }
-    .ly-card-info > :not(:first-child) { display: none; }
+    .ly-card-info > :not(:first-child):not(.ly-nx) { display: none; }
+    .ly-nx b:nth-of-type(n+2) { display: none; }
+    .ly-card-nama { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; font-size: 1.05em; line-height: 1.15; }
     .ly-card-no small { display: none; }
 }
-.ly-list[data-n="4"] .ly-card { border-radius: 1.25em; .ly-kode { min-width: 2.5em; height: 2.5em; } .ly-card-info { display: none; } .ly-card-nama { font-size: 1em; } }
+.ly-list[data-n="4"] {
+    .ly-card { gap: .75em; padding: .75em 1em .75em .75em; border-radius: 1.25em; .ly-kode { min-width: 2.5em; height: 2.5em; } .ly-card-info { display: none; } .ly-card-nama { font-size: 1em; } }
+    .ly-card-no small, .ly-plus { display: none; }
+}
 
 // ---------- layar satu poli ----------
 .ly-nextlist { flex: 1; min-height: 0; margin: 0; padding: 0; list-style: none; display: grid; gap: .5em; align-content: start; }
@@ -180,7 +179,7 @@ html.no-fs .ly-fs { display: none; }
 
 // ---------- HP mendatar yang pendek ----------
 @media (max-height: 559px) and (orientation: landscape) { .ly { padding-block: 1em; gap: 1em; } .ly-now { padding: 1.5em; gap: 1em; } .ly-jam { font-size: 1.9em; } .ly-live { display: none; } .ly-stats { display: none; } }
-@media (max-width: 479px) { .ly { padding: 1em; } .ly-live, .ly-top .brand-sub { display: none; } .ly-now { padding: 1.5em; border-radius: 1.5em; } .ly-jam { font-size: 1.9em; } }
+@media (max-width: 479px) { .ly { padding: 1em; } .ly-tgl, .ly-top .brand-sub { display: none !important; } .ly-top { flex-wrap: nowrap; } .ly-top > :first-child { min-width: 0; } .ly-live, .ly-top .brand-sub { display: none; } .ly-now { padding: 1.5em; border-radius: 1.5em; } .ly-jam { font-size: 1.9em; } }
 
 // ---------- gerak ----------
 @keyframes ly-naik { from { opacity: 0; transform: translateY(1.5em); } to { opacity: 1; transform: none; } }
@@ -193,7 +192,30 @@ html.no-fs .ly-fs { display: none; }
 @keyframes ly-putar { to { --ang: 360deg; } }
 @keyframes ly-ping { 0% { transform: scale(1); opacity: .7; } 80%, 100% { transform: scale(3.2); opacity: 0; } }
 @keyframes ly-drift { from { transform: translate3d(-2%, -1%, 0) scale(1); } to { transform: translate3d(3%, 2%, 0) scale(1.08); } }
-@keyframes ly-badge { 0%, 100% { box-shadow: 0 0 0 0 rgba($ly-glow, .5); } 50% { box-shadow: 0 0 0 .35em rgba($ly-glow, 0); } }
 @media (prefers-reduced-motion: reduce) {
     .ly *, .ly *::before, .ly *::after, .ly::after { animation: none !important; transition: none !important; }
 }
+
+
+// ---------- panel samping layar per poli: ruang dokter, terlambat, daftar berikutnya ----------
+.ly-side-poli { gap: .9em; }
+.ly-panel { display: grid; gap: .75em; padding: 1em 1.1em; background: $ly-kartu; border: 1px solid $ly-garis; border-radius: 1.5em; min-width: 0; animation: ly-naik .9s $ly-ease both; }
+.ly-panel .ly-side-head { padding-inline: .15em; }
+.ly-panel-next { flex: 1; min-height: 0; align-content: start; overflow: hidden; }
+.ly-rooms { display: grid; gap: .5em; margin: 0; padding: 0; list-style: none; max-height: 13em; overflow: hidden auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+.ly-rooms li { display: flex; align-items: center; gap: 1em; padding: .6em 1em; background: rgba(#fff, .06); border-radius: 1em; min-width: 0; animation: ly-naik .7s $ly-ease both; }
+.ly-rooms .numeral { flex: none; font-size: 1.9em; line-height: 1; color: var(--a, #{$ly-glow}); font-variant-numeric: tabular-nums; }
+.ly-room-info { display: grid; min-width: 0; line-height: 1.2; b { font-size: 1em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } small { font-size: .75em; color: $ly-muted; } }
+.ly-late { display: flex; flex-wrap: wrap; align-items: center; gap: .35em .6em; margin: 0; padding: .55em .9em; font-size: .82em; font-weight: 600; color: #FFD7A0; background: rgba(#F4C85E, .12); border: 1px solid rgba(#F4C85E, .3); border-radius: 1em;
+    b { padding: .05em .55em; color: #2B1E00; background: #F4C85E; border-radius: 999px; font-size: 1.05em; font-variant-numeric: tabular-nums; } em { font-style: normal; opacity: .8; } }
+.ly-empty { margin: 0; padding: 1em; text-align: center; color: $ly-muted; font-size: .9em; }
+// kisi nomor: banyak pasien tetap rapi, kolom menyesuaikan lebar
+.ly-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.2em, 1fr)); gap: .5em; margin: 0; padding: 0; list-style: none; }
+.ly-grid li { display: grid; place-items: center; min-height: 2.9em; padding: .25em .4em; background: rgba(#fff, .06); border: 1px solid transparent; border-radius: .9em; animation: ly-naik .7s $ly-ease both; animation-delay: calc(min(var(--k, 0), 12) * 35ms + 150ms); }
+.ly-grid .numeral { font-size: 1.35em; line-height: 1; color: $ly-teks; font-variant-numeric: tabular-nums; }
+.ly-grid .is-first { background: var(--a-soft); border-color: var(--a); grid-column: span 2; .numeral { font-size: 1.9em; color: var(--a); } }
+.ly-grid .is-soon .numeral { color: #fff; }
+.ly-grid li:not(.is-first):not(.is-soon):not(.is-more) .numeral { color: $ly-muted; }
+.ly-grid .is-more { background: transparent; border: 1px dashed $ly-garis; span { display: flex; align-items: baseline; gap: .3em; font-weight: 800; color: $ly-muted; } small { font-size: .65em; font-weight: 600; } }
+@media (min-width: 900px) and (min-height: 560px) and (orientation: landscape) { .ly-side-poli { height: 100%; } }
+@media (max-width: 639px) { .ly-grid { grid-template-columns: repeat(auto-fill, minmax(4.4em, 1fr)); } .ly-grid .numeral { font-size: 1.2em; } .ly-rooms { max-height: none; } }

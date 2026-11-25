@@ -32,6 +32,10 @@ Route::post('/demo/masuk/{role}', DemoLoginController::class)
     ->whereIn('role', ['admin', 'petugas', 'dokter'])
     ->name('demo.masuk');
 
+// Alat uji coba panel DEV (404 di luar komputer developer)
+Route::post('/demo/mode-uji', [\App\Http\Controllers\DemoUjiController::class, 'modeUji'])->name('demo.mode-uji');
+Route::post('/demo/pasien-uji', [\App\Http\Controllers\DemoUjiController::class, 'pasienUji'])->name('demo.pasien-uji');
+
 /*
 |--------------------------------------------------------------------------
 | Setelah login, arahkan sesuai peran
@@ -56,6 +60,9 @@ Route::middleware('auth')->group(function () {
 */
 Route::get('/antrian/ambil', [AntrianController::class, 'create'])->name('antrian.create');
 Route::post('/antrian/ambil', [AntrianController::class, 'store'])->middleware('throttle:20,1')->name('antrian.store');
+Route::get('/antrian/status/{antrian:kode_tiket}', [AntrianController::class, 'statusTiket'])->middleware('throttle:60,1')->name('antrian.status-tiket');
+Route::get('/antrian/cek', [AntrianController::class, 'cekTiket'])->name('antrian.cek');
+Route::post('/antrian/cek', [AntrianController::class, 'cariTiket'])->middleware('throttle:10,1')->name('antrian.cari');
 Route::get('/antrian/tiket/{antrian:kode_tiket}', [AntrianController::class, 'tiket'])->middleware('throttle:60,1')->name('antrian.tiket');
 Route::get('/antrian/display/{poli}', [AntrianController::class, 'display'])->name('antrian.display');
 Route::view('/antrian/layar', 'antrian.layar')->name('antrian.layar');

@@ -1,63 +1,97 @@
-<div @if ($masihBerjalan) wire:poll.10s.visible @endif>
-    @if ($antrian->status === 'dipanggil')
-        <div class="alert alert-warning text-center fs-5" role="alert">
-            <strong>Giliran Anda!</strong> Silakan menuju {{ $antrian->poli->nama_poli }}@if ($antrian->dokter), {{ $antrian->dokter->nama }}@endif.
-            @if ($antrian->waktu_dipanggil)
-                <div class="fs-6 mt-1">Harap hadir sebelum pukul {{ $antrian->waktu_dipanggil->copy()->addMinutes((int) config('antrian.batas_telat_menit'))->format('H.i') }}.</div>
-            @endif
-        </div>
-    @elseif ($antrian->status === 'telat')
-        <div class="alert alert-warning text-center" role="alert">
-            <strong>Anda terlambat.</strong> Segera menuju {{ $antrian->poli->nama_poli }} dan temui petugas.
-            @if ($antrian->waktu_telat)
-                <div class="small mt-1">Tanpa kabar sampai pukul {{ $antrian->waktu_telat->copy()->addMinutes((int) config('antrian.batas_tidak_hadir_menit'))->format('H.i') }}, nomor ini ditandai tidak hadir.</div>
-            @endif
-        </div>
-    @elseif ($antrian->status === 'dilayani')
-        <div class="alert alert-info text-center" role="alert">Anda sedang dilayani.</div>
-    @elseif ($antrian->status === 'selesai')
-        <div class="alert alert-success text-center" role="alert">Pelayanan selesai. Terima kasih.</div>
-    @elseif ($antrian->status === 'tidak_hadir')
-        <div class="alert alert-danger text-center" role="alert">
-            Anda ditandai tidak hadir.
-            <div class="mt-2"><a href="{{ route('antrian.create') }}" class="btn btn-sm btn-danger">Daftar lagi</a></div>
-        </div>
-    @endif
-
-    <article class="card overflow-hidden">
-        <div class="board board-pattern text-center px-4 pt-4 pb-5 rounded-0">
-            <div class="d-flex justify-content-center mb-4">@include('partials.brand', ['terang' => true, 'sub' => false])</div>
-            <div class="small board-muted">Tiket antrian {{ $antrian->poli->nama_poli }}</div>
-            <div class="numeral mt-2" style="font-size: 6.5rem">{{ $antrian->nomor_antrian }}</div>
-            <div class="small board-muted mt-3">Simpan nomor ini sampai dipanggil</div>
+@php
+    $st = $antrian->status;
+    $langkah = ['Terdaftar', 'Menunggu', 'Dipanggil', 'Dilayani', 'Selesai'];
+    $posisi = ['menunggu' => 1, 'dipanggil' => 2, 'telat' => 2, 'dilayani' => 3, 'selesai' => 4, 'tidak_hadir' => 1][$st] ?? 1;
+    $label = ['menunggu' => 'Menunggu giliran', 'dipanggil' => 'Giliran Anda', 'telat' => 'Terlambat', 'dilayani' => 'Sedang dilayani', 'selesai' => 'Selesai', 'tidak_hadir' => 'Tidak hadir'][$st] ?? $st;
+    $tanggal = $antrian->waktu_daftar->locale('id')->translatedFormat('l, j F Y');
+@endphp
+<div class="tk" data-status="{{ $st }}" @if ($masihBerjalan) wire:poll.10s.visible @endif>
+    <section class="tk-main">
+        <div class="tk-state is-{{ $st }}" role="status">
+            <span class="tk-state-dot" aria-hidden="true"></span>
+            <div>
+                @if ($st === 'dipanggil')
+                    <b>Giliran Anda! Silakan menuju {{ $antrian->poli->nama_poli }}@if ($antrian->dokter), {{ $antrian->dokter->nama }}@endif.</b>
+                    @if ($antrian->waktu_dipanggil)<small>Harap hadir sebelum pukul {{ $antrian->waktu_dipanggil->copy()->addMinutes((int) config('antrian.batas_telat_menit'))->format('H.i') }}.</small>@endif
+                @elseif ($st === 'telat')
+                    <b>Anda terlambat. Segera menuju {{ $antrian->poli->nama_poli }} dan temui petugas.</b>
+                    @if ($antrian->waktu_telat)<small>Tanpa kabar sampai pukul {{ $antrian->waktu_telat->copy()->addMinutes((int) config('antrian.batas_tidak_hadir_menit'))->format('H.i') }}, nomor ini ditandai tidak hadir.</small>@endif
+                @elseif ($st === 'dilayani')
+                    <b>Anda sedang dilayani.</b>
+                @elseif ($st === 'selesai')
+                    <b>Pelayanan selesai. Terima kasih.</b>
+                @elseif ($st === 'tidak_hadir')
+                    <b>Anda ditandai tidak hadir.</b><small>Anda boleh mendaftar lagi dengan NIK yang sama.</small>
+                @else
+                    <b>Menunggu giliran</b><small>Halaman ini memperbarui diri otomatis.</small>
+                @endif
+            </div>
+            @if ($st === 'tidak_hadir')<a href="{{ route('antrian.create') }}" class="tk-state-btn">Daftar lagi</a>@endif
         </div>
 
-        <div class="ticket-cut" aria-hidden="true"><span class="hole hole-l"></span><span class="hole hole-r"></span></div>
+        <article class="tk-card">
+            <div class="tk-card-head">
+                <span class="tk-chip">{{ $label }}</span>
+                <p>Tiket antrian {{ $antrian->poli->nama_poli }}</p>
+                <div class="tk-no numeral" aria-label="Nomor antrian {{ $antrian->nomor_antrian }}">{{ $antrian->nomor_antrian }}</div>
+                <small>Simpan nomor ini sampai dipanggil</small>
+            </div>
+            <div class="tk-cut" aria-hidden="true"><span></span><span></span></div>
+            <dl class="tk-rows">
+                <div><dt>Atas nama</dt><dd>{{ $antrian->pasien->nama_samar }}</dd></div>
+                <div><dt>Tanggal daftar</dt><dd>{{ $tanggal }}</dd></div>
+                <div><dt>Jam daftar</dt><dd>{{ $antrian->waktu_daftar->format('H.i') }} WIB</dd></div>
+            </dl>
+        </article>
+    </section>
 
-        <ul class="list-group list-group-flush">
-            @if ($antrian->status === 'menunggu')
-                <li class="list-group-item d-flex justify-content-between align-items-baseline px-4 py-3">
-                    <span class="text-body-secondary">Perkiraan tunggu</span>
-                    <span class="fs-5 fw-bold display-font">
+    <aside class="tk-side">
+        <div class="tk-panel">
+            <h2>Perjalanan antrian</h2>
+            <ol class="tk-steps" @if ($st === 'tidak_hadir') data-gagal @endif>
+                @foreach ($langkah as $i => $nama)
+                    <li @class(['is-done' => $i < $posisi, 'is-now' => $i === $posisi])><span class="tk-step-dot">@if ($i < $posisi)<i class="bi bi-check-lg" aria-hidden="true"></i>@endif</span><small>{{ $nama }}</small></li>
+                @endforeach
+            </ol>
+
+            @if ($st === 'menunggu')
+                <div class="tk-stats">
+                    <div><small>Di depan Anda</small><b class="numeral">{{ $posisiDidepan }}</b><span>orang</span></div>
+                    <div><small>Perkiraan tunggu</small>
                         @if ($antrian->estimasi_tunggu_detik !== null)
-                            &plusmn; {{ max(1, round($antrian->estimasi_tunggu_detik / 60)) }} menit
+                            <b class="numeral">&plusmn;{{ max(1, round($antrian->estimasi_tunggu_detik / 60)) }}</b><span>menit</span>
                         @else
-                            Belum tersedia
+                            <b class="numeral">-</b><span>belum tersedia</span>
                         @endif
-                    </span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between px-4 py-3"><span class="text-body-secondary">Di depan Anda</span><span class="fw-semibold">{{ $posisiDidepan }} orang</span></li>
+                    </div>
+                </div>
+                @if ($antrian->estimasi_tunggu_detik === null)
+                    <p class="tk-note">Perkiraan belum bisa dihitung karena poli sedang sangat padat. Petugas tetap memanggil sesuai urutan nomor.</p>
+                @endif
             @endif
-            <li class="list-group-item d-flex justify-content-between px-4 py-3"><span class="text-body-secondary">Atas nama</span><span class="fw-semibold">{{ $antrian->pasien->nama_samar }}</span></li>
-            <li class="list-group-item d-flex justify-content-between px-4 py-3"><span class="text-body-secondary">Terdaftar pukul</span><span class="fw-semibold">{{ $antrian->waktu_daftar->format('H:i') }}</span></li>
-        </ul>
-    </article>
+        </div>
 
-    @if ($antrian->status === 'menunggu' && $antrian->estimasi_tunggu_detik === null)
-        <p class="small text-body-secondary mt-3">Perkiraan belum bisa dihitung karena poli sedang sangat padat. Petugas tetap memanggil sesuai urutan nomor.</p>
-    @endif
+        <div class="tk-panel">
+            <h2>Simpan kartu</h2>
+            <div class="tk-aksi">
+                <button type="button" class="tk-btn tk-btn-utama" id="tiketUnduh"><i class="bi bi-download" aria-hidden="true"></i>Unduh kartu antrian</button>
+                <button type="button" class="tk-btn" id="tiketSalin"><i class="bi bi-link-45deg" aria-hidden="true"></i>Salin tautan tiket</button>
+            </div>
+            <p class="tk-note"><i class="bi bi-phone" aria-hidden="true"></i>Tiket tersimpan di perangkat ini sampai antrian selesai. Kalau ponsel bermasalah, buka lagi lewat <a href="{{ route('antrian.cek') }}">Cek tiket</a> dengan tautan di kartu.</p>
+            <a href="{{ route('antrian.display', $antrian->poli_id) }}" class="tk-link"><i class="bi bi-tv" aria-hidden="true"></i>Lihat layar antrian {{ $antrian->poli->nama_poli }}<i class="bi bi-arrow-right-short" aria-hidden="true"></i></a>
+        </div>
+    </aside>
 
-    @if ($masihBerjalan)
-        <p class="small text-center text-body-secondary mt-3 mb-0">Halaman ini memperbarui diri otomatis.</p>
-    @endif
+    <div id="tiketData" hidden
+         data-kode="{{ $antrian->kode_tiket }}"
+         data-nomor="{{ $antrian->nomor_antrian }}"
+         data-poli="{{ $antrian->poli->nama_poli }}"
+         data-nama="{{ $antrian->pasien->nama_samar }}"
+         data-tanggal="{{ $tanggal }}"
+         data-tgl="{{ $antrian->tanggal->toDateString() }}"
+         data-jam="{{ $antrian->waktu_daftar->format('H.i') }}"
+         data-rs="{{ config('rumahsakit.nama_lengkap') }}"
+         data-url="{{ route('antrian.tiket', $antrian->kode_tiket) }}"
+         data-status-url="{{ route('antrian.status-tiket', $antrian->kode_tiket) }}"
+         data-selesai="{{ in_array($st, ['selesai', 'tidak_hadir'], true) ? '1' : '0' }}"></div>
 </div>

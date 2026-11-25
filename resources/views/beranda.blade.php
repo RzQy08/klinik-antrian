@@ -36,7 +36,9 @@
         }
 
         $praktikLabel = [
-            'berlangsung' => ['ok', 'Sedang praktik'],
+            'aktif' => ['ok', 'Aktif'],
+            'memanggil' => ['busy', 'Memanggil pasien'],
+            'melayani' => ['busy', 'Sedang praktik'],
             'belum' => ['warn', 'Belum mulai'],
             'selesai' => ['off', 'Praktik selesai'],
             'libur' => ['off', 'Tidak praktik'],
@@ -248,7 +250,8 @@
     {{-- ============ DOKTER PRAKTIK HARI INI ============ --}}
     @php
         $perPoli = collect($dokterHariIni)->groupBy('poli');
-        $sedangPraktik = collect($dokterHariIni)->where('praktik', 'berlangsung')->count();
+        $jumlahAktif = collect($dokterHariIni)->where('praktik', 'aktif')->count();
+        $sedangPraktik = collect($dokterHariIni)->whereIn('praktik', ['melayani', 'memanggil'])->count();
     @endphp
     {{-- Isi awal dari server; setelah itu diperbarui diam-diam oleh resources/js/beranda-antrian.js --}}
     <section id="dokter" class="hm-section hm-fit hm-dokter" data-dokter-live>
@@ -258,7 +261,7 @@
                     <h2 class="hm-h2">Dokter praktik hari ini</h2>
                     <p class="hm-sub" data-live-tanggal>{{ now()->locale('id')->translatedFormat('l, j F Y') }}</p>
                 </div>
-                <p class="hm-dk-sum" data-dk-sum @if (! $dokterHariIni) hidden @endif><span><b class="numeral" data-dk-total>{{ count($dokterHariIni) }}</b>dokter</span><span class="is-ok"><b class="numeral" data-dk-aktif>{{ $sedangPraktik }}</b>sedang praktik</span></p>
+                <p class="hm-dk-sum" data-dk-sum @if (! $dokterHariIni) hidden @endif><span><b class="numeral" data-dk-total>{{ count($dokterHariIni) }}</b>dokter</span><span class="is-ok"><b class="numeral" data-dk-aktif>{{ $jumlahAktif }}</b>aktif</span><span class="is-busy"><b class="numeral" data-dk-praktik>{{ $sedangPraktik }}</b>sedang praktik</span></p>
             </div>
 
             <div class="hm-dk" data-dk @if (! $dokterHariIni) hidden @endif>
@@ -278,7 +281,7 @@
                                 <h3>{{ $d['nama'] }}</h3>
                                 <p>{{ $d['poli'] }}</p>
                             </div>
-                            <span class="hm-badge hm-badge-{{ $kelas }}" data-k="badge" @if ($d['praktik'] === 'berlangsung') hidden @endif>{{ $teks }}</span>
+                            <span class="hm-badge hm-badge-{{ $kelas }}" data-k="badge">{{ $teks }}</span>
                             <p class="hm-dkc-jam" data-k="jam" @if (! $d['jam']) hidden @endif><i class="bi bi-clock" aria-hidden="true"></i><span>{{ $d['jam'] }}</span></p>
                         </article>
                     @endforeach

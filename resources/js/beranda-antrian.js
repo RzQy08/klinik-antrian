@@ -23,7 +23,9 @@
     akar.style.setProperty('--putar', durasiPutar + 'ms');
 
     const PRAKTIK = {
-        berlangsung: ['ok', 'Sedang praktik'],
+        aktif: ['ok', 'Aktif'],
+        memanggil: ['busy', 'Memanggil pasien'],
+        melayani: ['busy', 'Sedang praktik'],
         belum: ['warn', 'Belum mulai'],
         selesai: ['off', 'Praktik selesai'],
         libur: ['off', 'Tidak praktik'],
@@ -465,7 +467,7 @@
             return `<article class="hm-dkc is-${kelas}" data-dk-kartu data-id="${d.id}" data-poli="${esc(d.poli_slug)}" data-w="${warna(d.poli)}">
   <span class="hm-dkc-av" aria-hidden="true">${esc(d.inisial)}</span>
   <div class="hm-dkc-info"><h3>${esc(d.nama)}</h3><p>${esc(d.poli)}</p></div>
-  <span class="hm-badge hm-badge-${kelas}" data-k="badge"${d.praktik === 'berlangsung' ? ' hidden' : ''}>${teks}</span>
+  <span class="hm-badge hm-badge-${kelas}" data-k="badge">${teks}</span>
   <p class="hm-dkc-jam" data-k="jam"${d.jam ? '' : ' hidden'}><i class="bi bi-clock" aria-hidden="true"></i><span>${esc(d.jam || '')}</span></p>
 </article>`;
         }).join('');
@@ -517,13 +519,12 @@
                 }
 
                 const [kelas, teks] = PRAKTIK[x.praktik] || PRAKTIK.libur;
-                k.classList.remove('is-ok', 'is-warn', 'is-off');
+                k.classList.remove('is-ok', 'is-busy', 'is-warn', 'is-off');
                 k.classList.add('is-' + kelas);
 
                 const badge = k.querySelector('[data-k="badge"]');
                 badge.className = 'hm-badge hm-badge-' + kelas;
                 setTeks(badge, teks);
-                setHidden(badge, x.praktik === 'berlangsung');
 
                 const jam = k.querySelector('[data-k="jam"]');
                 setTeks(jam.querySelector('span'), x.jam || '');
@@ -533,7 +534,8 @@
 
         // angka di ringkasan dan di tab poli
         setTeks(dokterRoot.querySelector('[data-dk-total]'), String(daftar.length));
-        setTeks(dokterRoot.querySelector('[data-dk-aktif]'), String(daftar.filter((x) => x.praktik === 'berlangsung').length));
+        setTeks(dokterRoot.querySelector('[data-dk-aktif]'), String(daftar.filter((x) => x.praktik === 'aktif').length));
+        setTeks(dokterRoot.querySelector('[data-dk-praktik]'), String(daftar.filter((x) => x.praktik === 'melayani' || x.praktik === 'memanggil').length));
         setHidden(dkTabs, new Set(daftar.map((x) => x.poli)).size < 2);
 
         dkTabs.querySelectorAll('[data-dk-tab]').forEach((t) => {

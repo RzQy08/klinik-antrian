@@ -1,5 +1,8 @@
 @php
     $berikut = $berikut ?? collect();
+    $diRuangan = $diRuangan ?? collect();
+    $telat = $telat ?? collect();
+    $sisa = $sisa ?? 0;
 @endphp
 <div wire:poll.2s.keep-alive class="ly ly-c{{ ($poli->id ?? 0) % 6 }}" data-t="{{ now()->timestamp }}">
 
@@ -50,18 +53,44 @@
             @endif
         </section>
 
-        <aside class="ly-side" aria-label="Antrian berikutnya">
-            <div class="ly-side-head">
-                <h2 class="ly-side-title">Berikutnya</h2>
-                <span class="ly-side-sub">Harap bersiap</span>
+        <aside class="ly-side ly-side-poli" aria-label="Status antrian {{ $poli->nama_poli }}">
+            @if ($diRuangan->count() > 1 || $telat->isNotEmpty())
+                <div class="ly-panel">
+                    <div class="ly-side-head"><h2 class="ly-side-title">Di ruang dokter</h2><span class="ly-side-sub">{{ $diRuangan->count() }} dokter melayani</span></div>
+                    <ul class="ly-rooms">
+                        @foreach ($diRuangan as $r)
+                            <li wire:key="r-{{ $r->id }}-{{ $r->jumlah_panggil }}">
+                                <span class="numeral">{{ $r->nomor_antrian }}</span>
+                                <span class="ly-room-info"><b>{{ $r->dokter?->nama ?? 'Dokter' }}</b><small>{{ $r->status === 'dilayani' ? 'Sedang diperiksa' : 'Dipanggil, silakan masuk' }}</small></span>
+                            </li>
+                        @endforeach
+                    </ul>
+                    @if ($telat->isNotEmpty())
+                        <p class="ly-late"><i class="bi bi-hourglass-split" aria-hidden="true"></i><span>Terlambat, segera hadir:</span>
+                            @foreach ($telat->take(6) as $t)<b class="numeral">{{ $t }}</b>@endforeach
+                            @if ($telat->count() > 6)<em>+{{ $telat->count() - 6 }}</em>@endif
+                        </p>
+                    @endif
+                </div>
+            @endif
+
+            <div class="ly-panel ly-panel-next">
+                <div class="ly-side-head">
+                    <h2 class="ly-side-title">Berikutnya</h2>
+                    <span class="ly-side-sub">Harap bersiap</span>
+                </div>
+                @if ($berikut->isEmpty())
+                    <p class="ly-empty">Belum ada yang menunggu</p>
+                @else
+                    <ol class="ly-grid">
+                        @foreach ($berikut as $i => $no)
+                            <li @class(['is-first' => $i === 0, 'is-soon' => $i > 0 && $i < 3]) style="--k:{{ $i }}" wire:key="n-{{ $no }}"><span class="numeral">{{ $no }}</span></li>
+                        @endforeach
+                        @if ($sisa > 0)<li class="is-more"><span>+{{ $sisa }}<small>lagi</small></span></li>@endif
+                    </ol>
+                @endif
             </div>
-            <ul class="ly-nextlist">
-                @forelse ($berikut as $i => $no)
-                    <li style="--k:{{ $i }}"><span class="numeral">{{ $no }}</span><small>Giliran selanjutnya</small></li>
-                @empty
-                    <li class="is-empty">Belum ada yang menunggu</li>
-                @endforelse
-            </ul>
+
             <div class="ly-wait">
                 <span>Masih menunggu<small>pasien di poli ini</small></span>
                 <span class="numeral">{{ $jumlahMenunggu }}</span>

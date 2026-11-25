@@ -34,7 +34,7 @@
     // Dock bawah memuat paling banyak 5 tombol; kalau menu lebih banyak, sisanya lewat tombol "Menu"
     $adaMenuLain = count($nav) > 5;
     $dock = $adaMenuLain ? array_slice($nav, 0, 4) : $nav;
-    $nama = config('rumahsakit.nama', 'RS Bersama');
+    $nama = config('rumahsakit.nama', 'RSU Kota Tangerang');
     $judul = collect($nav)->first(fn ($n) => $n[2])[0] ?? 'Dashboard';
     $tanggal = now()->locale('id')->translatedFormat('l, j F Y');
 @endphp
@@ -121,7 +121,7 @@
         {{ $slot }}
 
         <footer class="sh-foot-note">
-            <span>{{ config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama') }} &middot; {{ config('rumahsakit.sub', 'Sistem Antrian Poliklinik') }}</span>
+            <span>{{ config('rumahsakit.nama_lengkap', 'RSU Kota Tangerang') }} &middot; {{ config('rumahsakit.sub', 'Sistem Antrian Poliklinik') }}</span>
             <nav aria-label="Pintasan">
                 <a href="{{ route('antrian.create') }}" target="_blank" rel="noopener">Halaman pasien</a>
                 <a href="{{ route('antrian.layar') }}" target="_blank" rel="noopener">Papan antrian</a>

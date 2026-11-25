@@ -356,16 +356,18 @@ body { overflow-x: clip; }
         linear-gradient(160deg, rgba($navy-soft, .98), rgba($navy-deep, .99)) padding-box,
         conic-gradient(from var(--dev-ang), rgba($glow, .55), rgba(#fff, .06) 30%, rgba($glow, .5) 60%, rgba(#fff, .06) 90%, rgba($glow, .55)) border-box;
     box-shadow: 0 32px 60px -20px rgba(0, 0, 0, .75);
+    max-height: calc(100vh - 6rem); overflow-y: auto; overscroll-behavior: contain;
     form { margin: 0; }
-    button {
-        display: flex; align-items: center; gap: .75rem; width: 100%; padding: .5rem .65rem .5rem .5rem; text-align: left; cursor: pointer;
+    .bn-dev-head-2 { margin-top: .35rem; }
+    button, .bn-dev-link {
+        display: flex; align-items: center; gap: .75rem; width: 100%; text-decoration: none; padding: .5rem .65rem .5rem .5rem; text-align: left; cursor: pointer;
         color: #fff; background: rgba(#fff, .05); border: 1px solid rgba(#fff, .07); border-radius: 1rem; transition: background .15s, border-color .15s, transform .15s;
         &:hover { background: rgba($glow, .12); border-color: rgba($glow, .35); .bn-dev-go { transform: translateX(3px); color: $glow; } }
         &:focus-visible { outline: 2px solid $glow; outline-offset: 2px; }
         &.is-aktif { background: rgba($glow, .14); border-color: rgba($glow, .5); }
     }
     form, .bn-dev-sembunyi { animation: dev-baris .3s cubic-bezier(.2, .8, .2, 1) both; }
-    form:nth-of-type(1) { animation-delay: .04s; } form:nth-of-type(2) { animation-delay: .09s; } form:nth-of-type(3) { animation-delay: .14s; }
+    form:nth-of-type(1) { animation-delay: .04s; } form:nth-of-type(2) { animation-delay: .09s; } form:nth-of-type(3) { animation-delay: .14s; } form:nth-of-type(n+4) { animation-delay: .18s; }
 }
 .bn-dev-menu[open] .bn-dev-panel { animation-name: dev-buka; }
 .bn-dev-menu[open] { --dev-ang: 0deg; .bn-dev-panel { animation: dev-buka .22s cubic-bezier(.2, .8, .2, 1) both, dev-putar 9s linear infinite; } }

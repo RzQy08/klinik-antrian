@@ -52,6 +52,13 @@ class RingkasanAntrian
             ->unique('poli_id')
             ->keyBy('poli_id');
 
+        // Kueri 2b: dokter yang sedang punya pasien (dipanggil = menuju ruangan, dilayani = sedang diperiksa)
+        $sibuk = Antrian::hariIni()
+            ->whereNotNull('dokter_id')
+            ->whereIn('status', ['dipanggil', 'dilayani'])
+            ->pluck('status', 'dokter_id')
+            ->all();
+
         // Kueri 3: jumlah antrian per poli per status
         $hitung = Antrian::hariIni()
             ->selectRaw('poli_id, status, COUNT(*) as jumlah')
@@ -83,7 +90,7 @@ class RingkasanAntrian
 
         $jadwalPerPoli = $jadwal->groupBy(fn (JadwalPraktik $j) => $j->dokter->poli_id);
 
-        $baris = $polis->map(function (Poli $poli) use ($aktif, $hitung, $menunggu, $rata, $jadwalPerPoli, $jam) {
+        $baris = $polis->map(function (Poli $poli) use ($aktif, $hitung, $menunggu, $rata, $jadwalPerPoli, $jam, $sibuk) {
             $a = $aktif->get($poli->id);
             $status = $hitung->get($poli->id, collect())->pluck('jumlah', 'status');
 
@@ -104,7 +111,7 @@ class RingkasanAntrian
                 'status_panggil' => $a?->status,
                 'dokter' => $a?->nama_dokter ?? self::dokterTampil($jadwalPoli, $jam),
                 'jam' => self::rentangJam($jadwalPoli),
-                'praktik' => self::statusPraktik($jadwalPoli, $jam),
+                'praktik' => self::statusPraktik($jadwalPoli, $jam, $sibuk),
                 'total' => $total,
                 'menunggu' => $jumlahMenunggu,
                 'selesai' => $jumlahSelesai,
@@ -128,7 +135,7 @@ class RingkasanAntrian
                 'dokter' => Dokter::where('aktif', true)->count(),
             ],
             'poli' => $baris->all(),
-            'dokter' => self::dokterHariIni($jadwal, $polis, $jam),
+            'dokter' => self::dokterHariIni($jadwal, $polis, $jam, $sibuk),
         ];
     }
 
@@ -156,14 +163,14 @@ class RingkasanAntrian
     }
 
     /** Dokter yang punya jadwal hari ini, untuk bagian "Dokter praktik hari ini". */
-    private static function dokterHariIni(Collection $jadwal, Collection $polis, string $jam): array
+    private static function dokterHariIni(Collection $jadwal, Collection $polis, string $jam, array $sibuk = []): array
     {
         $namaPoli = $polis->pluck('nama_poli', 'id');
 
         return $jadwal
             ->filter(fn (JadwalPraktik $j) => $namaPoli->has($j->dokter->poli_id))
             ->groupBy('dokter_id')
-            ->map(function (Collection $js) use ($namaPoli, $jam) {
+            ->map(function (Collection $js) use ($namaPoli, $jam, $sibuk) {
                 $dokter = $js->first()->dokter;
 
                 return [
@@ -173,7 +180,7 @@ class RingkasanAntrian
                     'poli' => $namaPoli->get($dokter->poli_id),
                     'poli_slug' => \Illuminate\Support\Str::slug($namaPoli->get($dokter->poli_id)),
                     'jam' => self::rentangJam($js),
-                    'praktik' => self::statusPraktik($js, $jam),
+                    'praktik' => self::statusPraktik($js, $jam, $sibuk),
                 ];
             })
             ->sortBy([['poli', 'asc'], ['nama', 'asc']])
@@ -195,14 +202,31 @@ class RingkasanAntrian
         return strlen($jam) === 5 ? $jam.':00' : substr($jam, 0, 8);
     }
 
-    private static function statusPraktik(Collection $jadwal, string $jam): string
+    /**
+     * Status dokter (atau poli, bila jadwalnya banyak dokter):
+     *   melayani  = ada pasien di ruangan, sedang diperiksa
+     *   memanggil = pasien sudah dipanggil tapi belum masuk ruangan
+     *   aktif     = jam praktik berjalan dan dokter kosong (siap menerima pasien)
+     *   belum / selesai / libur = di luar jam praktik
+     *
+     * @param  array<int, string>  $sibuk  dokter_id => status antrian yang sedang berjalan
+     */
+    private static function statusPraktik(Collection $jadwal, string $jam, array $sibuk = []): string
     {
         if ($jadwal->isEmpty()) {
             return 'libur';
         }
 
-        if ($jadwal->contains(fn ($j) => self::norm($j->jam_mulai) <= $jam && self::norm($j->jam_selesai) >= $jam)) {
-            return 'berlangsung';
+        $berjalan = $jadwal->filter(fn ($j) => self::norm($j->jam_mulai) <= $jam && self::norm($j->jam_selesai) >= $jam);
+
+        if ($berjalan->isNotEmpty()) {
+            $status = $berjalan->map(fn ($j) => $sibuk[$j->dokter_id] ?? null);
+
+            if ($status->contains('dilayani')) {
+                return 'melayani';
+            }
+
+            return $status->contains('dipanggil') ? 'memanggil' : 'aktif';
         }
 
         return $jadwal->contains(fn ($j) => self::norm($j->jam_mulai) > $jam) ? 'belum' : 'selesai';

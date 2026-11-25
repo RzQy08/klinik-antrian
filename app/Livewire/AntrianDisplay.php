@@ -24,31 +24,31 @@ class AntrianDisplay extends Component
 
         $poli = Poli::findOrFail($this->poliId);
 
-        // antrian yang sedang aktif dipanggil/dilayani (paling baru)
-        $sedangDipanggil = Antrian::untukPoli($poli->id)
+        // semua dokter di poli ini yang sedang punya pasien (dipanggil atau diperiksa), terbaru di atas
+        $diRuangan = Antrian::untukPoli($poli->id)
             ->hariIni()
             ->whereIn('status', ['dipanggil', 'dilayani'])
-            ->with('pasien')
-            ->latest('waktu_dipanggil')
-            ->first();
+            ->with('dokter:id,nama')
+            ->orderByDesc('waktu_dipanggil')
+            ->get(['id', 'poli_id', 'dokter_id', 'nomor_antrian', 'status', 'jumlah_panggil', 'waktu_dipanggil']);
 
-        // 5 antrian terakhir yang sudah dipanggil (riwayat panggilan, buat ditampilkan di layar)
-        $riwayatDipanggil = Antrian::untukPoli($poli->id)
-            ->hariIni()
-            ->whereNotNull('waktu_dipanggil')
-            ->latest('waktu_dipanggil')
-            ->limit(5)
-            ->get();
+        $sedangDipanggil = $diRuangan->first();
 
-        // hanya satu nomor berikutnya (urutan datang, FIFO) agar layar tidak ramai
-        $berikut = Antrian::untukPoli($poli->id)->hariIni()->menunggu()->orderBy('id')->limit(1)->pluck('nomor_antrian');
+        // pasien yang sudah dipanggil tapi belum datang
+        $telat = Antrian::untukPoli($poli->id)->hariIni()->where('status', 'telat')->orderBy('waktu_telat')->pluck('nomor_antrian');
+
+        // urutan datang (FIFO). Yang ditampilkan dibatasi supaya layar tetap rapi walau antrian panjang
+        $batas = 12;
+        $berikut = Antrian::untukPoli($poli->id)->hariIni()->menunggu()->orderBy('waktu_daftar')->orderBy('id')->limit($batas)->pluck('nomor_antrian');
 
         $jumlahMenunggu = Antrian::untukPoli($poli->id)->hariIni()->menunggu()->count();
 
         return view('livewire.antrian-display', [
             'poli' => $poli,
             'sedangDipanggil' => $sedangDipanggil,
-            'riwayatDipanggil' => $riwayatDipanggil,
+            'diRuangan' => $diRuangan,
+            'telat' => $telat,
+            'sisa' => max(0, $jumlahMenunggu - $berikut->count()),
             'jumlahMenunggu' => $jumlahMenunggu,
             'berikut' => $berikut,
         ]);

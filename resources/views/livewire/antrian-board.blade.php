@@ -5,7 +5,7 @@
     $baris = $baris ?? collect();
     $jumlahPoli = $baris->count();
     // kepadatan daftar: 1 = lega, 2 = rapat, 3 = dua kolom, 4 = tiga kolom ringkas
-    $tier = $jumlahPoli <= 5 ? 1 : ($jumlahPoli <= 8 ? 2 : ($jumlahPoli <= 16 ? 3 : 4));
+    $tier = $jumlahPoli <= 5 ? 1 : ($jumlahPoli <= 6 ? 2 : ($jumlahPoli <= 16 ? 3 : 4));
 @endphp
 <div wire:poll.2s.keep-alive class="ly" data-t="{{ now()->timestamp }}">
 
@@ -75,8 +75,10 @@
                             <div class="ly-card-info">
                                 <span><b>{{ $b->menunggu }}</b> menunggu</span>
                                 @if ($b->berikut->isNotEmpty())
-                                    <span>berikutnya</span>
-                                    @foreach ($b->berikut as $n)<span class="ly-next">{{ $n }}</span>@endforeach
+                                    <span class="ly-nx">berikut @foreach ($b->berikut as $n)<b>{{ $n }}</b>@endforeach</span>
+                                @endif
+                                @if ($b->telat > 0)
+                                    <span class="ly-tl"><i class="bi bi-hourglass-split" aria-hidden="true"></i>{{ $b->telat }} telat</span>
                                 @endif
                             </div>
                         </div>
@@ -84,6 +86,7 @@
                             <small>Sekarang</small>
                             @if ($b->sekarang)
                                 <span class="numeral" wire:key="n-{{ $b->sekarang->id }}-{{ $b->sekarang->jumlah_panggil }}">{{ $b->sekarang->nomor_antrian }}</span>
+                                @if ($b->lainnya > 0)<em class="ly-plus">+{{ $b->lainnya }} dokter</em>@endif
                             @else
                                 <span class="numeral is-kosong">-</span>
                             @endif

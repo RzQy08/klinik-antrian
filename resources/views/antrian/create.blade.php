@@ -16,7 +16,7 @@
     <div class="am-stage" id="amStage">
         <header class="am-top">
             <h1>Ambil nomor antrian</h1>
-            <p>Selesai dalam 3 langkah</p>
+            <p>Selesai dalam 3 langkah &middot; <a href="{{ route('antrian.cek') }}">Sudah punya tiket?</a></p>
         </header>
 
         {{-- Pemberitahuan: ditutup, NIK ditolak, isian belum lengkap --}}

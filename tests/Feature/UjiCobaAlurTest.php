@@ -11,6 +11,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+afterEach(fn () => Carbon::setTestNow());
+
 it('membuka semua halaman utama sesuai peran dan login akun uji berjalan', function () {
     $this->seed(DataUjiSeeder::class);
 
@@ -76,6 +78,7 @@ it('membuka semua halaman utama sesuai peran dan login akun uji berjalan', funct
 });
 
 it('alur ambil nomor sampai selesai pelayanan berjalan lancar', function () {
+    Carbon::setTestNow(Carbon::parse('next tuesday')->setTime(9, 0)); // di dalam jam pendaftaran, supaya tes tidak bergantung jam jalan
     $this->seed(DataUjiSeeder::class);
 
     $dokter = Dokter::query()
@@ -135,6 +138,9 @@ it('alur ambil nomor sampai selesai pelayanan berjalan lancar', function () {
         'nama' => 'NIK Salah',
     ])->assertSessionHasErrors('nik');
 
+    // Data uji menyisakan pasien yang sedang ditangani dokter ini; selesaikan dulu supaya ruangannya kosong
+    Antrian::query()->where('dokter_id', $dokter->id)->whereIn('status', ['dipanggil', 'dilayani'])->update(['status' => 'selesai']);
+
     // Petugas memanggil antrian paling lama menunggu (limpahan harus paling depan)
     $dipanggil = Antrian::query()
         ->untukPoli($poli->id)
@@ -169,18 +175,19 @@ it('alur ambil nomor sampai selesai pelayanan berjalan lancar', function () {
     expect($dipanggil->status)->toBe('selesai');
     expect($dipanggil->waktu_selesai)->not->toBeNull();
 
-    // Panggil, tandai tidak hadir, lalu panggil ulang
+    // Setelah pelayanan selesai, dokter yang kosong langsung dipanggilkan pasien berikutnya secara otomatis.
+    // Petugas tidak perlu (dan tidak bisa) memanggil lagi untuk dokter yang sama selama pasiennya belum selesai.
     $this->flushSession();
     $berikutnya = Antrian::query()
         ->untukPoli($poli->id)
         ->hariIni()
-        ->menunggu()
-        ->orderBy('waktu_daftar')
+        ->where('dokter_id', $dokter->id)
+        ->where('status', 'dipanggil')
         ->firstOrFail();
 
     $this->actingAs($petugas)
         ->post(route('antrian.panggil', $poli), ['dokter_id' => $dokter->id])
-        ->assertSessionHas('success');
+        ->assertSessionHas('error');
 
     $berikutnya->refresh();
     expect($berikutnya->status)->toBe('dipanggil');

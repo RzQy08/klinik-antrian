@@ -83,7 +83,7 @@ class PemanggilOtomatis
             $dokters = Dokter::where('poli_id', $id)
                 ->where('aktif', true)
                 ->tidakCuti()
-                ->when(config('antrian.ikuti_jadwal'), fn ($q) => $q->bertugasSekarang())
+                ->when(config('antrian.ikuti_jadwal') && ! JamOperasional::modeUji(), fn ($q) => $q->bertugasSekarang())
                 ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('antrians')
                     ->whereColumn('antrians.dokter_id', 'dokters.id')
                     ->where('antrians.tanggal', '>=', now()->toDateString())
@@ -104,25 +104,40 @@ class PemanggilOtomatis
 
     private static function panggilSatu(int $poliId, int $dokterId): bool
     {
-        $antrian = DB::transaction(function () use ($poliId, $dokterId) {
-            // Dokter bisa saja sudah mendapat pasien dari petugas sejak daftar di atas dibuat
-            $sibuk = Antrian::hariIni()->where('dokter_id', $dokterId)->whereIn('status', ['dipanggil', 'dilayani'])->exists();
+        // Satu dokter diproses satu proses pada satu waktu (penjadwal, layar yang terbuka, dan tombol petugas
+        // bisa berjalan bersamaan). Kalau lock sedang dipegang proses lain, lewati: dokternya sedang diurus.
+        $kunci = Cache::lock("antrian.panggil.dokter.{$dokterId}", 10);
 
-            if ($sibuk) {
-                return null;
-            }
+        if (! $kunci->get()) {
+            return false;
+        }
 
-            $antrian = Antrian::untukPoli($poliId)->hariIni()->menunggu()->orderBy('waktu_daftar')->lockForUpdate()->first();
+        try {
+            $antrian = DB::transaction(function () use ($poliId, $dokterId) {
+                // Dokter hanya dipanggilkan pasien bila ruangannya kosong: tidak ada yang dipanggil maupun diperiksa
+                if (Antrian::hariIni()->where('dokter_id', $dokterId)->whereIn('status', ['dipanggil', 'dilayani'])->exists()) {
+                    return null;
+                }
 
-            $antrian?->update([
-                'status' => 'dipanggil',
-                'dokter_id' => $dokterId,
-                'waktu_dipanggil' => now(),
-                'jumlah_panggil' => 1,
-            ]);
+                $kandidat = Antrian::untukPoli($poliId)->hariIni()->menunggu()->orderBy('waktu_daftar')->orderBy('id')->lockForUpdate()->first();
 
-            return $antrian;
-        });
+                if (! $kandidat) {
+                    return null;
+                }
+
+                // Perubahan bersyarat: hanya berhasil kalau nomor itu masih "menunggu" (belum diambil pemanggil lain)
+                $berhasil = Antrian::whereKey($kandidat->id)->where('status', 'menunggu')->update([
+                    'status' => 'dipanggil',
+                    'dokter_id' => $dokterId,
+                    'waktu_dipanggil' => now(),
+                    'jumlah_panggil' => 1,
+                ]);
+
+                return $berhasil ? $kandidat : null;
+            });
+        } finally {
+            $kunci->release();
+        }
 
         if (! $antrian) {
             return false;

@@ -64,7 +64,31 @@ class JamOperasional
 
     public static function aktif(): bool
     {
+        // Mode uji (hanya di komputer developer): semua pembatasan jam dimatikan supaya bisa dites kapan saja
+        if (self::modeUji()) {
+            return false;
+        }
+
         return self::data()['aktif'];
+    }
+
+    public const KUNCI_MODE_UJI = 'dev.abaikan_jam';
+
+    /**
+     * Saklar uji coba dari panel DEV. Hanya berlaku di APP_ENV=local; di server nyata selalu false
+     * walaupun ada nilai sisa di cache. Saklarnya sendiri hanya bisa diubah lewat AksesLokal (lihat DemoUjiController).
+     */
+    public static function modeUji(): bool
+    {
+        if (! app()->isLocal()) {
+            return false;
+        }
+
+        try {
+            return (bool) Cache::get(self::KUNCI_MODE_UJI, false);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /** Alasan rumah sakit tutup pada tanggal itu (libur atau hari tutup mingguan), atau null bila buka. */

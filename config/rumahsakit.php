@@ -13,10 +13,10 @@
 
 return [
     // Nama pendek untuk navbar dan judul tab
-    'nama' => env('RS_NAMA', 'RS Bersama'),
+    'nama' => env('RS_NAMA', 'RSU Kota Tangerang'),
 
     // Nama lengkap untuk halaman login dan footer
-    'nama_lengkap' => env('RS_NAMA_LENGKAP', 'Rumah Sakit Bersama'),
+    'nama_lengkap' => env('RS_NAMA_LENGKAP', 'RSU Kota Tangerang'),
 
     // Keterangan kecil di bawah nama
     'sub' => 'Sistem Antrian Poliklinik',
@@ -25,7 +25,7 @@ return [
     'alamat' => env('RS_ALAMAT'),               // contoh: Jl. Melati No. 12, Bogor, Jawa Barat
     'telepon' => env('RS_TELEPON'),             // contoh: (0251) 123456
     'whatsapp' => env('RS_WHATSAPP'),           // contoh: 081234567890
-    'email' => env('RS_EMAIL'),                 // contoh: info@rsbersama.id
+    'email' => env('RS_EMAIL'),                 // contoh: info@rsukotatangerang.id
     'jam_layanan' => env('RS_JAM_LAYANAN'),     // contoh: Senin sampai Sabtu, 07.00 sampai 14.00 WIB
 
     // ---- Media sosial (opsional, isi alamat lengkapnya) ----

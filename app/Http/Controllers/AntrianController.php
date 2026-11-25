@@ -250,6 +250,43 @@ class AntrianController extends Controller
     }
 
     /**
+     * Status ringkas untuk penyimpanan tiket di perangkat pasien: dipakai untuk memutuskan
+     * apakah tiket masih perlu diingat (belum selesai dan masih hari yang sama).
+     */
+    public function statusTiket(Antrian $antrian): \Illuminate\Http\JsonResponse
+    {
+        $selesai = in_array($antrian->status, ['selesai', 'tidak_hadir'], true)
+            || $antrian->tanggal->toDateString() !== now()->toDateString();
+
+        return response()->json([
+            'nomor' => $antrian->nomor_antrian,
+            'status' => $antrian->status,
+            'selesai' => $selesai,
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    /** Form untuk membuka tiket dari kode atau tautan di kartu yang diunduh. */
+    public function cekTiket(): View
+    {
+        return view('antrian.cek');
+    }
+
+    public function cariTiket(Request $request): RedirectResponse
+    {
+        $request->validate(['kode' => ['required', 'string', 'max:300']]);
+
+        // Terima kode saja maupun seluruh tautan tiket
+        preg_match('/[A-Za-z0-9]{32}/', (string) $request->input('kode'), $cocok);
+        $antrian = isset($cocok[0]) ? Antrian::where('kode_tiket', $cocok[0])->first() : null;
+
+        if (! $antrian) {
+            return back()->withInput()->withErrors(['kode' => 'Tiket tidak ditemukan. Periksa kembali kode atau tautan di kartu Anda.']);
+        }
+
+        return redirect()->route('antrian.tiket', $antrian->kode_tiket);
+    }
+
+    /**
      * Layar antrian untuk TV ruang tunggu. Data realtime ada di komponen Livewire AntrianDisplay.
      */
     public function display(Poli $poli): View
@@ -282,6 +319,11 @@ class AntrianController extends Controller
         // Lock baru bekerja di dalam transaksi: dua petugas yang menekan "Panggil" bersamaan
         // tidak akan lagi mendapat pasien yang sama.
         $antrian = DB::transaction(function () use ($poli, $validated) {
+            // Dokter yang masih punya pasien (dipanggil atau sedang diperiksa) tidak diberi pasien lagi
+            if (Antrian::hariIni()->where('dokter_id', $validated['dokter_id'])->whereIn('status', ['dipanggil', 'dilayani'])->exists()) {
+                return false;
+            }
+
             $antrian = Antrian::untukPoli($poli->id)
                 ->hariIni()
                 ->menunggu()
@@ -298,6 +340,10 @@ class AntrianController extends Controller
 
             return $antrian;
         });
+
+        if ($antrian === false) {
+            return back()->with('error', 'Dokter ini masih punya pasien (sudah dipanggil atau sedang diperiksa). Tunggu sampai selesai.');
+        }
 
         if (! $antrian) {
             return back()->with('error', 'Tidak ada pasien yang menunggu.');

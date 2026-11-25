@@ -21,8 +21,8 @@ beforeEach(function () {
         'whatsapp.redirect_ke' => null,
         'operasional.aktif' => true,
         'operasional.pendaftaran_buka' => '07:00',
-        'operasional.pendaftaran_tutup' => '11:00',
-        'operasional.layanan_selesai' => '14:00',
+        'operasional.pendaftaran_tutup' => '14:00',
+        'operasional.layanan_selesai' => '16:00',
         'operasional.limpahan_status' => ['menunggu'],
     ]);
 });
@@ -49,25 +49,25 @@ function buatAntrian(Poli $poli, array $atribut = []): Antrian
 
 // ---------- jam pendaftaran dan layanan ----------
 
-it('pendaftaran dibuka pukul 07.00 sampai sebelum 11.00', function () {
+it('pendaftaran dibuka pukul 07.00 sampai sebelum 14.00', function () {
     Carbon::setTestNow('2026-10-20 06:59:00');
     expect(JamOperasional::pendaftaranDibuka())->toBeFalse();
 
     Carbon::setTestNow('2026-10-20 07:00:00');
     expect(JamOperasional::pendaftaranDibuka())->toBeTrue();
 
-    Carbon::setTestNow('2026-10-20 10:59:00');
+    Carbon::setTestNow('2026-10-20 13:59:00');
     expect(JamOperasional::pendaftaranDibuka())->toBeTrue();
 
-    Carbon::setTestNow('2026-10-20 11:00:00');
+    Carbon::setTestNow('2026-10-20 14:00:00');
     expect(JamOperasional::pendaftaranDibuka())->toBeFalse();
 });
 
 it('layanan berjalan sampai sebelum jam layanan selesai', function () {
-    Carbon::setTestNow('2026-10-20 13:59:00');
+    Carbon::setTestNow('2026-10-20 15:59:00');
     expect(JamOperasional::layananBerjalan())->toBeTrue();
 
-    Carbon::setTestNow('2026-10-20 14:00:00');
+    Carbon::setTestNow('2026-10-20 16:00:00');
     expect(JamOperasional::layananBerjalan())->toBeFalse();
 });
 
@@ -83,7 +83,7 @@ it('tidak ada pembatasan jam kalau OPERASIONAL_AKTIF dimatikan', function () {
 });
 
 it('pasien tidak bisa mengambil antrian setelah pendaftaran ditutup', function () {
-    Carbon::setTestNow('2026-10-20 11:30:00');
+    Carbon::setTestNow('2026-10-20 14:30:00');
     $poli = Poli::factory()->create();
 
     $response = $this->post(route('antrian.store'), [
@@ -112,7 +112,7 @@ it('pasien bisa mengambil antrian saat pendaftaran dibuka', function () {
 // ---------- panggil ulang ----------
 
 it('petugas bisa memanggil ulang pasien yang tidak hadir', function () {
-    Carbon::setTestNow('2026-10-20 12:00:00');
+    Carbon::setTestNow('2026-10-20 15:00:00');
 
     $petugas = User::factory()->create(['role' => 'petugas']);
     $poli = Poli::factory()->create();
@@ -134,7 +134,7 @@ it('petugas bisa memanggil ulang pasien yang tidak hadir', function () {
 });
 
 it('panggil ulang ditolak setelah jam layanan selesai', function () {
-    Carbon::setTestNow('2026-10-20 15:00:00');
+    Carbon::setTestNow('2026-10-20 17:00:00');
 
     $petugas = User::factory()->create(['role' => 'petugas']);
     $poli = Poli::factory()->create();
@@ -149,7 +149,7 @@ it('panggil ulang ditolak setelah jam layanan selesai', function () {
 });
 
 it('panggil berikutnya ditolak setelah jam layanan selesai', function () {
-    Carbon::setTestNow('2026-10-20 15:00:00');
+    Carbon::setTestNow('2026-10-20 17:00:00');
 
     $petugas = User::factory()->create(['role' => 'petugas']);
     $poli = Poli::factory()->create();

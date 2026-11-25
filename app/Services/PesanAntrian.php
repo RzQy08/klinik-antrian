@@ -16,25 +16,34 @@ class PesanAntrian
         ?string $jamPanggil,
         int $panggilanKe = 1
     ): string {
-        $tempat = $namaDokter ? "{$namaPoli} ({$namaDokter})" : $namaPoli;
-        $jam = $jamPanggil ? " pukul {$jamPanggil}" : '';
+        $judul = $panggilanKe > 1
+            ? "*Panggilan ke-{$panggilanKe}.* Giliran Anda sudah tiba, silakan menuju poli sekarang."
+            : '*Giliran Anda sudah tiba.* Silakan menuju poli sekarang.';
 
-        if ($panggilanKe > 1) {
-            $isi = "*Panggilan ke-{$panggilanKe}.* Nomor *{$nomorAntrian}* dipanggil lagi di {$tempat}{$jam}, tapi belum ada yang masuk.\n\nMohon segera ke ruang poli.";
-        } else {
-            $isi = "*Giliran Anda sudah tiba.* Nomor *{$nomorAntrian}* dipanggil di {$tempat}{$jam}.\n\nSilakan langsung masuk ke ruang poli.";
+        $baris = [
+            "Halo, {$namaPasien}.",
+            '',
+            $judul,
+            '',
+            "Nomor antrian: *{$nomorAntrian}*",
+            "Poli: {$namaPoli}",
+        ];
+
+        if ($namaDokter) {
+            $baris[] = "Dokter: {$namaDokter}";
         }
 
-        return implode("\n", [
-            "Halo {$namaPasien},",
-            '',
-            $isi,
-            '',
-            'Kalau Anda belum sempat, nomor ini masih bisa dipanggil ulang selama jam layanan.',
-            '',
-            'Salam,',
-            config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama'),
-        ]);
+        if ($jamPanggil) {
+            $baris[] = "Dipanggil pukul: {$jamPanggil}";
+        }
+
+        $baris[] = '';
+        $baris[] = 'Mohon segera datang. Selama jam layanan masih berlangsung, nomor Anda masih bisa dipanggil ulang oleh petugas.';
+        $baris[] = '';
+        $baris[] = 'Terima kasih,';
+        $baris[] = config('rumahsakit.nama_lengkap', 'RSU Kota Tangerang');
+
+        return implode("\n", $baris);
     }
 
     /**
@@ -49,16 +58,17 @@ class PesanAntrian
         string $tanggalBaru
     ): string {
         return implode("\n", [
-            "Halo {$namaPasien},",
+            "Halo, {$namaPasien}.",
             '',
-            "Nomor {$nomorLama} di {$namaPoli} pada {$tanggalAsal} belum sempat dipanggil karena jam layanan sudah habis. Kami pindahkan ke {$tanggalBaru}, dan Anda didahulukan dari pendaftar baru.",
+            "Antrian Anda pada {$tanggalAsal} (nomor {$nomorLama}, {$namaPoli}) belum sempat terpanggil. Kami pindahkan ke {$tanggalBaru} dengan prioritas.",
             '',
-            "Nomor baru Anda: *{$nomorBaru}*",
+            "Nomor antrian baru: *{$nomorBaru}*",
+            "Poli: {$namaPoli}",
             '',
-            'Datang saja pagi ini dan lihat layar antrian di ruang tunggu. Tidak perlu daftar ulang.',
+            'Silakan datang pagi ini dan pantau layar antrian di ruang tunggu. Anda tidak perlu mendaftar ulang.',
             '',
-            'Salam,',
-            config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama'),
+            'Terima kasih,',
+            config('rumahsakit.nama_lengkap', 'RSU Kota Tangerang'),
         ]);
     }
 }

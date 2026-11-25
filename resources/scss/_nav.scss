@@ -355,3 +355,24 @@ body.has-ctabar .ft-mark { margin-bottom: -.5rem; }
     .nv-brand .brand-name, .nv-brand .brand-sub,
     .nv-sheet-link, .nv-sheet-link .ic, .nv-menu .dropdown-item, .nv-dock a, .nv-dock button, .nv-foot a, .ft a, .ft-top { transition: none; }
 }
+
+// ---------- chip "Tiket saya": tiket antrian yang diingat di perangkat ----------
+.ts { position: fixed; z-index: 1030; right: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom)); display: grid; justify-items: end; gap: .5rem; animation: ts-masuk .6s cubic-bezier(.22, 1, .36, 1) both; }
+.nv-ctabar ~ .ts, .has-ctabar .ts { bottom: calc(5.25rem + env(safe-area-inset-bottom)); }
+@include media-breakpoint-up(lg) { .has-ctabar .ts { bottom: 1.25rem; right: 1.25rem; } }
+.ts-btn {
+    display: inline-flex; align-items: center; gap: .65rem; padding: .55rem .9rem .55rem .7rem; color: #fff; text-decoration: none; cursor: pointer;
+    background: $navy; border: 1px solid rgba($glow, .35); border-radius: 999px; box-shadow: 0 .75rem 1.75rem -.5rem rgba(0, 0, 0, .45); transition: transform .25s, border-color .25s;
+    &:hover { color: #fff; transform: translateY(-2px); border-color: $glow; }
+    > .bi:first-child { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%; font-size: 1rem; color: $navy; background: $glow; }
+    span { display: grid; line-height: 1.1; text-align: left; }
+    small { font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: rgba(#fff, .65); }
+    b { font-family: $headings-font-family; font-size: 1.15rem; letter-spacing: .02em; }
+    em { font-style: normal; font-size: .75rem; font-weight: 700; padding: .1rem .5rem; color: $navy; background: $glow; border-radius: 999px; }
+    .bi-arrow-right-short { font-size: 1.4rem; margin-left: -.2rem; }
+}
+.ts-list { display: grid; gap: .25rem; min-width: 13rem; padding: .4rem; background: #fff; border: 1px solid $border-color; border-radius: 1rem; box-shadow: 0 1rem 2rem -.75rem rgba(0, 0, 0, .35);
+    &[hidden] { display: none; }
+    a { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: .55rem .75rem; border-radius: .7rem; color: $dark; text-decoration: none; &:hover { background: $light; } b { font-family: $headings-font-family; } span { font-size: .8rem; color: $body-secondary-color; } } }
+@keyframes ts-masuk { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ts { animation: none; } }

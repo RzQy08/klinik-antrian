@@ -1,4 +1,4 @@
-@props(['title' => null, 'wide' => false, 'full' => false, 'fit' => false])
+@props(['title' => null, 'wide' => false, 'full' => false, 'fit' => false, 'bare' => false])
 @php
     $jamAktif = \App\Services\JamOperasional::aktif();
     $buka = \App\Services\JamOperasional::pendaftaranDibuka();
@@ -17,9 +17,9 @@
 
     $telepon = config('rumahsakit.telepon');
 
-    $ctaBar = ! request()->routeIs('antrian.create');
-    $nama = config('rumahsakit.nama', 'RS Bersama');
-    $namaLengkap = config('rumahsakit.nama_lengkap', 'Rumah Sakit Bersama');
+    $ctaBar = ! $bare && ! request()->routeIs('antrian.create');
+    $nama = config('rumahsakit.nama', 'RSU Kota Tangerang');
+    $namaLengkap = config('rumahsakit.nama_lengkap', 'RSU Kota Tangerang');
     $alamat = config('rumahsakit.alamat');
     $telp = config('rumahsakit.telepon');
     $wa = config('rumahsakit.whatsapp');
@@ -40,8 +40,9 @@
 <head>
     @include('partials.head', ['title' => $title])
 </head>
-<body @class(['d-flex flex-column bn-pub', 'min-vh-dvh' => ! $fit, 'am-fit' => $fit, 'has-ctabar' => $ctaBar])>
+<body @class(['d-flex flex-column bn-pub', 'min-vh-dvh' => ! $fit, 'am-fit' => $fit, 'has-ctabar' => $ctaBar, 'tk-page' => $bare])>
 
+@unless ($bare)
 <a class="nv-skip" href="#konten">Lewati ke konten</a>
 
 <div class="nv-strip" role="status">
@@ -101,7 +102,11 @@
     </div>
 </div>
 
-@if ($full)
+@endunless
+
+@if ($bare)
+    <main id="konten" tabindex="-1" class="flex-grow-1">{{ $slot }}</main>
+@elseif ($full)
     <main id="konten" tabindex="-1" class="flex-grow-1">{{ $slot }}</main>
 @else
     <main id="konten" tabindex="-1" class="container-xxl py-4 py-md-5 flex-grow-1" @if (! $wide) style="max-width: 46rem" @endif>
@@ -110,7 +115,7 @@
 @endif
 
 {{-- Footer --}}
-@unless ($fit)
+@unless ($fit || $bare)
 <footer class="ft" aria-label="Footer">
     <div class="container-xxl">
 
@@ -144,6 +149,7 @@
                     <li><a href="{{ route('beranda') }}#antrian">Antrian hari ini</a></li>
                     <li><a href="{{ route('beranda') }}#dokter">Jadwal dokter</a></li>
                     <li><a href="{{ route('antrian.layar') }}">Papan antrian</a></li>
+                    <li><a href="{{ route('antrian.cek') }}">Cek tiket saya</a></li>
                 </ul>
             </nav>
 
@@ -248,6 +254,28 @@
         var diam = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         window.scrollTo({ top: 0, behavior: diam ? 'auto' : 'smooth' });
     });
+})();
+</script>
+
+{{-- Bila perangkat ini punya tiket aktif, tombol "Ambil nomor" langsung berubah menjadi "Antrian saya" (tanpa berkedip) --}}
+<script>
+(function () {
+    try {
+        var d = JSON.parse(localStorage.getItem('rs.tiket') || '[]'), n = new Date();
+        var h = n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+        var t = d.filter(function (x) { return !x.tgl || x.tgl === h; })[0];
+        if (!t) return;
+        document.querySelectorAll('a[href$="/antrian/ambil"]').forEach(function (a) {
+            for (var i = 0; i < a.childNodes.length; i++) {
+                var c = a.childNodes[i];
+                if (c.nodeType === 3 && /ambil/i.test(c.nodeValue)) {
+                    a.dataset.asalHref = a.href; a.dataset.asalTeks = c.nodeValue;
+                    a.href = t.url; c.nodeValue = 'Antrian saya';
+                    break;
+                }
+            }
+        });
+    } catch (e) {}
 })();
 </script>
 

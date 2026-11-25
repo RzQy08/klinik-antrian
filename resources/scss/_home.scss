@@ -197,6 +197,7 @@ $hm-gelombang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 .hm-badge { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .7rem; border-radius: 999px; font-size: .72rem; font-weight: 700; white-space: nowrap; flex: none;
     &::before { content: ''; width: .4rem; height: .4rem; border-radius: 50%; background: currentColor; }
     &.hm-badge-ok { color: $success; background: rgba($success, .12); }
+    &.hm-badge-busy { color: #fff; background: $primary; }
     &.hm-badge-warn { color: #8A5A00; background: rgba($warning, .22); }
     &.hm-badge-off { color: #4F626A; background: #E9EFF1; } }
 
@@ -294,7 +295,8 @@ $hm-gelombang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
 .hm-dk-sum { display: flex; gap: .6rem; margin: 0; flex-wrap: wrap;
     span { display: inline-flex; align-items: baseline; gap: .45rem; padding: .5rem 1rem; border-radius: 999px; font-size: .85rem; font-weight: 600; color: $hm-teks-redup; background: $light; border: 1px solid $hm-garis; }
     b { font-size: 1.35rem; color: $navy; line-height: 1; }
-    .is-ok { color: $success; background: rgba($success, .1); border-color: rgba($success, .25); b { color: $success; } } }
+    .is-ok { color: $success; background: rgba($success, .1); border-color: rgba($success, .25); b { color: $success; } }
+    .is-busy { color: $primary; background: rgba($primary, .1); border-color: rgba($primary, .3); b { color: $primary; } } }
 .hm-dk-tabs { display: none; gap: .55rem; margin-bottom: 1.25rem; overflow-x: auto; scrollbar-width: none; padding: .15rem .1rem .35rem; margin-inline: -.1rem; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; &::-webkit-scrollbar { display: none; } }
 .hm-dk.is-js .hm-dk-tabs { display: flex; }
 .hm-dk-tab { flex: none; scroll-snap-align: start; display: inline-flex; align-items: center; gap: .55rem; padding: .55rem .5rem .55rem 1rem; border-radius: 999px; font-size: .86rem; font-weight: 700; color: $body-color; background: #fff; border: 1px solid $hm-garis; white-space: nowrap;
@@ -314,8 +316,10 @@ $hm-gelombang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'
     h3 { margin: 0; font-size: 1rem; line-height: 1.25; letter-spacing: -.01em; overflow-wrap: anywhere; }
     .hm-badge { grid-area: badge; justify-self: start; margin: 0; }
     &.is-ok { border-color: rgba($success, .35); background: linear-gradient(180deg, rgba($success, .05), #fff 70%); }
+    &.is-busy { border-color: rgba($primary, .4); background: linear-gradient(180deg, rgba($primary, .07), #fff 70%); }
     &.is-off { background: $light; h3, .hm-dkc-av { opacity: .75; } } }
 .hm-dkc-av { grid-area: av; position: relative; display: grid; place-items: center; width: 3.4rem; height: 3.4rem; border-radius: 1.1rem; font-family: $headings-font-family; font-weight: 800; font-size: 1.15rem; letter-spacing: .02em; color: $c; background: $c-lembut; }
+.hm-dkc.is-busy .hm-dkc-av::after { content: ''; position: absolute; right: -.3rem; bottom: -.3rem; width: .85rem; height: .85rem; border-radius: 50%; background: $primary; border: 2px solid #fff; animation: hm-denyut 1.2s infinite; color: $primary; }
 .hm-dkc.is-ok .hm-dkc-av::after { content: ''; position: absolute; right: -.3rem; bottom: -.3rem; width: .85rem; height: .85rem; border-radius: 50%; background: $success; border: 2px solid #fff; animation: hm-denyut 2s infinite; color: $success; }
 .hm-dkc-info { grid-area: info; min-width: 0; p { margin: .15rem 0 0; font-size: .82rem; font-weight: 700; color: $c; } }
 .hm-dkc-jam { grid-area: jam; display: flex; align-items: center; gap: .55rem; margin: 0; padding: .6rem .8rem; border-radius: .85rem; background: $light; font-size: .88rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #2D4852; i { color: $c; font-size: 1rem; } }

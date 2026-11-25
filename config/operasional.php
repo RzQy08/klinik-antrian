@@ -10,14 +10,14 @@
 |                      pengembangan dan pengujian. Ubah ke true di server nyata.
 |   PENDAFTARAN_BUKA   pendaftaran antrian dibuka mulai jam ini
 |   PENDAFTARAN_TUTUP  pendaftaran baru ditutup mulai jam ini
-|   LAYANAN_SELESAI    sampai jam ini pasien masih boleh dipanggil dan dipanggil ulang
+|   LAYANAN_SELESAI    layanan berakhir jam ini, atau lebih awal bila semua pasien sudah selesai
 */
 
 return [
     'aktif' => env('OPERASIONAL_AKTIF', false),
 
     'pendaftaran_buka' => env('PENDAFTARAN_BUKA', '07:00'),
-    'pendaftaran_tutup' => env('PENDAFTARAN_TUTUP', '11:00'),
+    'pendaftaran_tutup' => env('PENDAFTARAN_TUTUP', '14:00'),
     'layanan_selesai' => env('LAYANAN_SELESAI', '14:00'),
 
     // Status antrian yang dipindah ke hari berikutnya saat penutupan hari.

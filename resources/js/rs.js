@@ -6,6 +6,9 @@ window.bootstrap = bootstrap;
 // Panel antrian hari ini di beranda (hero) dan angka ringkasan
 import './beranda-antrian';
 
+// Tiket antrian tersimpan di perangkat, chip "Tiket saya", unduh kartu
+import './tiket-saya';
+
 // Navbar melayang: bayangan saat halaman digulir, dan indikator yang bergeser ke tautan yang disorot
 (function () {
     const header = document.querySelector('[data-nb]');

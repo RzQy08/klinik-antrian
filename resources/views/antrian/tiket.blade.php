@@ -1,9 +1,18 @@
-<x-public-layout :title="'Tiket '.$antrian->nomor_antrian">
-    @include('partials.flash')
+<x-public-layout :bare="true" :title="'Tiket '.$antrian->nomor_antrian">
+    <div class="tk-shell">
+        <header class="tk-top">
+            <a href="{{ route('beranda') }}" class="tk-back"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>Beranda</span></a>
+            <span class="tk-rs">{{ config('rumahsakit.nama') }}</span>
+        </header>
 
-    <div class="mx-auto" style="max-width: 24rem">
-        <livewire:tiket-antrian :antrian-id="$antrian->id" />
+        <div class="tk-wrap">
+            @if (session('success') || session('error'))
+                <div class="tk-flash {{ session('error') ? 'is-error' : '' }}" role="status">
+                    <i class="bi bi-{{ session('error') ? 'exclamation-triangle-fill' : 'check-circle-fill' }}" aria-hidden="true"></i>{{ session('error') ?? session('success') }}
+                </div>
+            @endif
 
-        <a href="{{ route('antrian.display', $antrian->poli_id) }}" class="btn btn-outline-primary w-100 mt-4"><i class="bi bi-tv me-2"></i>Lihat layar antrian</a>
+            <livewire:tiket-antrian :antrian-id="$antrian->id" />
+        </div>
     </div>
 </x-public-layout>

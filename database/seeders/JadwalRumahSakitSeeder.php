@@ -18,15 +18,15 @@ class JadwalRumahSakitSeeder extends Seeder
 {
     public function run(): void
     {
-        // Jam buka: Senin sampai Jumat penuh, Sabtu setengah hari, Minggu tutup
+        // Jam buka: Senin sampai Sabtu pendaftaran sampai 14.00 dan layanan sampai 16.00, Minggu tutup
         $jam = [
-            'senin' => [true, '07:00', '11:00', '14:00'],
-            'selasa' => [true, '07:00', '11:00', '14:00'],
-            'rabu' => [true, '07:00', '11:00', '14:00'],
-            'kamis' => [true, '07:00', '11:00', '14:00'],
-            'jumat' => [true, '07:00', '10:30', '12:00'],
-            'sabtu' => [true, '07:00', '10:00', '12:00'],
-            'minggu' => [false, '07:00', '11:00', '14:00'],
+            'senin' => [true, '07:00', '14:00', '16:00'],
+            'selasa' => [true, '07:00', '14:00', '16:00'],
+            'rabu' => [true, '07:00', '14:00', '16:00'],
+            'kamis' => [true, '07:00', '14:00', '16:00'],
+            'jumat' => [true, '07:00', '14:00', '16:00'],
+            'sabtu' => [true, '07:00', '14:00', '16:00'],
+            'minggu' => [false, '07:00', '14:00', '16:00'],
         ];
 
         foreach ($jam as $hari => [$buka, $daftarBuka, $daftarTutup, $selesai]) {

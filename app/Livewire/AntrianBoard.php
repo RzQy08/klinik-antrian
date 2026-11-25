@@ -50,13 +50,19 @@ class AntrianBoard extends Component
             ->get(['id', 'poli_id', 'nomor_antrian'])
             ->groupBy('poli_id');
 
-        $baris = $polis->map(function (Poli $poli) use ($aktifPerPoli, $menunggu) {
+        // yang terlambat (sudah dipanggil, belum hadir): ditampilkan sebagai penanda kecil di kartu poli
+        $telat = Antrian::hariIni()->where('status', 'telat')->get(['poli_id', 'nomor_antrian'])->groupBy('poli_id');
+
+        $baris = $polis->map(function (Poli $poli) use ($aktifPerPoli, $menunggu, $telat) {
             $antrianPoli = $menunggu->get($poli->id, collect());
 
             return (object) [
                 'poli' => $poli,
                 'sekarang' => optional($aktifPerPoli->get($poli->id))->first(),
-                'berikut' => $antrianPoli->take(1)->pluck('nomor_antrian'),
+                // dokter lain di poli yang sama yang juga sedang punya pasien
+                'lainnya' => max(0, $aktifPerPoli->get($poli->id, collect())->count() - 1),
+                'telat' => $telat->get($poli->id, collect())->count(),
+                'berikut' => $antrianPoli->take(3)->pluck('nomor_antrian'),
                 'menunggu' => $antrianPoli->count(),
             ];
         });
